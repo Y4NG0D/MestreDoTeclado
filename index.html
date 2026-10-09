@@ -1,803 +1,1291 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mestre do Teclado - ABNT2</title>
-    <!-- Tailwind CSS para Layout e Estilos Base -->
+    <title>Mestre do Teclado - Tutor ABNT2</title>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Tone.js para Música e Efeitos Sonoros -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-    <!-- Font Awesome para Ícones -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        // Cores Pedagógicas para os Dedos
+                        pinkyL: '#f472b6',   // Rosa (Mindinho Esq)
+                        ringL: '#fcd34d',    // Amarelo (Anelar Esq)
+                        middleL: '#4ade80',  // Verde (Médio Esq)
+                        indexL: '#60a5fa',   // Azul (Indicador Esq)
+                        indexR: '#a78bfa',   // Roxo (Indicador Dir)
+                        middleR: '#fb7185',  // Vermelho/Rosa escuro (Médio Dir)
+                        ringR: '#fb923c',    // Laranja (Anelar Dir)
+                        pinkyR: '#22d3ee',   // Ciano (Mindinho Dir)
+                        thumb: '#cbd5e1'     // Cinza (Polegares)
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
+    <!-- Tone.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
+    <style>
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0f172a; /* Tailwind slate-900 */
+            background-color: #0f172a;
             color: #f8fafc;
             overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
 
+        /* Ocultar input nativo, usado apenas para capturar eventos de forma confiável */
+        #core-input {
+            position: absolute;
+            opacity: 0;
+            top: -1000px;
+            left: -1000px;
+        }
+
+        /* Estilização do Display de Texto */
         .text-display {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 2rem;
-            line-height: 1.5;
+            font-size: 2.2rem;
+            line-height: 1.6;
             white-space: pre-wrap;
             word-break: break-word;
+            user-select: none;
         }
 
         .char {
             color: #64748b; /* slate-500 */
-            transition: color 0.1s, background-color 0.1s;
             border-radius: 4px;
+            transition: all 0.1s ease;
+            position: relative;
         }
 
-        .char.correct { color: #4ade80; /* green-400 */ }
-        .char.wrong { color: #f87171; background-color: rgba(248, 113, 113, 0.2); /* red-400 */ }
+        .char.correct { color: #4ade80; } /* green-400 */
+        .char.wrong { color: #f87171; background-color: rgba(248, 113, 113, 0.2); } /* red-400 */
         .char.active {
-            color: #38bdf8; /* sky-400 */
-            background-color: rgba(56, 189, 248, 0.2);
-            text-decoration: underline;
-            text-decoration-color: #38bdf8;
-            text-decoration-thickness: 3px;
+            color: #e2e8f0;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-bottom: 4px solid #38bdf8; /* sky-400 */
         }
+        
+        /* Animação para erro crítico */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .shake-animation { animation: shake 0.2s ease-in-out; }
 
-        /* Estilos do Teclado Virtual */
-        .keyboard-container {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            padding: 20px;
-            background: #1e293b;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
-            max-width: 1000px;
+        /* Teclado Virtual ABNT2 */
+        .keyboard-wrapper {
+            background: #1e293b; /* slate-800 */
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.05);
+            max-width: 1100px;
             margin: 0 auto;
         }
 
-        .keyboard-row {
+        .kb-row {
             display: flex;
             justify-content: center;
-            gap: 6px;
+            gap: 8px;
+            margin-bottom: 8px;
         }
+        .kb-row:last-child { margin-bottom: 0; }
 
-        .key {
-            height: 50px;
-            background: #334155;
-            border: 2px solid #475569;
+        .kb-key {
+            height: 54px;
+            background: #334155; /* slate-700 */
+            border: 2px solid #475569; /* slate-600 */
             border-radius: 8px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             font-weight: 600;
-            color: #cbd5e1;
+            color: #cbd5e1; /* slate-300 */
             box-shadow: 0 4px 0 #0f172a;
-            transition: all 0.1s ease;
+            transition: all 0.05s ease;
             position: relative;
             user-select: none;
+            font-family: 'Inter', sans-serif;
         }
 
-        .key span { pointer-events: none; }
-        .key .sub { font-size: 0.65rem; color: #94a3b8; }
+        .kb-key .sub { font-size: 0.65rem; color: #94a3b8; position: absolute; top: 4px; left: 6px; }
+        .kb-key .alt { font-size: 0.65rem; color: #94a3b8; position: absolute; bottom: 4px; right: 6px; }
+        .kb-key .main { position: absolute; bottom: 4px; left: 6px; font-size: 1rem; }
+        .kb-key.center-label { justify-content: center; }
+        .kb-key.center-label .main { position: static; }
 
-        /* Tamanhos de teclas especiais */
-        .key.w-1-5 { width: 60px; }
-        .key.w-2 { width: 80px; }
-        .key.w-2-5 { width: 100px; }
-        .key.w-space { width: 300px; }
-        .key.w-1 { width: 45px; }
+        /* Tamanhos Específicos */
+        .key-w-1 { width: 50px; }
+        .key-w-1-25 { width: 62.5px; }
+        .key-w-1-5 { width: 75px; }
+        .key-w-1-75 { width: 87.5px; }
+        .key-w-2 { width: 100px; }
+        .key-w-2-25 { width: 112.5px; }
+        .key-w-2-75 { width: 137.5px; }
+        .key-w-6-25 { width: 312.5px; } /* Barra de Espaço */
 
-        /* Estados das teclas */
-        .key.pressed {
+        /* Estados das Teclas */
+        .kb-key.pressed {
             transform: translateY(4px);
             box-shadow: 0 0 0 #0f172a;
             background: #475569;
+            color: #fff;
         }
 
-        /* Cores por dedo (Ensino de Digitação) */
-        .finger-l-pinky.target { background: #fda4af; border-color: #e11d48; color: #881337; box-shadow: 0 4px 0 #9f1239, 0 0 15px #fda4af; }
-        .finger-l-ring.target { background: #fcd34d; border-color: #d97706; color: #78350f; box-shadow: 0 4px 0 #b45309, 0 0 15px #fcd34d; }
-        .finger-l-middle.target { background: #86efac; border-color: #16a34a; color: #14532d; box-shadow: 0 4px 0 #15803d, 0 0 15px #86efac; }
-        .finger-l-index.target { background: #93c5fd; border-color: #2563eb; color: #1e3a8a; box-shadow: 0 4px 0 #1d4ed8, 0 0 15px #93c5fd; }
+        /* Cores Pedagógicas (Identificação Visual dos Dedos) */
+        /* Apenas iluminam quando a tecla é alvo (.target) */
+        .finger-pinkyL.target { background: #be185d; border-color: #f472b6; color: #fff; box-shadow: 0 4px 0 #831843, 0 0 15px #f472b6; }
+        .finger-ringL.target { background: #b45309; border-color: #fcd34d; color: #fff; box-shadow: 0 4px 0 #78350f, 0 0 15px #fcd34d; }
+        .finger-middleL.target { background: #15803d; border-color: #4ade80; color: #fff; box-shadow: 0 4px 0 #14532d, 0 0 15px #4ade80; }
+        .finger-indexL.target { background: #1d4ed8; border-color: #60a5fa; color: #fff; box-shadow: 0 4px 0 #1e3a8a, 0 0 15px #60a5fa; }
         
-        .finger-r-index.target { background: #c4b5fd; border-color: #7c3aed; color: #4c1d95; box-shadow: 0 4px 0 #6d28d9, 0 0 15px #c4b5fd; }
-        .finger-r-middle.target { background: #f9a8d4; border-color: #db2777; color: #831843; box-shadow: 0 4px 0 #be185d, 0 0 15px #f9a8d4; }
-        .finger-r-ring.target { background: #fdba74; border-color: #ea580c; color: #7c2d12; box-shadow: 0 4px 0 #c2410c, 0 0 15px #fdba74; }
-        .finger-r-pinky.target { background: #67e8f9; border-color: #0891b2; color: #164e63; box-shadow: 0 4px 0 #0e7490, 0 0 15px #67e8f9; }
+        .finger-indexR.target { background: #6d28d9; border-color: #a78bfa; color: #fff; box-shadow: 0 4px 0 #4c1d95, 0 0 15px #a78bfa; }
+        .finger-middleR.target { background: #be123c; border-color: #fb7185; color: #fff; box-shadow: 0 4px 0 #881337, 0 0 15px #fb7185; }
+        .finger-ringR.target { background: #c2410c; border-color: #fb923c; color: #fff; box-shadow: 0 4px 0 #7c2d12, 0 0 15px #fb923c; }
+        .finger-pinkyR.target { background: #0e7490; border-color: #22d3ee; color: #fff; box-shadow: 0 4px 0 #164e63, 0 0 15px #22d3ee; }
         
-        .finger-thumb.target { background: #d8b4fe; border-color: #9333ea; color: #581c87; box-shadow: 0 4px 0 #7e22ce, 0 0 15px #d8b4fe; }
+        .finger-thumb.target { background: #475569; border-color: #cbd5e1; color: #fff; box-shadow: 0 4px 0 #334155, 0 0 15px #cbd5e1; }
 
-        /* Animações e Efeitos */
+        /* Modificadores ativos (ex: indicando que shift deve ser pressionado) */
+        .kb-key.modifier-target {
+            border-color: #e2e8f0;
+            background: #64748b;
+            animation: pulse-mod 1.5s infinite;
+        }
+        @keyframes pulse-mod {
+            0% { box-shadow: 0 4px 0 #0f172a, 0 0 0px #e2e8f0; }
+            50% { box-shadow: 0 4px 0 #0f172a, 0 0 20px #e2e8f0; }
+            100% { box-shadow: 0 4px 0 #0f172a, 0 0 0px #e2e8f0; }
+        }
+
+        /* Indicador de Marcador Base (Alto-relevo no F e J) */
+        .homing-bump::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            height: 2px;
+            background: #94a3b8;
+            border-radius: 2px;
+        }
+
+        /* UI Elements Genéricos */
         .glass-panel {
             background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        @keyframes pulse-bg {
-            0%, 100% { background-color: #1e293b; }
-            50% { background-color: #334155; }
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
         }
 
-        .hidden { display: none !important; }
-        
-        /* Input escondido para capturar digitação de forma robusta, especialmente acentos */
-        #hidden-input {
-            position: absolute;
-            opacity: 0;
-            top: -1000px;
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        .hidden-screen { display: none !important; }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Hand Guide CSS */
+        .hand-guide-color {
+            width: 16px; height: 16px; border-radius: 50%; display: inline-block; margin-right: 6px;
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-center relative">
+<body class="text-slate-300">
 
-    <!-- Background Animado -->
-    <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-20">
-        <div class="absolute w-[500px] h-[500px] bg-blue-500 rounded-full blur-[100px] top-[-100px] left-[-100px] animate-pulse"></div>
-        <div class="absolute w-[400px] h-[400px] bg-purple-500 rounded-full blur-[100px] bottom-[-50px] right-[-50px] animate-pulse" style="animation-delay: 2s;"></div>
+    <!-- Input Oculto Central - Coração da Captura de Texto -->
+    <input type="text" id="core-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+
+    <!-- Background Animado Abstrato -->
+    <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none opacity-20">
+        <div class="absolute w-[600px] h-[600px] bg-blue-600 rounded-full blur-[120px] top-[-200px] left-[-200px] animate-pulse"></div>
+        <div class="absolute w-[500px] h-[500px] bg-purple-600 rounded-full blur-[120px] bottom-[-150px] right-[-150px] animate-pulse" style="animation-delay: 2s;"></div>
     </div>
 
-    <div class="z-10 w-full max-w-6xl p-4 flex flex-col h-screen">
-        
-        <!-- Header -->
-        <header class="flex justify-between items-center py-4 mb-4 border-b border-slate-700">
-            <h1 class="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-                <i class="fa-solid fa-keyboard mr-2 text-blue-400"></i>Mestre do Teclado
-            </h1>
-            <button id="btn-mute" class="text-slate-400 hover:text-white transition" onclick="toggleMute()">
-                <i class="fa-solid fa-volume-up text-2xl" id="mute-icon"></i>
+    <!-- HEADER GLOBAL -->
+    <header class="relative z-10 w-full max-w-7xl mx-auto p-4 flex justify-between items-center border-b border-slate-800">
+        <div class="flex items-center gap-3 cursor-pointer" onclick="UI.showScreen('menu')">
+            <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white shadow-lg">
+                <i class="fa-solid fa-keyboard text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-white leading-tight">Mestre do Teclado</h1>
+                <p class="text-xs text-slate-400 font-mono tracking-widest uppercase">Tutor ABNT2 Pro</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-6">
+            <!-- XP & Level Display -->
+            <div class="hidden md:flex flex-col items-end">
+                <div class="text-sm font-semibold text-blue-400">Nível <span id="hdr-lvl">1</span></div>
+                <div class="w-32 h-2 bg-slate-800 rounded-full overflow-hidden mt-1 relative">
+                    <div id="hdr-xp-bar" class="absolute top-0 left-0 h-full bg-blue-500 transition-all duration-500" style="width: 0%;"></div>
+                </div>
+            </div>
+            
+            <button id="btn-audio" class="w-10 h-10 rounded-full glass-panel flex items-center justify-center hover:bg-slate-700 transition" onclick="AudioEngine.toggleMute()">
+                <i id="icon-audio" class="fa-solid fa-volume-up text-slate-300"></i>
             </button>
-        </header>
+        </div>
+    </header>
+
+    <!-- CONTAINER PRINCIPAL DE TELAS -->
+    <main class="relative z-10 flex-1 w-full max-w-7xl mx-auto p-4 flex flex-col">
 
         <!-- TELA 1: MENU PRINCIPAL -->
-        <div id="screen-menu" class="flex-1 flex flex-col items-center justify-center gap-6 fade-in">
-            <h2 class="text-2xl font-semibold text-slate-300 mb-4">Escolha seu Treinamento</h2>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
-                <!-- Modo 1 -->
-                <button onclick="startGame(1)" class="glass-panel p-6 rounded-2xl hover:scale-105 transition transform text-left group border-t-4 border-t-blue-500">
-                    <div class="text-blue-400 text-3xl mb-3 group-hover:animate-bounce"><i class="fa-solid fa-stopwatch"></i></div>
-                    <h3 class="text-xl font-bold mb-2">Corrida contra o Tempo</h3>
-                    <p class="text-slate-400 text-sm">1 minuto e 30 segundos. Digite palavras em sequência o mais rápido que puder.</p>
+        <section id="screen-menu" class="flex-1 flex flex-col items-center justify-center fade-in">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl md:text-5xl font-extrabold text-white mb-4">Aprenda a digitar <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">como um profissional.</span></h2>
+                <p class="text-lg text-slate-400 max-w-2xl mx-auto">Domine o teclado ABNT2 usando todos os dedos, aumente sua velocidade e precisão com exercícios baseados em pedagogia motora.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl">
+                <!-- Card Trilha -->
+                <button onclick="UI.showScreen('campaign')" class="glass-panel p-8 rounded-2xl hover:-translate-y-2 transition-transform text-left group border-t-4 border-t-blue-500 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="w-14 h-14 bg-blue-500/20 rounded-xl flex items-center justify-center text-blue-400 text-3xl mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-3">Trilha de Aprendizagem</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed mb-4">Curso completo passo a passo. Aprenda a posição correta das mãos, memorize as teclas e domine acentos e símbolos.</p>
+                    <div class="text-xs font-mono text-blue-400 bg-blue-500/10 px-3 py-1 rounded inline-block">Recomendado para Iniciantes</div>
                 </button>
 
-                <!-- Modo 2 -->
-                <button onclick="startGame(2)" class="glass-panel p-6 rounded-2xl hover:scale-105 transition transform text-left group border-t-4 border-t-green-500">
-                    <div class="text-green-400 text-3xl mb-3 group-hover:animate-bounce"><i class="fa-solid fa-book-open"></i></div>
-                    <h3 class="text-xl font-bold mb-2">Textos Completos</h3>
-                    <p class="text-slate-400 text-sm">Pratique com textos longos (fábulas, curiosidades). Foco na precisão e velocidade (PPM).</p>
+                <!-- Card Velocidade -->
+                <button onclick="Game.startMode('speed')" class="glass-panel p-8 rounded-2xl hover:-translate-y-2 transition-transform text-left group border-t-4 border-t-green-500 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-green-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="w-14 h-14 bg-green-500/20 rounded-xl flex items-center justify-center text-green-400 text-3xl mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-stopwatch"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-3">Corrida contra o Tempo</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed mb-4">Teste seus reflexos. Você tem 90 segundos para digitar o máximo de palavras aleatórias possível. O tempo não perdoa!</p>
+                    <div class="text-xs font-mono text-green-400 bg-green-500/10 px-3 py-1 rounded inline-block">Treino de Agilidade</div>
                 </button>
 
-                <!-- Modo 3 -->
-                <button onclick="startGame(3)" class="glass-panel p-6 rounded-2xl hover:scale-105 transition transform text-left group border-t-4 border-t-purple-500">
-                    <div class="text-purple-400 text-3xl mb-3 group-hover:animate-bounce"><i class="fa-solid fa-star"></i></div>
-                    <h3 class="text-xl font-bold mb-2">Mestre dos Acentos</h3>
-                    <p class="text-slate-400 text-sm">Treino intensivo de Shift, acentos (´, ~, ^) e caracteres especiais (º, ª, °).</p>
+                <!-- Card Textos -->
+                <button onclick="Game.startMode('texts')" class="glass-panel p-8 rounded-2xl hover:-translate-y-2 transition-transform text-left group border-t-4 border-t-purple-500 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="w-14 h-14 bg-purple-500/20 rounded-xl flex items-center justify-center text-purple-400 text-3xl mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-book-open"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-3">Textos Completos</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed mb-4">Pratique resistência e consistência digitando textos longos. Acompanhe seu progresso e estabeleça novos recordes.</p>
+                    <div class="text-xs font-mono text-purple-400 bg-purple-500/10 px-3 py-1 rounded inline-block">Foco e Resistência</div>
                 </button>
             </div>
-        </div>
+        </section>
 
-        <!-- TELA 2: JOGO -->
-        <div id="screen-game" class="hidden flex-1 flex flex-col relative">
+        <!-- TELA 2: TRILHA DE APRENDIZAGEM (MAPA) -->
+        <section id="screen-campaign" class="hidden-screen flex-1 flex flex-col fade-in max-w-5xl mx-auto w-full py-8">
+            <div class="flex justify-between items-end mb-8">
+                <div>
+                    <button onclick="UI.showScreen('menu')" class="text-slate-400 hover:text-white mb-4 flex items-center transition"><i class="fa-solid fa-arrow-left mr-2"></i> Voltar ao Menu</button>
+                    <h2 class="text-3xl font-bold text-white">Trilha de Aprendizagem</h2>
+                    <p class="text-slate-400 mt-2">Siga a sequência para construir memória muscular corretamente.</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm text-slate-400">Progresso Geral</div>
+                    <div class="text-2xl font-bold text-blue-400" id="camp-progress-text">0%</div>
+                </div>
+            </div>
+
+            <!-- Grid de Lições gerado dinamicamente -->
+            <div id="lessons-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto pr-2 pb-10" style="max-height: 60vh;">
+                <!-- Populado via JS -->
+            </div>
+        </section>
+
+        <!-- TELA 3: ÁREA DE JOGO -->
+        <section id="screen-game" class="hidden-screen flex-1 flex flex-col fade-in">
             
             <!-- HUD -->
-            <div class="flex justify-between items-center glass-panel p-4 rounded-xl mb-6">
-                <div class="flex gap-6">
-                    <div class="text-center">
-                        <div class="text-xs text-slate-400 uppercase tracking-widest">Tempo</div>
-                        <div class="text-2xl font-bold text-blue-400 font-mono" id="hud-time">00:00</div>
+            <div class="flex flex-wrap justify-between items-center glass-panel p-4 md:px-8 rounded-2xl mb-6 shadow-lg">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center border-2 border-slate-700" id="hud-icon">
+                        <i class="fa-solid fa-gamepad text-slate-400"></i>
                     </div>
-                    <div class="text-center">
-                        <div class="text-xs text-slate-400 uppercase tracking-widest">PPM</div>
-                        <div class="text-2xl font-bold text-green-400 font-mono" id="hud-wpm">0</div>
-                    </div>
-                </div>
-                <div class="flex gap-6">
-                    <div class="text-center">
-                        <div class="text-xs text-slate-400 uppercase tracking-widest">Acertos</div>
-                        <div class="text-2xl font-bold text-emerald-400 font-mono" id="hud-hits">0</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-xs text-slate-400 uppercase tracking-widest">Erros</div>
-                        <div class="text-2xl font-bold text-red-400 font-mono" id="hud-misses">0</div>
+                    <div>
+                        <h3 class="font-bold text-white text-lg leading-tight" id="hud-title">Modo de Jogo</h3>
+                        <p class="text-xs text-slate-400" id="hud-subtitle">Subtítulo do modo</p>
                     </div>
                 </div>
-                <button onclick="endGame()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-semibold transition">
-                    Encerrar <i class="fa-solid fa-times ml-1"></i>
+
+                <div class="flex gap-4 md:gap-8 mt-4 md:mt-0">
+                    <div id="hud-timer-container" class="text-center">
+                        <div class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Tempo</div>
+                        <div class="text-2xl font-black text-white font-mono drop-shadow-md" id="hud-time">--:--</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">PPM <i class="fa-solid fa-circle-info text-slate-600 ml-1" title="Palavras Por Minuto (Líquido)"></i></div>
+                        <div class="text-2xl font-black text-blue-400 font-mono drop-shadow-md" id="hud-wpm">0</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Precisão</div>
+                        <div class="text-2xl font-black text-green-400 font-mono drop-shadow-md" id="hud-acc">100%</div>
+                    </div>
+                    <div class="text-center hidden md:block">
+                        <div class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Erros</div>
+                        <div class="text-2xl font-black text-red-400 font-mono drop-shadow-md" id="hud-misses">0</div>
+                    </div>
+                </div>
+
+                <button onclick="Game.endSession()" class="mt-4 md:mt-0 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-semibold transition border border-slate-600">
+                    Encerrar <i class="fa-solid fa-stop ml-2"></i>
                 </button>
             </div>
 
-            <!-- Área de Texto -->
-            <div class="flex-1 flex items-center justify-center mb-6">
-                <div class="glass-panel p-8 rounded-2xl w-full max-w-4xl shadow-xl border-l-4 border-l-blue-500 relative overflow-hidden" onclick="focusInput()">
-                    <div class="text-display" id="text-display">
-                        <!-- Texto será injetado aqui -->
-                    </div>
-                    <!-- Input oculto para mobile/gerenciamento de acentos nativos -->
-                    <input type="text" id="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-                </div>
+            <!-- Warning Tooltip para dicas em tempo real -->
+            <div id="game-warning" class="absolute top-32 left-1/2 transform -translate-x-1/2 bg-red-500/90 text-white px-6 py-2 rounded-full font-bold shadow-xl opacity-0 transition-opacity z-50 pointer-events-none">
+                Use o Shift da mão oposta!
             </div>
 
-            <!-- Teclado Virtual ABNT2 -->
-            <div id="keyboard-area" class="mt-auto pb-4">
-                <div class="keyboard-container" id="virtual-keyboard">
-                    <!-- Teclas geradas via JS -->
-                </div>
-            </div>
-        </div>
-
-        <!-- TELA 3: RESULTADOS -->
-        <div id="screen-result" class="hidden flex-1 flex flex-col items-center justify-center">
-            <div class="glass-panel p-10 rounded-3xl w-full max-w-2xl text-center shadow-2xl relative overflow-hidden">
-                <div class="absolute inset-0 bg-gradient-to-b from-blue-500/10 to-transparent pointer-events-none"></div>
-                
-                <h2 class="text-4xl font-extrabold mb-2" id="res-title">Sessão Concluída!</h2>
-                <p class="text-slate-400 mb-8" id="res-subtitle">Veja seu desempenho.</p>
-
-                <div class="flex justify-center items-center gap-8 mb-8">
-                    <!-- Nota/Rank -->
-                    <div class="flex flex-col items-center">
-                        <div id="res-rank" class="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 drop-shadow-lg mb-2">S</div>
-                        <div class="text-sm text-slate-400 uppercase tracking-widest">Rank</div>
-                    </div>
+            <!-- Área de Digitação -->
+            <div class="flex-1 flex flex-col items-center justify-center mb-6 w-full" onclick="Engine.focusInput()">
+                <div class="glass-panel p-6 md:p-10 rounded-2xl w-full max-w-5xl shadow-2xl border border-slate-700/50 relative overflow-hidden group cursor-text">
+                    <!-- Foco visualizador -->
+                    <div class="absolute inset-0 border-2 border-blue-500/0 group-hover:border-blue-500/30 rounded-2xl transition-all pointer-events-none" id="focus-ring"></div>
+                    <div class="absolute top-2 right-4 text-xs text-slate-500 bg-slate-800 px-2 py-1 rounded hidden" id="focus-lost-msg">Clique aqui para continuar digitando</div>
                     
-                    <div class="grid grid-cols-2 gap-4 text-left">
-                        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
-                            <div class="text-xs text-slate-400 uppercase">Velocidade</div>
-                            <div class="text-2xl font-bold text-white"><span id="res-wpm">0</span> <span class="text-sm text-slate-500">PPM</span></div>
+                    <div class="text-display relative z-10" id="text-display">
+                        <!-- Texto Injetado Dinamicamente -->
+                    </div>
+                </div>
+
+                <!-- Pedagogy Hand Guide -->
+                <div class="mt-6 flex justify-center items-center gap-8 text-sm bg-slate-800/50 px-6 py-3 rounded-full border border-slate-700">
+                    <div id="guide-left" class="flex items-center text-slate-400 transition-colors"><i class="fa-solid fa-hand mr-2"></i> Mão Esquerda</div>
+                    <div class="w-px h-6 bg-slate-600"></div>
+                    <div id="guide-right" class="flex items-center text-slate-400 transition-colors"><i class="fa-solid fa-hand mr-2"></i> Mão Direita</div>
+                </div>
+            </div>
+
+            <!-- Teclado Virtual Container -->
+            <div id="keyboard-area" class="w-full pb-4">
+                <div class="keyboard-wrapper" id="virtual-keyboard">
+                    <!-- Gerado via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TELA 4: RESULTADOS -->
+        <section id="screen-result" class="hidden-screen flex-1 flex flex-col items-center justify-center fade-in py-8">
+            <div class="glass-panel p-8 md:p-12 rounded-3xl w-full max-w-4xl shadow-2xl relative overflow-hidden border border-slate-700/50">
+                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+                
+                <div class="text-center mb-10">
+                    <h2 class="text-4xl font-black text-white mb-2" id="res-title">Sessão Concluída!</h2>
+                    <p class="text-slate-400 text-lg" id="res-subtitle">Analise seu desempenho e identifique onde melhorar.</p>
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-10 items-center justify-center mb-12">
+                    
+                    <!-- Rank Hexagon -->
+                    <div class="relative flex items-center justify-center w-40 h-40">
+                        <svg class="absolute inset-0 w-full h-full drop-shadow-xl" viewBox="0 0 100 100">
+                            <polygon points="50 3, 93 25, 93 75, 50 97, 7 75, 7 25" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+                        </svg>
+                        <div id="res-rank" class="relative z-10 text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-600">S</div>
+                        <div class="absolute bottom-6 z-10 text-[10px] text-slate-400 uppercase font-bold tracking-widest bg-slate-900 px-2 rounded-full">Rank</div>
+                    </div>
+
+                    <!-- Métricas -->
+                    <div class="grid grid-cols-2 gap-4 flex-1 w-full">
+                        <div class="bg-slate-800/80 p-5 rounded-2xl border border-slate-700">
+                            <div class="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">Velocidade (Líquida)</div>
+                            <div class="text-3xl font-black text-white"><span id="res-wpm">0</span> <span class="text-sm font-normal text-slate-500">PPM</span></div>
                         </div>
-                        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
-                            <div class="text-xs text-slate-400 uppercase">Precisão</div>
-                            <div class="text-2xl font-bold text-white"><span id="res-acc">0</span><span class="text-sm text-slate-500">%</span></div>
+                        <div class="bg-slate-800/80 p-5 rounded-2xl border border-slate-700">
+                            <div class="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">Precisão Real</div>
+                            <div class="text-3xl font-black text-white"><span id="res-acc">0</span><span class="text-sm font-normal text-slate-500">%</span></div>
                         </div>
-                        <div class="bg-slate-800/50 p-4 rounded-xl border border-emerald-900/50">
-                            <div class="text-xs text-emerald-400 uppercase">Acertos</div>
+                        <div class="bg-emerald-900/20 p-5 rounded-2xl border border-emerald-900/50">
+                            <div class="text-xs text-emerald-400 uppercase font-bold tracking-wider mb-1">Caracteres Certos</div>
                             <div class="text-2xl font-bold text-emerald-100" id="res-hits">0</div>
                         </div>
-                        <div class="bg-slate-800/50 p-4 rounded-xl border border-red-900/50">
-                            <div class="text-xs text-red-400 uppercase">Erros</div>
+                        <div class="bg-red-900/20 p-5 rounded-2xl border border-red-900/50">
+                            <div class="text-xs text-red-400 uppercase font-bold tracking-wider mb-1">Erros Totais</div>
                             <div class="text-2xl font-bold text-red-100" id="res-misses">0</div>
                         </div>
                     </div>
                 </div>
 
-                <button onclick="showMenu()" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold py-4 px-10 rounded-xl shadow-lg transition transform hover:-translate-y-1 text-lg">
-                    Voltar ao Menu
-                </button>
+                <!-- Painel de Feedback Pedagógico & Heatmap -->
+                <div class="bg-slate-900/50 rounded-2xl p-6 border border-slate-800 mb-8">
+                    <h4 class="text-lg font-bold text-white mb-4 border-b border-slate-700 pb-2"><i class="fa-solid fa-microscope text-purple-400 mr-2"></i>Análise de Dificuldades</h4>
+                    
+                    <div class="flex flex-col md:flex-row gap-8">
+                        <div class="flex-1">
+                            <p class="text-sm text-slate-400 mb-2">Teclas com maior índice de erro na sessão:</p>
+                            <div id="res-heatmap-list" class="flex flex-wrap gap-2">
+                                <!-- Preenchido via JS. Ex: <span class="bg-red-900/50 text-red-300 px-3 py-1 rounded font-mono border border-red-800">C (3 erros)</span> -->
+                            </div>
+                            <p id="res-recommendation" class="mt-4 text-sm font-medium text-blue-300 bg-blue-900/30 p-3 rounded-lg border border-blue-800/50">
+                                Excelente! Continue praticando para ganhar mais agilidade.
+                            </p>
+                        </div>
+                        
+                        <!-- Mini XP Card -->
+                        <div class="bg-slate-800 p-4 rounded-xl flex flex-col justify-center items-center text-center border border-slate-700 min-w-[150px]">
+                            <div class="text-xs text-slate-400 uppercase mb-1">XP Ganho</div>
+                            <div class="text-3xl font-black text-purple-400 mb-1" id="res-xp-gained">+0</div>
+                            <div class="text-xs font-semibold text-slate-500" id="res-xp-total">Total: 0 XP</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-center gap-4">
+                    <button onclick="UI.showScreen('menu')" class="px-8 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold transition">Menu Principal</button>
+                    <button id="btn-next-action" onclick="Game.retryOrNext()" class="btn-primary px-8 py-3 rounded-xl font-bold">Tentar Novamente</button>
+                </div>
             </div>
-        </div>
-    </div>
+        </section>
+    </main>
 
     <script>
-        // --- DADOS DO JOGO ---
-        const textsMode1 = [
-            "amigo", "brasil", "teclado", "computador", "aprender", "escola", "jogo", "foco", "dedos", "agilidade",
-            "velocidade", "precisao", "desenvolvedor", "html", "estudo", "pratica", "sucesso", "trabalho", "tempo",
-            "vencedor", "campeao", "monitor", "sistema", "internet", "navegador", "futuro", "desafio", "conhecimento"
-        ];
+        /**
+         * ESTRUTURAS DE DADOS MASSIVAS
+         * Necessárias para criar uma arquitetura robusta, extensível e pedagogicamente correta.
+         */
 
-        const textsMode2 = [
-            "A lebre e a tartaruga decidiram apostar uma corrida. A lebre, muito confiante de sua velocidade, acabou dormindo no meio do caminho. A tartaruga, com passos lentos mas constantes, venceu a corrida e provou que a persistência compensa.",
-            "O Brasil é o maior país da América do Sul e o quinto maior do mundo em área territorial. Sua diversidade cultural, flora e fauna são reconhecidas mundialmente, abrigando a maior parte da floresta amazônica.",
-            "A invenção do computador revolucionou a forma como a humanidade processa informações. O que antes ocupava salas inteiras com válvulas, hoje cabe na palma da nossa mão com muito mais capacidade de processamento.",
-            "O lobo e o cordeiro estavam bebendo água no mesmo riacho. O lobo, querendo arrumar desculpa para devorar o cordeiro, começou a acusá-lo de sujar a água, mesmo estando rio abaixo.",
-            "Programação é a arte de dar instruções precisas para uma máquina realizar tarefas. Aprender a programar desenvolve o raciocínio lógico e a capacidade de resolução de problemas complexos de forma estruturada.",
-            "O universo é vasto e ainda guarda muitos mistérios. Bilhões de galáxias, cada uma com bilhões de estrelas, flutuam pelo espaço sideral. A Terra é apenas um pequeno ponto azul pálido nessa imensidão."
-        ];
-
-        const textsMode3 = [
-            "O avião (A320) voará até São Paulo, à noite, com 100% de ocupação.",
-            "A 1ª colocada no torneio foi a equipe 'Fênix', com 95,5 pontos!",
-            "João & Maria comeram pão com maçã; o preço foi R$ 15,00.",
-            "Você quer chá ou café? O clima está 25°C hoje.",
-            "O artigo 5º da constituição garante direitos fundamentais.",
-            "A água (H₂O) é essencial! Até os cães e gatos sabem disso.",
-            "Para programar: if (x > 10) { print(\"Olá, mundo!\"); }",
-            "A maçã caiu na cabeça de Newton (ou será que é mito?)."
-        ];
-
-        // --- MAPEAMENTO DO TECLADO ABNT2 ---
-        // keyID, main label, sub label, width class, finger class, keys to trigger this button
-        const abnt2Layout = [
+        // 1. Definição Física do Teclado ABNT2
+        // [id, main, shift, altgr, widthClass, fingerClass, keyCodes]
+        const ABNT2_LAYOUT = [
             [
-                ['k-apos', "'", '"', 'w-1', 'finger-l-pinky', ["'", '"']],
-                ['k-1', '1', '!', 'w-1', 'finger-l-pinky', ['1', '!']],
-                ['k-2', '2', '@', 'w-1', 'finger-l-ring', ['2', '@']],
-                ['k-3', '3', '#', 'w-1', 'finger-l-middle', ['3', '#']],
-                ['k-4', '4', '$', 'w-1', 'finger-l-index', ['4', '$']],
-                ['k-5', '5', '%', 'w-1', 'finger-l-index', ['5', '%']],
-                ['k-6', '6', '¨', 'w-1', 'finger-r-index', ['6', '¨']],
-                ['k-7', '7', '&', 'w-1', 'finger-r-index', ['7', '&']],
-                ['k-8', '8', '*', 'w-1', 'finger-r-middle', ['8', '*']],
-                ['k-9', '9', '(', 'w-1', 'finger-r-ring', ['9', '(']],
-                ['k-0', '0', ')', 'w-1', 'finger-r-pinky', ['0', ')']],
-                ['k-minus', '-', '_', 'w-1', 'finger-r-pinky', ['-', '_']],
-                ['k-equal', '=', '+', 'w-1', 'finger-r-pinky', ['=', '+']],
-                ['k-backspace', 'Backspace', '', 'w-2', 'finger-r-pinky', ['Backspace']]
+                ['k-apos', "'", '"', '', 'key-w-1', 'finger-pinkyL', ["'", '"']],
+                ['k-1', '1', '!', '¹', 'key-w-1', 'finger-pinkyL', ['1', '!']],
+                ['k-2', '2', '@', '²', 'key-w-1', 'finger-ringL', ['2', '@']],
+                ['k-3', '3', '#', '³', 'key-w-1', 'finger-middleL', ['3', '#']],
+                ['k-4', '4', '$', '£', 'key-w-1', 'finger-indexL', ['4', '$']],
+                ['k-5', '5', '%', '¢', 'key-w-1', 'finger-indexL', ['5', '%']],
+                ['k-6', '6', '¨', '¬', 'key-w-1', 'finger-indexR', ['6', '¨']],
+                ['k-7', '7', '&', '', 'key-w-1', 'finger-indexR', ['7', '&']],
+                ['k-8', '8', '*', '', 'key-w-1', 'finger-middleR', ['8', '*']],
+                ['k-9', '9', '(', '', 'key-w-1', 'finger-ringR', ['9', '(']],
+                ['k-0', '0', ')', '', 'key-w-1', 'finger-pinkyR', ['0', ')']],
+                ['k-minus', '-', '_', '', 'key-w-1', 'finger-pinkyR', ['-', '_']],
+                ['k-equal', '=', '+', '§', 'key-w-1', 'finger-pinkyR', ['=', '+']],
+                ['k-backspace', 'Back', '', '', 'key-w-2', 'finger-pinkyR', ['Backspace']]
             ],
             [
-                ['k-tab', 'Tab', '', 'w-1-5', 'finger-l-pinky', ['Tab']],
-                ['k-q', 'Q', '', 'w-1', 'finger-l-pinky', ['q', 'Q']],
-                ['k-w', 'W', '', 'w-1', 'finger-l-ring', ['w', 'W']],
-                ['k-e', 'E', '', 'w-1', 'finger-l-middle', ['e', 'E']],
-                ['k-r', 'R', '', 'w-1', 'finger-l-index', ['r', 'R']],
-                ['k-t', 'T', '', 'w-1', 'finger-l-index', ['t', 'T']],
-                ['k-y', 'Y', '', 'w-1', 'finger-r-index', ['y', 'Y']],
-                ['k-u', 'U', '', 'w-1', 'finger-r-index', ['u', 'U']],
-                ['k-i', 'I', '', 'w-1', 'finger-r-middle', ['i', 'I']],
-                ['k-o', 'O', '', 'w-1', 'finger-r-ring', ['o', 'O']],
-                ['k-p', 'P', '', 'w-1', 'finger-r-pinky', ['p', 'P']],
-                ['k-acute', '´', '`', 'w-1', 'finger-r-pinky', ['´', '`']],
-                ['k-bracket', '[', '{', 'w-1', 'finger-r-pinky', ['[', '{', 'ª']],
-                ['k-enter', 'Enter', '', 'w-2', 'finger-r-pinky', ['Enter']]
+                ['k-tab', 'Tab', '', '', 'key-w-1-5', 'finger-pinkyL', ['Tab']],
+                ['k-q', 'Q', '', '/', 'key-w-1', 'finger-pinkyL', ['q', 'Q']],
+                ['k-w', 'W', '', '?', 'key-w-1', 'finger-ringL', ['w', 'W']],
+                ['k-e', 'E', '', '°', 'key-w-1', 'finger-middleL', ['e', 'E']],
+                ['k-r', 'R', '', '', 'key-w-1', 'finger-indexL', ['r', 'R']],
+                ['k-t', 'T', '', '', 'key-w-1', 'finger-indexL', ['t', 'T']],
+                ['k-y', 'Y', '', '', 'key-w-1', 'finger-indexR', ['y', 'Y']],
+                ['k-u', 'U', '', '', 'key-w-1', 'finger-indexR', ['u', 'U']],
+                ['k-i', 'I', '', '', 'key-w-1', 'finger-middleR', ['i', 'I']],
+                ['k-o', 'O', '', '', 'key-w-1', 'finger-ringR', ['o', 'O']],
+                ['k-p', 'P', '', '', 'key-w-1', 'finger-pinkyR', ['p', 'P']],
+                ['k-acute', '´', '`', '', 'key-w-1', 'finger-pinkyR', ['´', '`', 'Dead']], // Dead key
+                ['k-bracket', '[', '{', 'ª', 'key-w-1', 'finger-pinkyR', ['[', '{', 'ª']],
+                ['k-enter', 'Enter', '', '', 'key-w-1-75', 'finger-pinkyR', ['Enter']]
             ],
             [
-                ['k-caps', 'Caps Lock', '', 'w-2', 'finger-l-pinky', ['CapsLock']],
-                ['k-a', 'A', '', 'w-1', 'finger-l-pinky', ['a', 'A']],
-                ['k-s', 'S', '', 'w-1', 'finger-l-ring', ['s', 'S']],
-                ['k-d', 'D', '', 'w-1', 'finger-l-middle', ['d', 'D']],
-                ['k-f', 'F', '', 'w-1', 'finger-l-index', ['f', 'F']],
-                ['k-g', 'G', '', 'w-1', 'finger-l-index', ['g', 'G']],
-                ['k-h', 'H', '', 'w-1', 'finger-r-index', ['h', 'H']],
-                ['k-j', 'J', '', 'w-1', 'finger-r-index', ['j', 'J']],
-                ['k-k', 'K', '', 'w-1', 'finger-r-middle', ['k', 'K']],
-                ['k-l', 'L', '', 'w-1', 'finger-r-ring', ['l', 'L']],
-                ['k-cedilla', 'Ç', '', 'w-1', 'finger-r-pinky', ['ç', 'Ç']],
-                ['k-tilde', '~', '^', 'w-1', 'finger-r-pinky', ['~', '^']],
-                ['k-backslash', ']', '}', 'w-1-5', 'finger-r-pinky', [']', '}', 'º']]
+                ['k-caps', 'Caps', '', '', 'key-w-1-75', 'finger-pinkyL', ['CapsLock']],
+                ['k-a', 'A', '', '', 'key-w-1', 'finger-pinkyL', ['a', 'A']],
+                ['k-s', 'S', '', '', 'key-w-1', 'finger-ringL', ['s', 'S']],
+                ['k-d', 'D', '', '', 'key-w-1', 'finger-middleL', ['d', 'D']],
+                ['k-f', 'F', '', '', 'key-w-1', 'finger-indexL', ['f', 'F']],
+                ['k-g', 'G', '', '', 'key-w-1', 'finger-indexL', ['g', 'G']],
+                ['k-h', 'H', '', '', 'key-w-1', 'finger-indexR', ['h', 'H']],
+                ['k-j', 'J', '', '', 'key-w-1', 'finger-indexR', ['j', 'J']],
+                ['k-k', 'K', '', '', 'key-w-1', 'finger-middleR', ['k', 'K']],
+                ['k-l', 'L', '', '', 'key-w-1', 'finger-ringR', ['l', 'L']],
+                ['k-cedilla', 'Ç', '', '', 'key-w-1', 'finger-pinkyR', ['ç', 'Ç']],
+                ['k-tilde', '~', '^', '', 'key-w-1', 'finger-pinkyR', ['~', '^', 'Dead']], // Dead key
+                ['k-backslash', ']', '}', 'º', 'key-w-1-5', 'finger-pinkyR', [']', '}', 'º']]
             ],
             [
-                ['k-lshift', 'Shift', '', 'w-2-5', 'finger-l-pinky', ['ShiftLeft', 'Shift']],
-                ['k-intl', '\\', '|', 'w-1', 'finger-l-pinky', ['\\', '|']],
-                ['k-z', 'Z', '', 'w-1', 'finger-l-pinky', ['z', 'Z']],
-                ['k-x', 'X', '', 'w-1', 'finger-l-ring', ['x', 'X']],
-                ['k-c', 'C', '', 'w-1', 'finger-l-middle', ['c', 'C']],
-                ['k-v', 'V', '', 'w-1', 'finger-l-index', ['v', 'V']],
-                ['k-b', 'B', '', 'w-1', 'finger-l-index', ['b', 'B']],
-                ['k-n', 'N', '', 'w-1', 'finger-r-index', ['n', 'N']],
-                ['k-m', 'M', '', 'w-1', 'finger-r-index', ['m', 'M']],
-                ['k-comma', ',', '<', 'w-1', 'finger-r-middle', [',', '<']],
-                ['k-period', '.', '>', 'w-1', 'finger-r-ring', ['.', '>']],
-                ['k-slash', ';', ':', 'w-1', 'finger-r-pinky', [';', ':']],
-                ['k-ro', '/', '?', 'w-1', 'finger-r-pinky', ['/', '?', '°']],
-                ['k-rshift', 'Shift', '', 'w-2', 'finger-r-pinky', ['ShiftRight']]
+                ['k-lshift', 'Shift', '', '', 'key-w-1-25', 'finger-pinkyL', ['ShiftLeft']],
+                ['k-intl', '\\', '|', '', 'key-w-1', 'finger-pinkyL', ['\\', '|']],
+                ['k-z', 'Z', '', '', 'key-w-1', 'finger-pinkyL', ['z', 'Z']],
+                ['k-x', 'X', '', '', 'key-w-1', 'finger-ringL', ['x', 'X']],
+                ['k-c', 'C', '', '₢', 'key-w-1', 'finger-middleL', ['c', 'C']],
+                ['k-v', 'V', '', '', 'key-w-1', 'finger-indexL', ['v', 'V']],
+                ['k-b', 'B', '', '', 'key-w-1', 'finger-indexL', ['b', 'B']],
+                ['k-n', 'N', '', '', 'key-w-1', 'finger-indexR', ['n', 'N']],
+                ['k-m', 'M', '', '', 'key-w-1', 'finger-indexR', ['m', 'M']],
+                ['k-comma', ',', '<', '', 'key-w-1', 'finger-middleR', [',', '<']],
+                ['k-period', '.', '>', '', 'key-w-1', 'finger-ringR', ['.', '>']],
+                ['k-slash', ';', ':', '', 'key-w-1', 'finger-pinkyR', [';', ':']],
+                ['k-ro', '/', '?', '°', 'key-w-1', 'finger-pinkyR', ['/', '?', '°']],
+                ['k-rshift', 'Shift', '', '', 'key-w-2-25', 'finger-pinkyR', ['ShiftRight']]
             ],
             [
-                ['k-space', 'Espaço', '', 'w-space', 'finger-thumb', [' ', 'Space']],
-                ['k-altgr', 'Alt Gr', '', 'w-1-5', 'finger-thumb', ['AltGraph']]
+                ['k-lctrl', 'Ctrl', '', '', 'key-w-1-25', 'finger-pinkyL', ['ControlLeft']],
+                ['k-lwin', 'Win', '', '', 'key-w-1-25', 'finger-thumb', ['MetaLeft']],
+                ['k-lalt', 'Alt', '', '', 'key-w-1-25', 'finger-thumb', ['AltLeft']],
+                ['k-space', '', '', '', 'key-w-6-25', 'finger-thumb', [' ', 'Space']],
+                ['k-altgr', 'AltGr', '', '', 'key-w-1-25', 'finger-thumb', ['AltRight', 'AltGraph']],
+                ['k-rwin', 'Win', '', '', 'key-w-1-25', 'finger-thumb', ['MetaRight']],
+                ['k-menu', 'Menu', '', '', 'key-w-1-25', 'finger-thumb', ['ContextMenu']],
+                ['k-rctrl', 'Ctrl', '', '', 'key-w-1-25', 'finger-pinkyR', ['ControlRight']]
             ]
         ];
 
-        // Mapeamento de caractere para as teclas necessárias (para acender a luz)
-        // Ex: 'A' requer 'k-lshift' e 'k-a'.
-        const charToKeys = {};
+        // 2. Mapeamento Pedagógico de Caracteres -> Sequência Física Exata
+        // Formato: 'char': { keys: ['id1', 'id2'], enforceOppositeShift: true/false }
+        const CHAR_MAP = {};
         
-        function buildCharMap() {
-            // Mapeamento básico
-            abnt2Layout.forEach(row => {
-                row.forEach(keyData => {
-                    const id = keyData[0];
-                    const mainChar = keyData[1];
-                    const subChar = keyData[2];
-                    const triggers = keyData[5];
-
-                    triggers.forEach(trig => {
-                        if(trig.length === 1) {
-                            if (!charToKeys[trig]) charToKeys[trig] = [];
-                            charToKeys[trig].push(id);
-                            
-                            // Letras maiúsculas
-                            if(/[a-z]/.test(trig)) {
-                                const upper = trig.toUpperCase();
-                                charToKeys[upper] = ['k-lshift', id]; // Simplificação: sempre sugere left shift para facilitar
-                            }
+        function initializeCharMap() {
+            // Mapeia letras minúsculas e símbolos básicos
+            ABNT2_LAYOUT.forEach(row => {
+                row.forEach(key => {
+                    const [id, main, shift, altgr, w, finger] = key;
+                    const isLeftHand = ['finger-pinkyL', 'finger-ringL', 'finger-middleL', 'finger-indexL'].includes(finger);
+                    
+                    // Minúsculas/Base
+                    if (main && main.length === 1) {
+                        const low = main.toLowerCase();
+                        if(!CHAR_MAP[low]) CHAR_MAP[low] = { keys: [id], side: isLeftHand ? 'L' : 'R' };
+                        
+                        // Letras maísculas (Shift Oposto Enforced)
+                        if (/[a-z]/.test(low)) {
+                            const reqShift = isLeftHand ? 'k-rshift' : 'k-lshift';
+                            CHAR_MAP[main] = { keys: [reqShift, id], side: isLeftHand ? 'L' : 'R', shift: true };
                         }
-                    });
+                    }
+
+                    // Caracteres com Shift (Símbolos)
+                    if (shift && shift.length === 1) {
+                        const reqShift = isLeftHand ? 'k-rshift' : 'k-lshift';
+                        CHAR_MAP[shift] = { keys: [reqShift, id], side: isLeftHand ? 'L' : 'R', shift: true };
+                    }
+
+                    // Caracteres com AltGr
+                    if (altgr && altgr.length === 1) {
+                        CHAR_MAP[altgr] = { keys: ['k-altgr', id], side: isLeftHand ? 'L' : 'R', altgr: true };
+                    }
                 });
             });
 
-            // Ajustes manuais para caracteres de duas teclas ou shift/altgr específicos
-            const specials = {
-                '!': ['k-lshift', 'k-1'], '@': ['k-lshift', 'k-2'], '#': ['k-lshift', 'k-3'],
-                '$': ['k-lshift', 'k-4'], '%': ['k-lshift', 'k-5'], '¨': ['k-lshift', 'k-6'],
-                '&': ['k-lshift', 'k-7'], '*': ['k-lshift', 'k-8'], '(': ['k-lshift', 'k-9'],
-                ')': ['k-lshift', 'k-0'], '_': ['k-lshift', 'k-minus'], '+': ['k-lshift', 'k-equal'],
-                '"': ['k-lshift', 'k-apos'], '`': ['k-lshift', 'k-acute'], '{': ['k-lshift', 'k-bracket'],
-                '^': ['k-lshift', 'k-tilde'], '}': ['k-lshift', 'k-backslash'], '|': ['k-lshift', 'k-intl'],
-                '<': ['k-lshift', 'k-comma'], '>': ['k-lshift', 'k-period'], ':': ['k-lshift', 'k-slash'],
-                '?': ['k-lshift', 'k-ro'],
-                'º': ['k-altgr', 'k-backslash'], 'ª': ['k-altgr', 'k-bracket'], '°': ['k-altgr', 'k-ro'],
-                // Acentos (Simplificado para o jogo: acende o acento e a letra base, na vida real é em sequência)
+            // Adiciona Espaço e Enter
+            CHAR_MAP[' '] = { keys: ['k-space'], side: 'Thumb' };
+            CHAR_MAP['\n'] = { keys: ['k-enter'], side: 'R' };
+
+            // Trata Acentos Compositores (Sequências)
+            // No ABNT2 real, você pressiona o acento, solta, pressiona a letra.
+            // Para UI pedagógica, vamos iluminar o modificador de acento + base.
+            const accents = {
                 'á': ['k-acute', 'k-a'], 'é': ['k-acute', 'k-e'], 'í': ['k-acute', 'k-i'], 'ó': ['k-acute', 'k-o'], 'ú': ['k-acute', 'k-u'],
-                'Á': ['k-lshift', 'k-acute', 'k-a'], 'É': ['k-lshift', 'k-acute', 'k-e'],
-                'à': ['k-lshift', 'k-acute', 'k-a'], 'À': ['k-lshift', 'k-acute', 'k-a'], // Crase = Shift + ´
                 'ã': ['k-tilde', 'k-a'], 'õ': ['k-tilde', 'k-o'],
-                'Ã': ['k-lshift', 'k-tilde', 'k-a'], 'Õ': ['k-lshift', 'k-tilde', 'k-o'],
                 'â': ['k-lshift', 'k-tilde', 'k-a'], 'ê': ['k-lshift', 'k-tilde', 'k-e'], 'ô': ['k-lshift', 'k-tilde', 'k-o'],
-                'ç': ['k-cedilla'], 'Ç': ['k-lshift', 'k-cedilla']
+                'à': ['k-lshift', 'k-acute', 'k-a'], // Crase = Shift + ´, depois A
+                'Á': ['k-acute', 'k-rshift', 'k-a'], 'É': ['k-acute', 'k-lshift', 'k-e'], // Na prática: bate agudo, bate shift+letra
+                'Ã': ['k-tilde', 'k-rshift', 'k-a'], 'Õ': ['k-tilde', 'k-lshift', 'k-o']
             };
 
-            Object.assign(charToKeys, specials);
-            // Letras da direita devem usar shift esquerdo, letras da esquerda shift direito. Simplificando aqui.
-        }
-
-        // --- ESTADO DO JOGO ---
-        let currentMode = 1;
-        let isMuted = false;
-        let gameActive = false;
-        
-        let fullText = "";
-        let targetText = "";
-        let currentIndex = 0;
-        
-        let hits = 0;
-        let misses = 0;
-        let startTime = 0;
-        let timerInterval = null;
-        let timeLeft = 90; // 1m30s
-        
-        // Elementos DOM
-        const hiddenInput = document.getElementById('hidden-input');
-        const textDisplay = document.getElementById('text-display');
-        const kbContainer = document.getElementById('virtual-keyboard');
-
-        // --- SISTEMA DE ÁUDIO ---
-        let synthHit, synthMiss, bgMusic;
-        let isAudioInitialized = false;
-
-        async function initAudio() {
-            if (isAudioInitialized) return;
-            await Tone.start();
-            
-            synthHit = new Tone.PolySynth(Tone.Synth, {
-                oscillator: { type: "sine" },
-                envelope: { attack: 0.01, decay: 0.1, sustain: 0.0, release: 0.1 }
-            }).toDestination();
-            synthHit.volume.value = -15;
-
-            synthMiss = new Tone.Synth({
-                oscillator: { type: "sawtooth" },
-                envelope: { attack: 0.01, decay: 0.2, sustain: 0.0, release: 0.2 }
-            }).toDestination();
-            synthMiss.volume.value = -10;
-
-            // Música de Fundo Relaxante (Lo-Fi style chords)
-            const chords = [
-                ["C4", "E4", "G4", "B4"], 
-                ["A3", "C4", "E4", "G4"],
-                ["F3", "A3", "C4", "E4"],
-                ["G3", "B3", "D4", "F4"]
-            ];
-            
-            const synthBg = new Tone.PolySynth(Tone.Synth, {
-                oscillator: { type: "triangle" },
-                envelope: { attack: 1, decay: 1, sustain: 0.5, release: 2 }
-            }).toDestination();
-            synthBg.volume.value = -25; // Baixo volume
-
-            let step = 0;
-            bgMusic = new Tone.Loop(time => {
-                synthBg.triggerAttackRelease(chords[step % chords.length], "2n", time);
-                step++;
-            }, "1m");
-            
-            Tone.Transport.bpm.value = 80;
-            isAudioInitialized = true;
-        }
-
-        function playSound(type) {
-            if (isMuted || !isAudioInitialized) return;
-            if (type === 'hit') {
-                synthHit.triggerAttackRelease("C5", "16n");
-            } else if (type === 'miss') {
-                synthMiss.triggerAttackRelease("G2", "8n");
+            for (const [char, seq] of Object.entries(accents)) {
+                CHAR_MAP[char] = { keys: seq, isAccent: true };
             }
         }
+        initializeCharMap();
 
-        function toggleMute() {
-            isMuted = !isMuted;
-            const icon = document.getElementById('mute-icon');
-            if (isMuted) {
-                icon.classList.remove('fa-volume-up');
-                icon.classList.add('fa-volume-mute');
-                icon.classList.replace('text-white', 'text-slate-500');
-                if(bgMusic) bgMusic.stop();
-            } else {
-                icon.classList.remove('fa-volume-mute');
-                icon.classList.add('fa-volume-up');
-                icon.classList.replace('text-slate-500', 'text-white');
-                if(gameActive && bgMusic) bgMusic.start();
+        // 3. Biblioteca de Textos e Palavras
+        const WORDS_DB = {
+            base: ['fada', 'dada', 'fala', 'sala', 'casa', 'jaca', 'lata', 'mala', 'nada', 'pata', 'rato', 'vaca'],
+            mid: ['gato', 'homem', 'tecla', 'jogo', 'vida', 'novo', 'pulo', 'ruim', 'sapo', 'tatu'],
+            long: ['computador', 'teclado', 'programador', 'tecnologia', 'desenvolvimento', 'javascript'],
+            accents: ['maçã', 'café', 'avião', 'pão', 'coração', 'você', 'ótimo', 'saúde', 'fácil']
+        };
+
+        const TEXT_LIBRARY = [
+            "O aprendizado da digitação correta é um investimento para a vida toda. Quando você não precisa mais olhar para o teclado, seus pensamentos fluem diretamente para a tela do computador, aumentando enormemente a sua produtividade diária.",
+            "O lobo e o cordeiro estavam bebendo água no mesmo riacho. O lobo, querendo arrumar desculpa para devorar o cordeiro, começou a acusá-lo de sujar a água, mesmo estando rio abaixo. Moral: o tirano sempre arranja pretexto.",
+            "O Brasil é o maior país da América do Sul. Sua imensa extensão territorial abrange biomas variados como a Floresta Amazônica, o Cerrado, a Caatinga e o Pantanal. É uma nação conhecida por sua vasta biodiversidade e cultura plural.",
+            "Para se tornar um bom programador, é necessário escrever muito código. Símbolos como chaves {}, colchetes [] e barras // são comuns. A agilidade em encontrar esses caracteres especiais sem olhar para as mãos reduz a fadiga mental.",
+            "A invenção do transistor mudou o mundo. Os primeiros computadores usavam válvulas e ocupavam salas inteiras. Hoje, bilhões de transistores cabem em um chip do tamanho de uma unha, permitindo a existência dos smartphones modernos.",
+            "O sistema solar é fascinante. Júpiter é o maior planeta, composto principalmente de gases. Marte é conhecido como o planeta vermelho, e a Terra é o único lugar conhecido no universo que abriga vida. As estrelas cadentes são apenas pequenos meteoros."
+        ];
+
+        // 4. Trilha de Aprendizagem (15 Níveis)
+        const CAMPAIGN_LESSONS = [
+            { id: 1, title: 'Posição de Repouso', desc: 'Coloque os indicadores no F e J. Sinta os pequenos relevos.', type: 'chars', data: 'ff jj fj jf ffj jjf f j f j', reqWpm: 10, reqAcc: 95 },
+            { id: 2, title: 'Dedos Médios', desc: 'As teclas D e K são alcançadas pelos dedos médios.', type: 'chars', data: 'dd kk dk kd ddd kkk df jk fd kj', reqWpm: 12, reqAcc: 95 },
+            { id: 3, title: 'Anelares', desc: 'Use os dedos anelares para as teclas S e L.', type: 'chars', data: 'ss ll sl ls sss lll sdf jkl', reqWpm: 15, reqAcc: 95 },
+            { id: 4, title: 'Mindinhos Base', desc: 'As teclas A e Ç. Cuidado, o mindinho é mais fraco.', type: 'chars', data: 'aa çç aça çaa asdf jklç a ç a ç', reqWpm: 15, reqAcc: 95 },
+            { id: 5, title: 'Linha Central (Meio)', desc: 'Os indicadores alcançam o G e o H.', type: 'chars', data: 'gg hh gh hg fg jh gf hj fghj', reqWpm: 18, reqAcc: 92 },
+            { id: 6, title: 'Palavras: Linha Central', desc: 'Formando palavras apenas com a linha central.', type: 'words', data: 'fala sala laça faça gado lago halas chaga', reqWpm: 20, reqAcc: 92 },
+            { id: 7, title: 'Subindo: E e I', desc: 'Use os dedos médios para alcançar a linha superior.', type: 'chars', data: 'ee ii de ki ed ik eiei deki', reqWpm: 20, reqAcc: 92 },
+            { id: 8, title: 'Subindo: R e U', desc: 'Indicadores sobem para o R e U.', type: 'chars', data: 'rr uu fr ju rf uj furu rufu', reqWpm: 22, reqAcc: 92 },
+            { id: 9, title: 'Descendo: C e M', desc: 'Dedo médio esquerdo desce no C, indicador direito no M.', type: 'chars', data: 'cc mm dc jm cd mj moca maco', reqWpm: 22, reqAcc: 92 },
+            { id: 10, title: 'Mão Esquerda Inferior', desc: 'Mindinho no Z, anelar no X, indicador no V e B.', type: 'chars', data: 'zz xx vv bb zx vb zv bx az sx fv fb', reqWpm: 25, reqAcc: 90 },
+            { id: 11, title: 'Alfabeto Básico', desc: 'Palavras misturando todas as linhas, sem acentos.', type: 'words', data: 'carro tempo bola livro casa mundo teclado vidro pedra flor', reqWpm: 25, reqAcc: 90 },
+            { id: 12, title: 'Maiúsculas: Shift Oposto', desc: 'Use o Shift da mão OPOSTA à letra. (A -> Shift Dir).', type: 'words', data: 'Ana Brasil Carlos Daniel Fada Gato Hoje', reqWpm: 20, reqAcc: 90, strictShift: true },
+            { id: 13, title: 'Acentos Básicos (´ e ~)', desc: 'Aperte o acento com o mindinho direito, solte, aperte a vogal.', type: 'words', data: 'pão maçã avião café chulé cipó baú', reqWpm: 20, reqAcc: 90 },
+            { id: 14, title: 'Pontuação', desc: 'Ponto, vírgula, interrogação e exclamação.', type: 'words', data: 'Olá! Tudo bem? Sim, tudo. Fim.', reqWpm: 20, reqAcc: 90 },
+            { id: 15, title: 'O Mestre: Símbolos e AltGr', desc: 'Mistura completa: números, símbolos, ° e ª.', type: 'chars', data: '1º lugar! (100%) A água a 25°C. R$ 50,00.', reqWpm: 25, reqAcc: 90 }
+        ];
+
+        // 5. Gerenciamento de Estado e Usuário
+        const StorageMap = {
+            profile: 'mestreTeclado_profile',
+            audio: 'mestreTeclado_audio'
+        };
+
+        let User = {
+            xp: 0,
+            level: 1,
+            completedLessons: [],
+            heatmap: {}, // { 'a': missesCount, '´': missesCount }
+            
+            load() {
+                const saved = localStorage.getItem(StorageMap.profile);
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    this.xp = data.xp || 0;
+                    this.level = data.level || 1;
+                    this.completedLessons = data.completedLessons || [];
+                    this.heatmap = data.heatmap || {};
+                }
+                this.updateUI();
+            },
+            save() {
+                localStorage.setItem(StorageMap.profile, JSON.stringify({
+                    xp: this.xp, level: this.level, completedLessons: this.completedLessons, heatmap: this.heatmap
+                }));
+            },
+            addXP(amount) {
+                this.xp += amount;
+                const nextLevelReq = this.level * 500; // Escalada simples: lvl 2 = 500, lvl 3 = 1000
+                if (this.xp >= nextLevelReq) {
+                    this.level++;
+                    AudioEngine.playLevelUp();
+                }
+                this.save();
+                this.updateUI();
+            },
+            recordMiss(expectedChar) {
+                const keyId = (CHAR_MAP[expectedChar] && CHAR_MAP[expectedChar].keys.slice(-1)[0]) || expectedChar;
+                this.heatmap[keyId] = (this.heatmap[keyId] || 0) + 1;
+            },
+            updateUI() {
+                document.getElementById('hdr-lvl').innerText = this.level;
+                const nextLevelReq = this.level * 500;
+                const prevLevelReq = (this.level - 1) * 500;
+                const progress = ((this.xp - prevLevelReq) / (nextLevelReq - prevLevelReq)) * 100;
+                document.getElementById('hdr-xp-bar').style.width = `${Math.min(100, Math.max(0, progress))}%`;
             }
-        }
+        };
 
-        function renderKeyboard() {
-            kbContainer.innerHTML = '';
-            abnt2Layout.forEach(row => {
-                const rowDiv = document.createElement('div');
-                rowDiv.className = 'keyboard-row';
-                row.forEach(keyData => {
-                    const [id, main, sub, wClass, fClass] = keyData;
-                    const btn = document.createElement('div');
-                    btn.id = id;
-                    btn.className = `key ${wClass} ${fClass}`;
+        // 6. Motor de Áudio
+        const AudioEngine = {
+            initialized: false,
+            muted: false,
+            synthHit: null,
+            synthMiss: null,
+            synthLvl: null,
+            bgm: null,
+
+            async init() {
+                if (this.initialized) return;
+                await Tone.start();
+                
+                // Synth para acertos (Curto, estilo 'click' mecânico ou gota)
+                this.synthHit = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: "triangle" },
+                    envelope: { attack: 0.005, decay: 0.1, sustain: 0, release: 0.1 }
+                }).toDestination();
+                this.synthHit.volume.value = -12;
+
+                // Synth para erros (Buzz áspero)
+                this.synthMiss = new Tone.Synth({
+                    oscillator: { type: "sawtooth" },
+                    envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 }
+                }).toDestination();
+                this.synthMiss.volume.value = -10;
+
+                // Synth Level Up
+                this.synthLvl = new Tone.PolySynth(Tone.Synth).toDestination();
+                this.synthLvl.volume.value = -8;
+
+                // BGM Chords Lo-fi
+                const bgmSynth = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: "sine" },
+                    envelope: { attack: 2, decay: 1, sustain: 0.8, release: 3 }
+                }).toDestination();
+                bgmSynth.volume.value = -25;
+
+                const chords = [["C4", "E4", "G4", "B4"], ["A3", "C4", "E4", "G4"], ["F3", "A3", "C4", "E4"]];
+                let step = 0;
+                this.bgm = new Tone.Loop(time => {
+                    bgmSynth.triggerAttackRelease(chords[step % chords.length], "2n", time);
+                    step++;
+                }, "1m");
+                Tone.Transport.bpm.value = 75;
+
+                // Load Settings
+                this.muted = localStorage.getItem(StorageMap.audio) === 'true';
+                this.updateBtnUI();
+
+                this.initialized = true;
+            },
+            playHit() { if (!this.muted && this.initialized) this.synthHit.triggerAttackRelease("E5", "32n"); },
+            playMiss() { if (!this.muted && this.initialized) this.synthMiss.triggerAttackRelease("G2", "8n"); },
+            playLevelUp() { 
+                if (!this.muted && this.initialized) {
+                    const now = Tone.now();
+                    this.synthLvl.triggerAttackRelease(["C4", "E4", "G4"], "8n", now);
+                    this.synthLvl.triggerAttackRelease(["E4", "G4", "C5"], "4n", now + 0.2);
+                }
+            },
+            startBGM() { if (!this.muted && this.initialized) { Tone.Transport.start(); this.bgm.start(0); } },
+            stopBGM() { if (this.initialized) { this.bgm.stop(); Tone.Transport.stop(); } },
+            toggleMute() {
+                this.muted = !this.muted;
+                localStorage.setItem(StorageMap.audio, this.muted);
+                this.updateBtnUI();
+                if(this.muted) this.stopBGM();
+                else if(Engine.active) this.startBGM();
+            },
+            updateBtnUI() {
+                const icon = document.getElementById('icon-audio');
+                icon.className = this.muted ? 'fa-solid fa-volume-xmark text-slate-500' : 'fa-solid fa-volume-up text-blue-400';
+            }
+        };
+
+        // 7. Sistema de Interface de Usuário
+        const UI = {
+            screens: ['menu', 'campaign', 'game', 'result'],
+            
+            showScreen(id) {
+                this.screens.forEach(s => document.getElementById(`screen-${s}`).classList.add('hidden-screen'));
+                document.getElementById(`screen-${id}`).classList.remove('hidden-screen');
+                
+                if (id === 'campaign') this.renderCampaignMap();
+                if (id !== 'game') {
+                    Engine.active = false;
+                    AudioEngine.stopBGM();
+                }
+            },
+
+            buildKeyboard() {
+                const container = document.getElementById('virtual-keyboard');
+                container.innerHTML = '';
+                
+                ABNT2_LAYOUT.forEach(row => {
+                    const rowDiv = document.createElement('div');
+                    rowDiv.className = 'kb-row';
+                    row.forEach(key => {
+                        const [id, main, shift, altgr, wClass, fingerClass] = key;
+                        const btn = document.createElement('div');
+                        btn.id = id;
+                        btn.className = `kb-key ${wClass} ${fingerClass}`;
+                        
+                        // F e J ganham marcador táctil
+                        if (id === 'k-f' || id === 'k-j') btn.classList.add('homing-bump');
+
+                        if (!shift && !altgr) {
+                            btn.classList.add('center-label');
+                            btn.innerHTML = `<span class="main">${main}</span>`;
+                        } else {
+                            btn.innerHTML = `
+                                ${shift ? `<span class="sub">${shift}</span>` : ''}
+                                ${altgr ? `<span class="alt">${altgr}</span>` : ''}
+                                <span class="main">${main}</span>
+                            `;
+                        }
+                        rowDiv.appendChild(btn);
+                    });
+                    container.appendChild(rowDiv);
+                });
+            },
+
+            renderCampaignMap() {
+                const grid = document.getElementById('lessons-grid');
+                grid.innerHTML = '';
+                
+                let completedCount = 0;
+
+                CAMPAIGN_LESSONS.forEach((lesson, index) => {
+                    const isCompleted = User.completedLessons.includes(lesson.id);
+                    const isLocked = index > 0 && !User.completedLessons.includes(CAMPAIGN_LESSONS[index-1].id);
+                    if (isCompleted) completedCount++;
+
+                    const card = document.createElement('div');
+                    card.className = `p-5 rounded-xl border transition-all ${isLocked ? 'bg-slate-800/30 border-slate-800 opacity-50 cursor-not-allowed' : isCompleted ? 'bg-emerald-900/20 border-emerald-700/50 hover:bg-emerald-900/40 cursor-pointer' : 'glass-panel border-blue-500/50 hover:border-blue-400 cursor-pointer hover:-translate-y-1'}`;
                     
-                    if (sub) {
-                        btn.innerHTML = `<span class="sub">${sub}</span><span>${main}</span>`;
+                    const icon = isLocked ? '<i class="fa-solid fa-lock text-slate-600"></i>' : 
+                                 isCompleted ? '<i class="fa-solid fa-check-circle text-emerald-400"></i>' : 
+                                 '<i class="fa-solid fa-play-circle text-blue-400"></i>';
+
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-xs font-mono font-bold text-slate-500">Lição ${lesson.id}</span>
+                            ${icon}
+                        </div>
+                        <h4 class="font-bold text-white mb-1 ${isLocked ? 'text-slate-500' : ''}">${lesson.title}</h4>
+                        <p class="text-xs text-slate-400 leading-snug">${lesson.desc}</p>
+                    `;
+
+                    if (!isLocked) {
+                        card.onclick = () => Game.startMode('campaign', lesson.id);
+                    }
+                    grid.appendChild(card);
+                });
+
+                const pct = Math.round((completedCount / CAMPAIGN_LESSONS.length) * 100);
+                document.getElementById('camp-progress-text').innerText = `${pct}%`;
+            },
+
+            highlightPhysicalKeys(charExpected) {
+                // Remove destaques anteriores
+                document.querySelectorAll('.kb-key').forEach(el => {
+                    el.classList.remove('target', 'modifier-target');
+                });
+                document.getElementById('guide-left').classList.remove('text-blue-400', 'font-bold');
+                document.getElementById('guide-right').classList.remove('text-blue-400', 'font-bold');
+
+                if(!charExpected) return;
+
+                const mapInfo = CHAR_MAP[charExpected];
+                if (!mapInfo) return; // Caractere não mapeado
+
+                mapInfo.keys.forEach((keyId, idx) => {
+                    const el = document.getElementById(keyId);
+                    if (el) {
+                        el.classList.add('target');
+                        // Se for um shift/altgr/acento, pisca como modifier
+                        if (mapInfo.keys.length > 1 && idx < mapInfo.keys.length - 1) {
+                            el.classList.add('modifier-target');
+                        }
+                    }
+                });
+
+                // Destaca a mão
+                if(mapInfo.side === 'L') document.getElementById('guide-left').classList.add('text-blue-400', 'font-bold');
+                else if(mapInfo.side === 'R') document.getElementById('guide-right').classList.add('text-blue-400', 'font-bold');
+            },
+
+            showWarning(msg) {
+                const w = document.getElementById('game-warning');
+                w.innerText = msg;
+                w.classList.remove('opacity-0');
+                w.classList.add('opacity-100');
+                setTimeout(() => w.classList.replace('opacity-100', 'opacity-0'), 2000);
+            }
+        };
+
+        // 8. Motor Principal de Digitação
+        const Engine = {
+            active: false,
+            mode: null,
+            targetText: "",
+            currentIndex: 0,
+            
+            hits: 0,
+            misses: 0,
+            sessionMisses: {}, // Para o heatmap atual
+            
+            startTime: 0,
+            timerInterval: null,
+            timeLeft: 0,
+            lessonData: null,
+            
+            // Estado físico do teclado (Para checar regras estritas como Shift oposto)
+            keysHeld: new Set(),
+
+            initEvents() {
+                const input = document.getElementById('core-input');
+                const display = document.getElementById('text-display');
+                const msg = document.getElementById('focus-lost-msg');
+
+                // Garante que o input escondido mantenha o foco
+                document.addEventListener('click', (e) => {
+                    if (this.active && e.target.closest('#screen-game')) {
+                        input.focus();
+                        msg.classList.add('hidden');
+                    }
+                });
+
+                input.addEventListener('blur', () => {
+                    if (this.active) msg.classList.remove('hidden');
+                });
+
+                // Tratamento Físico Visual (keydown/keyup)
+                document.addEventListener('keydown', (e) => {
+                    if(!this.active) return;
+                    this.keysHeld.add(e.code);
+                    
+                    // Impedir atalhos que atrapalham o jogo (Exceto F5/DevTools)
+                    if (e.key === 'Tab' || e.code === 'Space') e.preventDefault();
+
+                    // Identifica visualmente a tecla pressionada baseada no ABNT2 físico
+                    let visualId = null;
+                    if (e.code === 'Space') visualId = 'k-space';
+                    else if (e.code === 'Backspace') visualId = 'k-backspace';
+                    else if (e.code === 'Enter') visualId = 'k-enter';
+                    else if (e.code === 'ShiftLeft') visualId = 'k-lshift';
+                    else if (e.code === 'ShiftRight') visualId = 'k-rshift';
+                    else if (e.code === 'AltRight' || e.key === 'AltGraph') visualId = 'k-altgr';
+                    else if (e.code === 'ControlLeft') visualId = 'k-lctrl';
+                    else if (e.code === 'ControlRight') visualId = 'k-rctrl';
+                    else {
+                        // Letras normais, busca pelo charMap base
+                        const mapInfo = CHAR_MAP[e.key.toLowerCase()];
+                        if (mapInfo && mapInfo.keys.length > 0) {
+                            visualId = mapInfo.keys.slice(-1)[0]; // Pega o último (a tecla física base)
+                        } else if (e.key === 'Dead') {
+                            // Se for dead key, verificamos o que era esperado para iluminar
+                            const exp = this.targetText[this.currentIndex];
+                            if (exp && CHAR_MAP[exp] && CHAR_MAP[exp].isAccent) {
+                                visualId = CHAR_MAP[exp].keys[0]; // ex: k-acute
+                            }
+                        }
+                    }
+
+                    if (visualId) {
+                        const el = document.getElementById(visualId);
+                        if(el) el.classList.add('pressed');
+                    }
+                });
+
+                document.addEventListener('keyup', (e) => {
+                    this.keysHeld.delete(e.code);
+                    document.querySelectorAll('.kb-key.pressed').forEach(el => el.classList.remove('pressed'));
+                });
+
+                // Tratamento Lógico de Caracteres (input event, resolve OS composition/dead keys)
+                input.addEventListener('input', (e) => {
+                    if (!this.active) return;
+                    
+                    // Evita colagem
+                    if (e.inputType === 'insertFromPaste') {
+                        input.value = '';
+                        UI.showWarning("Sem colar! Digite você mesmo.");
+                        return;
+                    }
+
+                    const val = input.value;
+                    if (val.length === 0) return;
+                    
+                    const charTyped = val.slice(-1);
+                    input.value = ''; // Reseta imediatamente
+                    
+                    this.processChar(charTyped);
+                });
+            },
+
+            processChar(charTyped) {
+                const charExpected = this.targetText[this.currentIndex];
+
+                // Checagem Rigorosa de Shift Oposto (se configurado na lição)
+                let shiftViolation = false;
+                if (this.lessonData && this.lessonData.strictShift && CHAR_MAP[charExpected] && CHAR_MAP[charExpected].shift) {
+                    const reqShift = CHAR_MAP[charExpected].keys[0]; // k-lshift ou k-rshift
+                    const usedLeft = this.keysHeld.has('ShiftLeft');
+                    const usedRight = this.keysHeld.has('ShiftRight');
+                    
+                    if (reqShift === 'k-rshift' && !usedRight && usedLeft) shiftViolation = true;
+                    if (reqShift === 'k-lshift' && !usedLeft && usedRight) shiftViolation = true;
+                }
+
+                if (charTyped === charExpected && !shiftViolation) {
+                    // ACERTO
+                    AudioEngine.playHit();
+                    this.hits++;
+                    this.currentIndex++;
+                    this.updateUI();
+                    
+                    if (this.currentIndex >= this.targetText.length) {
+                        Game.endSession();
                     } else {
-                        btn.innerHTML = `<span>${main}</span>`;
+                        UI.highlightPhysicalKeys(this.targetText[this.currentIndex]);
                     }
-                    rowDiv.appendChild(btn);
-                });
-                kbContainer.appendChild(rowDiv);
-            });
-        }
-
-        function highlightKeyForChar(char) {
-            // Resetar destaques anteriores
-            document.querySelectorAll('.key.target').forEach(el => el.classList.remove('target'));
-            
-            if (!char) return;
-
-            let keysToHighlight = charToKeys[char];
-            // Fallback para espaço
-            if (char === ' ') keysToHighlight = ['k-space'];
-            // Se houver quebra de linha
-            if (char === '\n') keysToHighlight = ['k-enter'];
-
-            if (keysToHighlight) {
-                keysToHighlight.forEach(kId => {
-                    const el = document.getElementById(kId);
-                    if (el) el.classList.add('target');
-                });
-            }
-        }
-
-        // Simulação de pressionamento visual ao digitar qualquer coisa no teclado físico
-        document.addEventListener('keydown', (e) => {
-            if(!gameActive) return;
-            // Mapeando evento para o id visual. Usamos key ou code
-            let visualId = null;
-            if(e.code === 'Space') visualId = 'k-space';
-            else if(e.code === 'Backspace') visualId = 'k-backspace';
-            else if(e.code === 'Enter') visualId = 'k-enter';
-            else if(e.key === 'Shift') visualId = e.code === 'ShiftRight' ? 'k-rshift' : 'k-lshift';
-            else if(e.key === 'AltGraph') visualId = 'k-altgr';
-            else if(e.code === 'CapsLock') visualId = 'k-caps';
-            else {
-                // Tenta achar pelo char base minúsculo
-                const k = e.key.toLowerCase();
-                const mapKey = charToKeys[k];
-                if(mapKey && mapKey.length === 1) visualId = mapKey[0];
-            }
-            
-            if(visualId) {
-                const el = document.getElementById(visualId);
-                if(el) el.classList.add('pressed');
-            }
-            
-            hiddenInput.focus();
-        });
-
-        document.addEventListener('keyup', (e) => {
-            document.querySelectorAll('.key.pressed').forEach(el => el.classList.remove('pressed'));
-        });
-
-        function showMenu() {
-            document.getElementById('screen-result').classList.add('hidden');
-            document.getElementById('screen-game').classList.add('hidden');
-            document.getElementById('screen-menu').classList.remove('hidden');
-            if(bgMusic) bgMusic.stop();
-            Tone.Transport.stop();
-            gameActive = false;
-        }
-
-        async function startGame(mode) {
-            await initAudio();
-            currentMode = mode;
-            hits = 0;
-            misses = 0;
-            currentIndex = 0;
-            updateHUD();
-
-            // Configuração dos Textos com base no Modo
-            if (mode === 1) {
-                // Modo 1: 1m30s de palavras aleatórias
-                timeLeft = 90;
-                let words = [];
-                for(let i=0; i<100; i++) {
-                    words.push(textsMode1[Math.floor(Math.random() * textsMode1.length)]);
-                }
-                fullText = words.join(" ");
-                document.getElementById('hud-time').parentElement.classList.remove('hidden');
-            } else if (mode === 2) {
-                // Modo 2: Texto Completo (Aleatório), tempo infinito
-                timeLeft = 0; 
-                fullText = textsMode2[Math.floor(Math.random() * textsMode2.length)];
-                document.getElementById('hud-time').parentElement.classList.add('hidden');
-            } else if (mode === 3) {
-                // Modo 3: Acentos e Especiais
-                timeLeft = 0;
-                fullText = textsMode3[Math.floor(Math.random() * textsMode3.length)];
-                document.getElementById('hud-time').parentElement.classList.add('hidden');
-            }
-
-            targetText = fullText;
-            renderText();
-            renderKeyboard();
-            highlightKeyForChar(targetText[0]);
-            
-            document.getElementById('screen-menu').classList.add('hidden');
-            document.getElementById('screen-game').classList.remove('hidden');
-            
-            hiddenInput.value = '';
-            hiddenInput.focus();
-            
-            startTime = Date.now();
-            gameActive = true;
-            
-            if (!isMuted && isAudioInitialized) {
-                Tone.Transport.start();
-                bgMusic.start(0);
-            }
-
-            if(timerInterval) clearInterval(timerInterval);
-            timerInterval = setInterval(gameLoop, 1000);
-        }
-
-        function gameLoop() {
-            if (!gameActive) return;
-
-            // Atualiza Tempo (Modo 1)
-            if (currentMode === 1) {
-                timeLeft--;
-                const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-                const s = (timeLeft % 60).toString().padStart(2, '0');
-                document.getElementById('hud-time').innerText = `${m}:${s}`;
-                
-                if (timeLeft <= 0) endGame();
-            }
-
-            // Atualiza PPM (Palavras por Minuto: total de caracteres digitados / 5 / minutos passados)
-            const minutesPassed = (Date.now() - startTime) / 60000;
-            if (minutesPassed > 0) {
-                const wpm = Math.round((currentIndex / 5) / minutesPassed);
-                document.getElementById('hud-wpm').innerText = wpm;
-            }
-        }
-
-        function focusInput() {
-            hiddenInput.focus();
-        }
-
-        // Monitorando o input do campo oculto
-        hiddenInput.addEventListener('input', (e) => {
-            if (!gameActive) return;
-
-            const typed = hiddenInput.value;
-            if (typed.length === 0) return;
-
-            const charTyped = typed[typed.length - 1]; // Pegar o último caracter digitado
-            const charExpected = targetText[currentIndex];
-
-            // Limpar input para não encher memória ou bugar
-            hiddenInput.value = '';
-
-            if (charTyped === charExpected) {
-                // Acerto
-                playSound('hit');
-                hits++;
-                currentIndex++;
-                updateHUD();
-                renderText();
-                
-                if (currentIndex >= targetText.length) {
-                    endGame();
                 } else {
-                    highlightKeyForChar(targetText[currentIndex]);
-                }
-            } else {
-                // Erro (Ignoramos teclas de navegação ou controle no campo text)
-                // Checa se o caracter digitado não é nulo/controle
-                if(charTyped.trim() !== '' || charExpected === ' ' || charExpected === '\n') {
-                    playSound('miss');
-                    misses++;
-                    updateHUD();
-                    // Piscar o cursor em vermelho
-                    const activeSpan = document.getElementById('char-' + currentIndex);
-                    if(activeSpan) {
-                        activeSpan.classList.add('wrong');
-                        setTimeout(() => activeSpan.classList.remove('wrong'), 200);
+                    // ERRO
+                    AudioEngine.playMiss();
+                    if (charTyped.trim() !== '' || charExpected === ' ' || charExpected === '\n') {
+                        this.misses++;
+                        User.recordMiss(charExpected);
+                        this.sessionMisses[charExpected] = (this.sessionMisses[charExpected] || 0) + 1;
+                        this.updateUI();
+                        
+                        if(shiftViolation) {
+                            UI.showWarning("Ops! Use o Shift da MÃO OPOSTA.");
+                        }
+
+                        // Animação de erro na tela
+                        const spanEl = document.getElementById(`char-${this.currentIndex}`);
+                        if (spanEl) {
+                            spanEl.classList.add('wrong', 'shake-animation');
+                            setTimeout(() => spanEl.classList.remove('wrong', 'shake-animation'), 200);
+                        }
                     }
                 }
+            },
+
+            focusInput() {
+                document.getElementById('core-input').focus();
+            },
+
+            updateUI() {
+                document.getElementById('hud-misses').innerText = this.misses;
+                
+                const minPassed = (Date.now() - this.startTime) / 60000;
+                // Gross WPM: (Total Keystrokes / 5) / Min
+                // Net WPM: ( (Gross WPM) - (Uncorrected Errors / Min) )
+                let netWpm = 0;
+                if (minPassed > 0) {
+                    const grossWpm = (this.hits / 5) / minPassed;
+                    const errPerMin = this.misses / minPassed;
+                    netWpm = Math.max(0, Math.round(grossWpm - errPerMin));
+                }
+                document.getElementById('hud-wpm').innerText = netWpm;
+
+                const totalAttempts = this.hits + this.misses;
+                const acc = totalAttempts > 0 ? Math.round((this.hits / totalAttempts) * 100) : 100;
+                document.getElementById('hud-acc').innerText = `${acc}%`;
+
+                // Renderiza janela deslizante do texto (performance otimizada)
+                const display = document.getElementById('text-display');
+                const winSize = 60;
+                const start = Math.max(0, this.currentIndex - 15);
+                const end = Math.min(this.targetText.length, start + winSize);
+
+                let html = '';
+                if (start > 0) html += `<span class="opacity-30">...</span>`;
+
+                for (let i = start; i < end; i++) {
+                    const c = this.targetText[i];
+                    let cls = 'char';
+                    if (i < this.currentIndex) cls += ' correct';
+                    else if (i === this.currentIndex) cls += ' active';
+
+                    let d = c;
+                    if (c === '\n') d = '↵<br>';
+                    html += `<span id="char-${i}" class="${cls}">${d}</span>`;
+                }
+
+                if (end < this.targetText.length) html += `<span class="opacity-30">...</span>`;
+                display.innerHTML = html;
             }
-        });
+        };
 
-        // Previne perder foco no jogo se pressionar teclas como tab, etc
-        document.addEventListener('keydown', (e) => {
-            if(gameActive && e.key === 'Tab') e.preventDefault();
-        });
+        // 9. Fluxo Principal do Jogo
+        const Game = {
+            async startMode(mode, lessonId = null) {
+                await AudioEngine.init();
+                User.load();
 
-        function renderText() {
-            // Otimização: Só renderizamos uma janela de texto para não sobrecarregar o DOM
-            const windowSize = 50;
-            const start = Math.max(0, currentIndex - 20);
-            const end = Math.min(targetText.length, start + windowSize);
-
-            let html = '';
-            if (start > 0) html += `<span class="char opacity-30">...</span>`;
-
-            for (let i = start; i < end; i++) {
-                const char = targetText[i];
-                let cssClass = 'char';
+                Engine.mode = mode;
+                Engine.hits = 0;
+                Engine.misses = 0;
+                Engine.currentIndex = 0;
+                Engine.sessionMisses = {};
+                Engine.lessonData = null;
                 
-                if (i < currentIndex) cssClass += ' correct';
-                else if (i === currentIndex) cssClass += ' active';
+                let title = "";
+                let sub = "";
+
+                if (mode === 'campaign') {
+                    const lesson = CAMPAIGN_LESSONS.find(l => l.id === lessonId);
+                    Engine.lessonData = lesson;
+                    Engine.targetText = lesson.data;
+                    Engine.timeLeft = 0;
+                    title = `Lição ${lesson.id}`;
+                    sub = lesson.title;
+                    document.getElementById('hud-timer-container').classList.add('hidden');
+                } 
+                else if (mode === 'speed') {
+                    // Gera 150 palavras aleatórias da DB base e mid
+                    let txt = [];
+                    const pool = [...WORDS_DB.base, ...WORDS_DB.mid, ...WORDS_DB.long];
+                    for(let i=0; i<150; i++) txt.push(pool[Math.floor(Math.random() * pool.length)]);
+                    Engine.targetText = txt.join(' ');
+                    Engine.timeLeft = 90;
+                    title = "Corrida contra o Tempo";
+                    sub = "90 segundos. Acelere!";
+                    document.getElementById('hud-timer-container').classList.remove('hidden');
+                }
+                else if (mode === 'texts') {
+                    // Pick random text but try to avoid the very last one played if possible
+                    Engine.targetText = TEXT_LIBRARY[Math.floor(Math.random() * TEXT_LIBRARY.length)];
+                    Engine.timeLeft = 0;
+                    title = "Texto Completo";
+                    sub = "Resistência e Precisão";
+                    document.getElementById('hud-timer-container').classList.add('hidden');
+                }
+
+                document.getElementById('hud-title').innerText = title;
+                document.getElementById('hud-subtitle').innerText = sub;
+
+                UI.showScreen('game');
+                UI.buildKeyboard();
+                UI.highlightPhysicalKeys(Engine.targetText[0]);
+                Engine.updateUI();
                 
-                let displayChar = char;
-                if (char === '\n') displayChar = '↵<br>';
+                const input = document.getElementById('core-input');
+                input.value = '';
+                input.focus();
+
+                Engine.startTime = Date.now();
+                Engine.active = true;
+                AudioEngine.startBGM();
+
+                if(Engine.timerInterval) clearInterval(Engine.timerInterval);
+                Engine.timerInterval = setInterval(() => this.tick(), 1000);
+            },
+
+            tick() {
+                if(!Engine.active) return;
                 
-                html += `<span id="char-${i}" class="${cssClass}">${displayChar}</span>`;
+                if(Engine.mode === 'speed') {
+                    Engine.timeLeft--;
+                    const m = Math.floor(Engine.timeLeft / 60).toString().padStart(2, '0');
+                    const s = (Engine.timeLeft % 60).toString().padStart(2, '0');
+                    document.getElementById('hud-time').innerText = `${m}:${s}`;
+                    
+                    if(Engine.timeLeft <= 0) this.endSession();
+                } else {
+                    // Update tempo corrido para HUD
+                    const passed = Math.floor((Date.now() - Engine.startTime) / 1000);
+                    const m = Math.floor(passed / 60).toString().padStart(2, '0');
+                    const s = (passed % 60).toString().padStart(2, '0');
+                    document.getElementById('hud-time').innerText = `${m}:${s}`;
+                }
+                // Garante que WPM atualize a cada segundo
+                Engine.updateUI();
+            },
+
+            endSession() {
+                Engine.active = false;
+                clearInterval(Engine.timerInterval);
+                AudioEngine.stopBGM();
+
+                const minPassed = (Date.now() - Engine.startTime) / 60000;
+                let finalWpm = 0;
+                if(minPassed > 0) {
+                    const gwpm = (Engine.hits / 5) / minPassed;
+                    finalWpm = Math.max(0, Math.round(gwpm - (Engine.misses / minPassed)));
+                }
+
+                const totalAtt = Engine.hits + Engine.misses;
+                const acc = totalAtt > 0 ? Math.round((Engine.hits / totalAtt) * 100) : 0;
+
+                // Análise e Recompensa
+                let xpGained = Math.round(Engine.hits * 0.5); // Base XP
+                
+                // Determina Rank
+                let rank = 'C';
+                let rColor = 'from-red-400 to-red-600';
+                let msg = "Precisamos praticar mais a precisão. Foco nas teclas corretas!";
+
+                if (acc >= 98 && finalWpm >= 40) { rank = 'S'; rColor = 'from-yellow-300 to-yellow-600'; xpGained *= 2; msg = "Desempenho Impecável! Você domina o teclado."; }
+                else if (acc >= 95 && finalWpm >= 25) { rank = 'A'; rColor = 'from-emerald-300 to-emerald-600'; xpGained = Math.round(xpGained * 1.5); msg = "Excelente! Mantenha a precisão e aumente a velocidade gradualmente."; }
+                else if (acc >= 90) { rank = 'B'; rColor = 'from-blue-300 to-blue-600'; msg = "Bom trabalho. Tente não olhar para as mãos."; }
+
+                // Verifica condições de vitória na Campanha
+                if (Engine.mode === 'campaign' && Engine.lessonData) {
+                    const reqAcc = Engine.lessonData.reqAcc;
+                    const reqWpm = Engine.lessonData.reqWpm;
+                    if (acc >= reqAcc && finalWpm >= reqWpm) {
+                        if (!User.completedLessons.includes(Engine.lessonData.id)) {
+                            User.completedLessons.push(Engine.lessonData.id);
+                            xpGained += 200; // Bônus por primeira conclusão
+                        }
+                        msg = `Lição ${Engine.lessonData.id} Concluída! Você atingiu os requisitos.`;
+                        document.getElementById('btn-next-action').innerText = "Próxima Lição";
+                        document.getElementById('btn-next-action').onclick = () => {
+                            if(Engine.lessonData.id < CAMPAIGN_LESSONS.length) Game.startMode('campaign', Engine.lessonData.id + 1);
+                            else UI.showScreen('campaign');
+                        };
+                    } else {
+                        msg = `Quase! Para passar, você precisa de ${reqAcc}% de precisão e ${reqWpm} PPM.`;
+                        document.getElementById('btn-next-action').innerText = "Repetir Lição";
+                        document.getElementById('btn-next-action').onclick = () => Game.startMode('campaign', Engine.lessonData.id);
+                        rank = '-'; rColor = 'from-slate-400 to-slate-600';
+                        xpGained = Math.round(xpGained * 0.2); // Reduz XP se falhar
+                    }
+                } else {
+                    document.getElementById('btn-next-action').innerText = "Jogar Novamente";
+                    document.getElementById('btn-next-action').onclick = () => Game.startMode(Engine.mode);
+                }
+
+                User.addXP(xpGained);
+
+                // Prepara Tela de Resultados
+                document.getElementById('res-wpm').innerText = finalWpm;
+                document.getElementById('res-acc').innerText = acc;
+                document.getElementById('res-hits').innerText = Engine.hits;
+                document.getElementById('res-misses').innerText = Engine.misses;
+                
+                const rEl = document.getElementById('res-rank');
+                rEl.innerText = rank;
+                rEl.className = `relative z-10 text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b ${rColor}`;
+                
+                document.getElementById('res-xp-gained').innerText = `+${xpGained}`;
+                document.getElementById('res-xp-total').innerText = `Total: ${User.xp} XP`;
+                document.getElementById('res-recommendation').innerText = msg;
+
+                // Prepara Heatmap Local
+                const hmList = document.getElementById('res-heatmap-list');
+                hmList.innerHTML = '';
+                const sortedMisses = Object.entries(Engine.sessionMisses).sort((a,b) => b[1] - a[1]).slice(0, 5);
+                
+                if (sortedMisses.length === 0) {
+                    hmList.innerHTML = '<span class="text-emerald-400 text-sm">Nenhum erro registrado! Perfeito!</span>';
+                } else {
+                    sortedMisses.forEach(([char, count]) => {
+                        const dispChar = char === ' ' ? 'Espaço' : char;
+                        hmList.innerHTML += `<span class="bg-red-900/40 text-red-300 px-3 py-1 rounded font-mono border border-red-800 text-sm">${dispChar} (${count} erros)</span>`;
+                    });
+                }
+
+                UI.showScreen('result');
+            },
+
+            retryOrNext() {
+                // Handled via dynamic onclick binding in endSession
             }
-            
-            if (end < targetText.length) html += `<span class="char opacity-30">...</span>`;
+        };
 
-            textDisplay.innerHTML = html;
-        }
-
-        function updateHUD() {
-            document.getElementById('hud-hits').innerText = hits;
-            document.getElementById('hud-misses').innerText = misses;
-        }
-
-        function endGame() {
-            gameActive = false;
-            clearInterval(timerInterval);
-            if(bgMusic) bgMusic.stop();
-            Tone.Transport.stop();
-
-            document.getElementById('screen-game').classList.add('hidden');
-            
-            const minutesPassed = (Date.now() - startTime) / 60000;
-            const finalWpm = minutesPassed > 0 ? Math.round((currentIndex / 5) / minutesPassed) : 0;
-            const total = hits + misses;
-            const accuracy = total > 0 ? Math.round((hits / total) * 100) : 0;
-
-            document.getElementById('res-wpm').innerText = finalWpm;
-            document.getElementById('res-acc').innerText = accuracy;
-            document.getElementById('res-hits').innerText = hits;
-            document.getElementById('res-misses').innerText = misses;
-
-            // Sistema de Rank
-            let rank = 'C';
-            let color = 'from-red-400 to-red-600';
-            
-            if (accuracy >= 98 && finalWpm >= 50) { rank = 'S'; color = 'from-yellow-300 to-yellow-600'; }
-            else if (accuracy >= 95 && finalWpm >= 35) { rank = 'A'; color = 'from-emerald-300 to-emerald-600'; }
-            else if (accuracy >= 90 && finalWpm >= 20) { rank = 'B'; color = 'from-blue-300 to-blue-600'; }
-            
-            const rankEl = document.getElementById('res-rank');
-            rankEl.innerText = rank;
-            rankEl.className = `text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r ${color} drop-shadow-lg mb-2`;
-
-            document.getElementById('screen-result').classList.remove('hidden');
-            document.getElementById('screen-result').classList.add('fade-in');
-        }
-
-        // Inicialização global
-        buildCharMap();
-
-        // Estilos extra para fade-in
-        const extraStyle = document.createElement('style');
-        extraStyle.innerHTML = `
-            .fade-in { animation: fadeIn 0.5s ease-out forwards; }
-            @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        `;
-        document.head.appendChild(extraStyle);
+        // Inicialização Principal
+        window.onload = () => {
+            User.load();
+            Engine.initEvents();
+        };
 
     </script>
 </body>

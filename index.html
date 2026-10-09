@@ -1,50 +1,35 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="dark">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mestre do Teclado - Tutor ABNT2</title>
-    
-    <!-- Tailwind CSS -->
+    <title>Mestre do Teclado - ABNT2 Pro</title>
+    <!-- Tailwind CSS para estruturação e responsividade -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace'],
-                    },
-                    colors: {
-                        // Cores Pedagógicas para os Dedos
-                        pinkyL: '#f472b6',   // Rosa (Mindinho Esq)
-                        ringL: '#fcd34d',    // Amarelo (Anelar Esq)
-                        middleL: '#4ade80',  // Verde (Médio Esq)
-                        indexL: '#60a5fa',   // Azul (Indicador Esq)
-                        indexR: '#a78bfa',   // Roxo (Indicador Dir)
-                        middleR: '#fb7185',  // Vermelho/Rosa escuro (Médio Dir)
-                        ringR: '#fb923c',    // Laranja (Anelar Dir)
-                        pinkyR: '#22d3ee',   // Ciano (Mindinho Dir)
-                        thumb: '#cbd5e1'     // Cinza (Polegares)
-                    }
-                }
-            }
-        }
-    </script>
-
-    <!-- FontAwesome -->
+    <!-- FontAwesome para ícones -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Tone.js -->
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Tone.js para sintetizadores de áudio de alta performance -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-
     <style>
+        /* Estilos base e variáveis globais */
+        :root {
+            --bg-color: #0f172a;
+            --key-bg: #1e293b;
+            --key-border: #334155;
+            --key-text: #cbd5e1;
+            --primary: #3b82f6;
+            --correct: #10b981;
+            --wrong: #ef4444;
+            --technique-error: #eab308;
+            --accent: #8b5cf6;
+        }
+
         body {
-            background-color: #0f172a;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
             color: #f8fafc;
             overflow-x: hidden;
             display: flex;
@@ -52,1247 +37,1491 @@
             min-height: 100vh;
         }
 
-        /* Ocultar input nativo, usado apenas para capturar eventos de forma confiável */
-        #core-input {
+        .code-font { font-family: 'Fira Code', monospace; }
+
+        /* Animações customizadas */
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.9); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+        }
+
+        @keyframes float-up {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Ocultar input nativo para evitar interferência na tela, mas mantendo foco */
+        #hidden-input {
             position: absolute;
             opacity: 0;
             top: -1000px;
             left: -1000px;
         }
 
-        /* Estilização do Display de Texto */
-        .text-display {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 2.2rem;
-            line-height: 1.6;
-            white-space: pre-wrap;
-            word-break: break-word;
-            user-select: none;
-        }
-
-        .char {
-            color: #64748b; /* slate-500 */
-            border-radius: 4px;
-            transition: all 0.1s ease;
-            position: relative;
-        }
-
-        .char.correct { color: #4ade80; } /* green-400 */
-        .char.wrong { color: #f87171; background-color: rgba(248, 113, 113, 0.2); } /* red-400 */
-        .char.active {
-            color: #e2e8f0;
-            background-color: rgba(255, 255, 255, 0.1);
-            border-bottom: 4px solid #38bdf8; /* sky-400 */
-        }
-        
-        /* Animação para erro crítico */
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
-        .shake-animation { animation: shake 0.2s ease-in-out; }
-
-        /* Teclado Virtual ABNT2 */
-        .keyboard-wrapper {
-            background: #1e293b; /* slate-800 */
-            border-radius: 20px;
-            padding: 24px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.05);
-            max-width: 1100px;
+        /* Layout do Teclado ABNT2 */
+        .keyboard-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 20px;
+            background: #0b1120;
+            border-radius: 12px;
+            border: 2px solid #1e293b;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            max-width: 1000px;
             margin: 0 auto;
         }
 
         .kb-row {
             display: flex;
+            gap: 6px;
             justify-content: center;
-            gap: 8px;
-            margin-bottom: 8px;
         }
-        .kb-row:last-child { margin-bottom: 0; }
 
-        .kb-key {
-            height: 54px;
-            background: #334155; /* slate-700 */
-            border: 2px solid #475569; /* slate-600 */
-            border-radius: 8px;
+        /* Estilização das Teclas 3D */
+        .key {
+            position: relative;
+            background: var(--key-bg);
+            border: 1px solid var(--key-border);
+            border-bottom: 4px solid #0f172a;
+            border-radius: 6px;
+            color: var(--key-text);
             display: flex;
             flex-direction: column;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            font-size: 0.9rem;
+            padding: 8px 4px;
+            font-size: 0.85rem;
             font-weight: 600;
-            color: #cbd5e1; /* slate-300 */
-            box-shadow: 0 4px 0 #0f172a;
-            transition: all 0.05s ease;
-            position: relative;
+            min-width: 45px;
+            height: 55px;
             user-select: none;
-            font-family: 'Inter', sans-serif;
+            transition: all 0.1s;
         }
 
-        .kb-key .sub { font-size: 0.65rem; color: #94a3b8; position: absolute; top: 4px; left: 6px; }
-        .kb-key .alt { font-size: 0.65rem; color: #94a3b8; position: absolute; bottom: 4px; right: 6px; }
-        .kb-key .main { position: absolute; bottom: 4px; left: 6px; font-size: 1rem; }
-        .kb-key.center-label { justify-content: center; }
-        .kb-key.center-label .main { position: static; }
-
-        /* Tamanhos Específicos */
-        .key-w-1 { width: 50px; }
-        .key-w-1-25 { width: 62.5px; }
-        .key-w-1-5 { width: 75px; }
-        .key-w-1-75 { width: 87.5px; }
-        .key-w-2 { width: 100px; }
-        .key-w-2-25 { width: 112.5px; }
-        .key-w-2-75 { width: 137.5px; }
-        .key-w-6-25 { width: 312.5px; } /* Barra de Espaço */
+        .key span.main-char { font-size: 1.1rem; margin-top: auto; }
+        .key span.shift-char { font-size: 0.75rem; position: absolute; top: 4px; left: 6px; color: #94a3b8; }
+        .key span.altgr-char { font-size: 0.75rem; position: absolute; bottom: 4px; right: 6px; color: #94a3b8; }
 
         /* Estados das Teclas */
-        .kb-key.pressed {
-            transform: translateY(4px);
-            box-shadow: 0 0 0 #0f172a;
-            background: #475569;
+        .key.active {
+            background: var(--primary);
+            border-color: #60a5fa;
+            border-bottom: 1px solid #1e3a8a;
+            transform: translateY(3px);
+            color: #fff;
+            box-shadow: 0 0 15px var(--primary);
+        }
+
+        .key.correct {
+            background: var(--correct);
+            border-color: #34d399;
             color: #fff;
         }
 
-        /* Cores Pedagógicas (Identificação Visual dos Dedos) */
-        /* Apenas iluminam quando a tecla é alvo (.target) */
-        .finger-pinkyL.target { background: #be185d; border-color: #f472b6; color: #fff; box-shadow: 0 4px 0 #831843, 0 0 15px #f472b6; }
-        .finger-ringL.target { background: #b45309; border-color: #fcd34d; color: #fff; box-shadow: 0 4px 0 #78350f, 0 0 15px #fcd34d; }
-        .finger-middleL.target { background: #15803d; border-color: #4ade80; color: #fff; box-shadow: 0 4px 0 #14532d, 0 0 15px #4ade80; }
-        .finger-indexL.target { background: #1d4ed8; border-color: #60a5fa; color: #fff; box-shadow: 0 4px 0 #1e3a8a, 0 0 15px #60a5fa; }
-        
-        .finger-indexR.target { background: #6d28d9; border-color: #a78bfa; color: #fff; box-shadow: 0 4px 0 #4c1d95, 0 0 15px #a78bfa; }
-        .finger-middleR.target { background: #be123c; border-color: #fb7185; color: #fff; box-shadow: 0 4px 0 #881337, 0 0 15px #fb7185; }
-        .finger-ringR.target { background: #c2410c; border-color: #fb923c; color: #fff; box-shadow: 0 4px 0 #7c2d12, 0 0 15px #fb923c; }
-        .finger-pinkyR.target { background: #0e7490; border-color: #22d3ee; color: #fff; box-shadow: 0 4px 0 #164e63, 0 0 15px #22d3ee; }
-        
-        .finger-thumb.target { background: #475569; border-color: #cbd5e1; color: #fff; box-shadow: 0 4px 0 #334155, 0 0 15px #cbd5e1; }
-
-        /* Modificadores ativos (ex: indicando que shift deve ser pressionado) */
-        .kb-key.modifier-target {
-            border-color: #e2e8f0;
-            background: #64748b;
-            animation: pulse-mod 1.5s infinite;
-        }
-        @keyframes pulse-mod {
-            0% { box-shadow: 0 4px 0 #0f172a, 0 0 0px #e2e8f0; }
-            50% { box-shadow: 0 4px 0 #0f172a, 0 0 20px #e2e8f0; }
-            100% { box-shadow: 0 4px 0 #0f172a, 0 0 0px #e2e8f0; }
+        .key.wrong {
+            background: var(--wrong);
+            border-color: #f87171;
+            color: #fff;
+            animation: shake 0.3s ease-in-out;
         }
 
-        /* Indicador de Marcador Base (Alto-relevo no F e J) */
-        .homing-bump::after {
-            content: '';
-            position: absolute;
-            bottom: 4px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 12px;
-            height: 2px;
-            background: #94a3b8;
-            border-radius: 2px;
+        .key.technique-error {
+            background: var(--technique-error);
+            border-color: #facc15;
+            color: #000;
         }
 
-        /* UI Elements Genéricos */
-        .glass-panel {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+        /* Identificação visual das mãos e dedos */
+        .finger-l-pinky { border-top: 2px solid #ec4899; }
+        .finger-l-ring { border-top: 2px solid #8b5cf6; }
+        .finger-l-middle { border-top: 2px solid #3b82f6; }
+        .finger-l-index { border-top: 2px solid #10b981; }
+        .finger-thumb { border-top: 2px solid #f59e0b; }
+        .finger-r-index { border-top: 2px solid #10b981; }
+        .finger-r-middle { border-top: 2px solid #3b82f6; }
+        .finger-r-ring { border-top: 2px solid #8b5cf6; }
+        .finger-r-pinky { border-top: 2px solid #ec4899; }
+
+        /* Tamanhos Específicos (ABNT2 Físico) */
+        .key-space { width: 300px; }
+        .key-backspace { width: 90px; }
+        .key-tab { width: 65px; }
+        .key-caps { width: 80px; }
+        .key-enter { width: 100px; }
+        .key-lshift { width: 60px; }
+        .key-rshift { width: 130px; }
+        .key-ctrl, .key-alt, .key-win { width: 60px; }
+
+        /* Estilização da caixa de texto principal */
+        .text-display {
+            font-size: 1.8rem;
+            line-height: 1.6;
+            background: #1e293b;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+            margin-bottom: 30px;
+            position: relative;
+            white-space: pre-wrap;
+            word-break: break-word;
         }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        .char {
+            display: inline-block;
+            border-bottom: 2px solid transparent;
+            transition: color 0.1s;
+        }
+
+        .char.typed-correct { color: #10b981; }
+        .char.typed-wrong { color: #ef4444; background: rgba(239, 68, 68, 0.2); border-radius: 2px; }
+        .char.current {
+            color: #fff;
+            border-bottom: 2px solid var(--primary);
+            animation: pulse-glow 1.5s infinite;
+        }
+        .char.untyped { color: #64748b; }
+
+        /* Barras de progresso e XP */
+        .progress-bar-container {
+            width: 100%;
+            background: #334155;
+            border-radius: 999px;
+            height: 12px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            transition: width 0.5s ease-out;
+        }
+
+        /* Mapa de Calor */
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 4px;
+            margin-top: 15px;
+        }
+        .heat-cell {
+            padding: 8px;
+            text-align: center;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.8rem;
             color: white;
-            transition: all 0.2s;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
         }
 
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #0f172a; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        /* Telas (SPA flow) */
+        .screen { display: none; }
+        .screen.active-screen { display: block; animation: float-up 0.4s ease-out; }
 
-        .hidden-screen { display: none !important; }
-        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Hand Guide CSS */
-        .hand-guide-color {
-            width: 16px; height: 16px; border-radius: 50%; display: inline-block; margin-right: 6px;
+        /* Rodapé fixo - Marca D'água */
+        footer {
+            margin-top: auto;
+            border-top: 1px solid #1e293b;
         }
     </style>
 </head>
-<body class="text-slate-300">
+<body>
 
-    <!-- Input Oculto Central - Coração da Captura de Texto -->
-    <input type="text" id="core-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-
-    <!-- Background Animado Abstrato -->
-    <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none opacity-20">
-        <div class="absolute w-[600px] h-[600px] bg-blue-600 rounded-full blur-[120px] top-[-200px] left-[-200px] animate-pulse"></div>
-        <div class="absolute w-[500px] h-[500px] bg-purple-600 rounded-full blur-[120px] bottom-[-150px] right-[-150px] animate-pulse" style="animation-delay: 2s;"></div>
-    </div>
-
-    <!-- HEADER GLOBAL -->
-    <header class="relative z-10 w-full max-w-7xl mx-auto p-4 flex justify-between items-center border-b border-slate-800">
-        <div class="flex items-center gap-3 cursor-pointer" onclick="UI.showScreen('menu')">
-            <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white shadow-lg">
-                <i class="fa-solid fa-keyboard text-xl"></i>
-            </div>
+    <!-- NAV BAR -->
+    <nav class="bg-gray-900 border-b border-gray-800 p-4 flex justify-between items-center shadow-lg">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-keyboard text-blue-500 text-3xl"></i>
             <div>
-                <h1 class="text-xl font-bold text-white leading-tight">Mestre do Teclado</h1>
-                <p class="text-xs text-slate-400 font-mono tracking-widest uppercase">Tutor ABNT2 Pro</p>
+                <h1 class="text-xl font-bold tracking-wider uppercase bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">Mestre do Teclado</h1>
+                <p class="text-xs text-gray-400">ABNT2 Pro Edition</p>
             </div>
         </div>
-
-        <div class="flex items-center gap-6">
-            <!-- XP & Level Display -->
-            <div class="hidden md:flex flex-col items-end">
-                <div class="text-sm font-semibold text-blue-400">Nível <span id="hdr-lvl">1</span></div>
-                <div class="w-32 h-2 bg-slate-800 rounded-full overflow-hidden mt-1 relative">
-                    <div id="hdr-xp-bar" class="absolute top-0 left-0 h-full bg-blue-500 transition-all duration-500" style="width: 0%;"></div>
-                </div>
+        <div class="flex gap-4 items-center">
+            <div class="text-right">
+                <p class="text-sm font-semibold text-blue-300">Nível <span id="nav-level">1</span></p>
+                <p class="text-xs text-gray-500" id="nav-xp">0 / 100 XP</p>
             </div>
-            
-            <button id="btn-audio" class="w-10 h-10 rounded-full glass-panel flex items-center justify-center hover:bg-slate-700 transition" onclick="AudioEngine.toggleMute()">
-                <i id="icon-audio" class="fa-solid fa-volume-up text-slate-300"></i>
+            <button id="btn-audio-toggle" class="p-2 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 transition" onclick="AudioEngine.toggleAudio()">
+                <i class="fa-solid fa-volume-up"></i>
+            </button>
+            <button class="p-2 rounded bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow transition" onclick="UI.showScreen('menu')">
+                <i class="fa-solid fa-house mr-1"></i> Menu
             </button>
         </div>
-    </header>
+    </nav>
 
-    <!-- CONTAINER PRINCIPAL DE TELAS -->
-    <main class="relative z-10 flex-1 w-full max-w-7xl mx-auto p-4 flex flex-col">
-
-        <!-- TELA 1: MENU PRINCIPAL -->
-        <section id="screen-menu" class="flex-1 flex flex-col items-center justify-center fade-in">
-            <div class="text-center mb-12">
-                <h2 class="text-4xl md:text-5xl font-extrabold text-white mb-4">Aprenda a digitar <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">como um profissional.</span></h2>
-                <p class="text-lg text-slate-400 max-w-2xl mx-auto">Domine o teclado ABNT2 usando todos os dedos, aumente sua velocidade e precisão com exercícios baseados em pedagogia motora.</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl">
-                <!-- Card Trilha -->
-                <button onclick="UI.showScreen('campaign')" class="glass-panel p-8 rounded-2xl hover:-translate-y-2 transition-transform text-left group border-t-4 border-t-blue-500 relative overflow-hidden">
-                    <div class="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    <div class="w-14 h-14 bg-blue-500/20 rounded-xl flex items-center justify-center text-blue-400 text-3xl mb-6 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-graduation-cap"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold text-white mb-3">Trilha de Aprendizagem</h3>
-                    <p class="text-slate-400 text-sm leading-relaxed mb-4">Curso completo passo a passo. Aprenda a posição correta das mãos, memorize as teclas e domine acentos e símbolos.</p>
-                    <div class="text-xs font-mono text-blue-400 bg-blue-500/10 px-3 py-1 rounded inline-block">Recomendado para Iniciantes</div>
-                </button>
-
-                <!-- Card Velocidade -->
-                <button onclick="Game.startMode('speed')" class="glass-panel p-8 rounded-2xl hover:-translate-y-2 transition-transform text-left group border-t-4 border-t-green-500 relative overflow-hidden">
-                    <div class="absolute inset-0 bg-green-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    <div class="w-14 h-14 bg-green-500/20 rounded-xl flex items-center justify-center text-green-400 text-3xl mb-6 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-stopwatch"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold text-white mb-3">Corrida contra o Tempo</h3>
-                    <p class="text-slate-400 text-sm leading-relaxed mb-4">Teste seus reflexos. Você tem 90 segundos para digitar o máximo de palavras aleatórias possível. O tempo não perdoa!</p>
-                    <div class="text-xs font-mono text-green-400 bg-green-500/10 px-3 py-1 rounded inline-block">Treino de Agilidade</div>
-                </button>
-
-                <!-- Card Textos -->
-                <button onclick="Game.startMode('texts')" class="glass-panel p-8 rounded-2xl hover:-translate-y-2 transition-transform text-left group border-t-4 border-t-purple-500 relative overflow-hidden">
-                    <div class="absolute inset-0 bg-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    <div class="w-14 h-14 bg-purple-500/20 rounded-xl flex items-center justify-center text-purple-400 text-3xl mb-6 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-book-open"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold text-white mb-3">Textos Completos</h3>
-                    <p class="text-slate-400 text-sm leading-relaxed mb-4">Pratique resistência e consistência digitando textos longos. Acompanhe seu progresso e estabeleça novos recordes.</p>
-                    <div class="text-xs font-mono text-purple-400 bg-purple-500/10 px-3 py-1 rounded inline-block">Foco e Resistência</div>
-                </button>
-            </div>
-        </section>
-
-        <!-- TELA 2: TRILHA DE APRENDIZAGEM (MAPA) -->
-        <section id="screen-campaign" class="hidden-screen flex-1 flex flex-col fade-in max-w-5xl mx-auto w-full py-8">
-            <div class="flex justify-between items-end mb-8">
-                <div>
-                    <button onclick="UI.showScreen('menu')" class="text-slate-400 hover:text-white mb-4 flex items-center transition"><i class="fa-solid fa-arrow-left mr-2"></i> Voltar ao Menu</button>
-                    <h2 class="text-3xl font-bold text-white">Trilha de Aprendizagem</h2>
-                    <p class="text-slate-400 mt-2">Siga a sequência para construir memória muscular corretamente.</p>
-                </div>
-                <div class="text-right">
-                    <div class="text-sm text-slate-400">Progresso Geral</div>
-                    <div class="text-2xl font-bold text-blue-400" id="camp-progress-text">0%</div>
-                </div>
-            </div>
-
-            <!-- Grid de Lições gerado dinamicamente -->
-            <div id="lessons-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto pr-2 pb-10" style="max-height: 60vh;">
-                <!-- Populado via JS -->
-            </div>
-        </section>
-
-        <!-- TELA 3: ÁREA DE JOGO -->
-        <section id="screen-game" class="hidden-screen flex-1 flex flex-col fade-in">
+    <!-- TELA PRINCIPAL (MENU) -->
+    <main id="screen-menu" class="screen active-screen p-8 max-w-6xl mx-auto w-full flex-grow">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
-            <!-- HUD -->
-            <div class="flex flex-wrap justify-between items-center glass-panel p-4 md:px-8 rounded-2xl mb-6 shadow-lg">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center border-2 border-slate-700" id="hud-icon">
-                        <i class="fa-solid fa-gamepad text-slate-400"></i>
+            <!-- Coluna de Modos de Jogo -->
+            <div class="col-span-2 space-y-6">
+                <h2 class="text-2xl font-bold border-b border-gray-700 pb-2"><i class="fa-solid fa-gamepad mr-2 text-blue-400"></i> Modos de Jogo</h2>
+                
+                <!-- Modo 1: Trilha de Aprendizagem -->
+                <div class="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-blue-500 transition cursor-pointer relative overflow-hidden group" onclick="UI.showScreen('lessons')">
+                    <div class="absolute right-0 top-0 opacity-10 transform translate-x-4 -translate-y-4 group-hover:scale-110 transition duration-500">
+                        <i class="fa-solid fa-graduation-cap text-9xl text-white"></i>
                     </div>
-                    <div>
-                        <h3 class="font-bold text-white text-lg leading-tight" id="hud-title">Modo de Jogo</h3>
-                        <p class="text-xs text-slate-400" id="hud-subtitle">Subtítulo do modo</p>
-                    </div>
-                </div>
-
-                <div class="flex gap-4 md:gap-8 mt-4 md:mt-0">
-                    <div id="hud-timer-container" class="text-center">
-                        <div class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Tempo</div>
-                        <div class="text-2xl font-black text-white font-mono drop-shadow-md" id="hud-time">--:--</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">PPM <i class="fa-solid fa-circle-info text-slate-600 ml-1" title="Palavras Por Minuto (Líquido)"></i></div>
-                        <div class="text-2xl font-black text-blue-400 font-mono drop-shadow-md" id="hud-wpm">0</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Precisão</div>
-                        <div class="text-2xl font-black text-green-400 font-mono drop-shadow-md" id="hud-acc">100%</div>
-                    </div>
-                    <div class="text-center hidden md:block">
-                        <div class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Erros</div>
-                        <div class="text-2xl font-black text-red-400 font-mono drop-shadow-md" id="hud-misses">0</div>
+                    <h3 class="text-xl font-bold text-blue-400 mb-2">1. Aprender a Digitar (Trilha)</h3>
+                    <p class="text-gray-400 text-sm mb-4">Campanha progressiva de 15 lições. Aprenda a posicionar os dedos, usar o Shift oposto, acentos e o AltGr passo a passo.</p>
+                    <div class="flex items-center gap-2 text-sm font-bold text-green-400">
+                        <i class="fa-solid fa-play"></i> Iniciar Trilha
                     </div>
                 </div>
 
-                <button onclick="Game.endSession()" class="mt-4 md:mt-0 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-semibold transition border border-slate-600">
-                    Encerrar <i class="fa-solid fa-stop ml-2"></i>
-                </button>
-            </div>
-
-            <!-- Warning Tooltip para dicas em tempo real -->
-            <div id="game-warning" class="absolute top-32 left-1/2 transform -translate-x-1/2 bg-red-500/90 text-white px-6 py-2 rounded-full font-bold shadow-xl opacity-0 transition-opacity z-50 pointer-events-none">
-                Use o Shift da mão oposta!
-            </div>
-
-            <!-- Área de Digitação -->
-            <div class="flex-1 flex flex-col items-center justify-center mb-6 w-full" onclick="Engine.focusInput()">
-                <div class="glass-panel p-6 md:p-10 rounded-2xl w-full max-w-5xl shadow-2xl border border-slate-700/50 relative overflow-hidden group cursor-text">
-                    <!-- Foco visualizador -->
-                    <div class="absolute inset-0 border-2 border-blue-500/0 group-hover:border-blue-500/30 rounded-2xl transition-all pointer-events-none" id="focus-ring"></div>
-                    <div class="absolute top-2 right-4 text-xs text-slate-500 bg-slate-800 px-2 py-1 rounded hidden" id="focus-lost-msg">Clique aqui para continuar digitando</div>
-                    
-                    <div class="text-display relative z-10" id="text-display">
-                        <!-- Texto Injetado Dinamicamente -->
+                <!-- Modo 2: Corrida de 90 Segundos -->
+                <div class="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-purple-500 transition cursor-pointer relative overflow-hidden group" onclick="Engine.startMode('rush')">
+                    <div class="absolute right-0 top-0 opacity-10 transform translate-x-4 -translate-y-4 group-hover:scale-110 transition duration-500">
+                        <i class="fa-solid fa-stopwatch text-9xl text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-purple-400 mb-2">2. Corrida contra o Tempo</h3>
+                    <p class="text-gray-400 text-sm mb-4">1 minuto e 30 segundos. Digite o máximo de palavras aleatórias e frases complexas. Penalidade por erros e bônus por combos.</p>
+                    <div class="flex items-center gap-2 text-sm font-bold text-purple-300">
+                        <i class="fa-solid fa-bolt"></i> Testar Velocidade
                     </div>
                 </div>
 
-                <!-- Pedagogy Hand Guide -->
-                <div class="mt-6 flex justify-center items-center gap-8 text-sm bg-slate-800/50 px-6 py-3 rounded-full border border-slate-700">
-                    <div id="guide-left" class="flex items-center text-slate-400 transition-colors"><i class="fa-solid fa-hand mr-2"></i> Mão Esquerda</div>
-                    <div class="w-px h-6 bg-slate-600"></div>
-                    <div id="guide-right" class="flex items-center text-slate-400 transition-colors"><i class="fa-solid fa-hand mr-2"></i> Mão Direita</div>
+                <!-- Modo 3: Maratona de 6 Textos -->
+                <div class="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-green-500 transition cursor-pointer relative overflow-hidden group" onclick="Engine.startMode('marathon')">
+                    <div class="absolute right-0 top-0 opacity-10 transform translate-x-4 -translate-y-4 group-hover:scale-110 transition duration-500">
+                        <i class="fa-solid fa-book-open text-9xl text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-green-400 mb-2">3. Maratona de 6 Textos</h3>
+                    <p class="text-gray-400 text-sm mb-4">Escreva 6 textos completos em sequência contínua. Excelente para medir consistência, PPM líquida e resistência muscular.</p>
+                    <div class="flex items-center gap-2 text-sm font-bold text-green-300">
+                        <i class="fa-solid fa-align-left"></i> Iniciar Maratona
+                    </div>
+                </div>
+
+                <!-- Modo 4: Mestre dos Acentos -->
+                <div class="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-yellow-500 transition cursor-pointer relative overflow-hidden group" onclick="Engine.startMode('accents')">
+                    <div class="absolute right-0 top-0 opacity-10 transform translate-x-4 -translate-y-4 group-hover:scale-110 transition duration-500">
+                        <i class="fa-solid fa-language text-9xl text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-yellow-400 mb-2">4. Mestre dos Acentos (Dead Keys)</h3>
+                    <p class="text-gray-400 text-sm mb-4">Treino intensivo de acentuação (á, à, ã, â), cedilha, Shift e símbolos com AltGr (º, ª, °).</p>
+                    <div class="flex items-center gap-2 text-sm font-bold text-yellow-300">
+                        <i class="fa-solid fa-star"></i> Praticar Acentos
+                    </div>
                 </div>
             </div>
 
-            <!-- Teclado Virtual Container -->
-            <div id="keyboard-area" class="w-full pb-4">
-                <div class="keyboard-wrapper" id="virtual-keyboard">
+            <!-- Coluna de Perfil e Recomendações -->
+            <div class="space-y-6">
+                <!-- Cartão de Perfil -->
+                <div class="bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-lg">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-2xl font-bold shadow-inner">
+                            <i class="fa-solid fa-user-astronaut"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg">Seu Progresso</h3>
+                            <p class="text-blue-400 text-sm font-semibold">Nível <span id="profile-level">1</span></p>
+                        </div>
+                    </div>
+                    <div class="text-sm text-gray-400 mb-1 flex justify-between">
+                        <span>XP Atual</span>
+                        <span id="profile-xp-text">0 / 100</span>
+                    </div>
+                    <div class="progress-bar-container mb-6">
+                        <div id="profile-xp-bar" class="progress-bar-fill" style="width: 0%"></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 text-center">
+                        <div class="bg-gray-900 p-3 rounded-lg border border-gray-700">
+                            <p class="text-xs text-gray-500 uppercase tracking-wide">Recorde PPM</p>
+                            <p class="text-xl font-bold text-green-400" id="profile-record-wpm">0</p>
+                        </div>
+                        <div class="bg-gray-900 p-3 rounded-lg border border-gray-700">
+                            <p class="text-xs text-gray-500 uppercase tracking-wide">Precisão Média</p>
+                            <p class="text-xl font-bold text-blue-400" id="profile-avg-acc">0%</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recomendações Adaptativas -->
+                <div class="bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-lg relative">
+                    <div class="absolute -top-3 -right-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded shadow animate-pulse">
+                        <i class="fa-solid fa-robot"></i> IA Tutor
+                    </div>
+                    <h3 class="font-bold text-lg mb-3 border-b border-gray-700 pb-2">Onde Melhorar</h3>
+                    <div id="adaptive-recommendations" class="text-sm text-gray-300 space-y-3">
+                        <p class="text-gray-500 italic">Jogue algumas partidas para receber diagnósticos do seu mapeamento muscular e erros técnicos.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- TELA DE LIÇÕES (CAMPANHA) -->
+    <main id="screen-lessons" class="screen p-8 max-w-5xl mx-auto w-full flex-grow">
+        <button class="mb-6 text-gray-400 hover:text-white transition flex items-center gap-2" onclick="UI.showScreen('menu')">
+            <i class="fa-solid fa-arrow-left"></i> Voltar ao Menu
+        </button>
+        <h2 class="text-3xl font-bold mb-2">Trilha de Aprendizagem</h2>
+        <p class="text-gray-400 mb-8">Complete as lições para desbloquear novos desafios. As primeiras focam em precisão técnica (PPM não exigido).</p>
+        
+        <div id="lessons-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Preenchido via JS -->
+        </div>
+    </main>
+
+    <!-- TELA DO JOGO (DIGITAÇÃO) -->
+    <main id="screen-game" class="screen p-4 md:p-8 w-full max-w-6xl mx-auto flex-grow flex flex-col">
+        <!-- Cabeçalho do Jogo (Stats) -->
+        <div class="flex justify-between items-end mb-4 bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-lg">
+            <div>
+                <h2 id="game-title" class="text-xl font-bold text-blue-400">Modo de Jogo</h2>
+                <p id="game-objective" class="text-sm text-gray-400">Objetivo: ...</p>
+            </div>
+            <div class="flex gap-6 text-center">
+                <div>
+                    <p class="text-xs text-gray-500 uppercase">Tempo</p>
+                    <p id="stat-time" class="text-2xl font-bold code-font">00:00</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 uppercase">PPM</p>
+                    <p id="stat-wpm" class="text-2xl font-bold text-green-400 code-font">0</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 uppercase">Precisão</p>
+                    <p id="stat-acc" class="text-2xl font-bold text-blue-400 code-font">100%</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 uppercase">Erros</p>
+                    <p id="stat-errors" class="text-2xl font-bold text-red-400 code-font">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Área de Texto -->
+        <div id="text-display" class="text-display code-font"></div>
+        
+        <!-- Alerta de Técnica (Shift/AltGr incorreto) -->
+        <div id="technique-alert" class="h-6 mb-2 text-center text-yellow-400 font-bold text-sm opacity-0 transition-opacity">
+            <i class="fa-solid fa-triangle-exclamation"></i> ERRO DE TÉCNICA: Use o Shift oposto!
+        </div>
+
+        <!-- Teclado Virtual ABNT2 -->
+        <div class="keyboard-container" id="keyboard-ui">
+            <!-- Renderizado via JS para garantir mapeamento preciso -->
+        </div>
+
+        <!-- Guia de Mãos (Auxiliar) -->
+        <div class="mt-6 flex justify-center gap-12 text-gray-500 text-sm">
+            <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-pink-500"></div> Mindinho (A/Ç)</div>
+            <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-purple-500"></div> Anelar (S/L)</div>
+            <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-blue-500"></div> Médio (D/K)</div>
+            <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-green-500"></div> Indicador (F/J)</div>
+        </div>
+
+        <!-- Input Oculto para capturar texto nativo -->
+        <input type="text" id="hidden-input" autocomplete="off" spellcheck="false" autocorrect="off">
+        
+        <div class="mt-6 flex justify-center">
+            <button class="px-6 py-2 bg-red-600 hover:bg-red-500 text-white rounded font-bold shadow" onclick="Engine.cleanupAndExit()">
+                <i class="fa-solid fa-xmark mr-2"></i> Abandonar Sessão
+            </button>
+        </div>
+    </main>
+
+    <!-- TELA DE RESULTADOS -->
+    <main id="screen-results" class="screen p-8 max-w-3xl mx-auto w-full flex-grow text-center">
+        <div class="bg-gray-800 p-10 rounded-2xl border border-gray-700 shadow-2xl relative overflow-hidden">
+            <!-- Confete/Decoração de Fundo (Simples CSS) -->
+            <div class="absolute -top-20 -left-20 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+            <div class="absolute -bottom-20 -right-20 w-64 h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+            
+            <h1 id="result-title" class="text-4xl font-bold mb-2 text-white relative z-10">Desempenho Concluído!</h1>
+            <p id="result-msg" class="text-gray-400 mb-8 relative z-10">Você completou a tarefa com sucesso.</p>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8 relative z-10">
+                <div class="bg-gray-900 p-4 rounded-xl border border-gray-700">
+                    <p class="text-sm text-gray-500 mb-1">PPM Líquida</p>
+                    <p id="res-wpm" class="text-3xl font-black text-green-400">0</p>
+                </div>
+                <div class="bg-gray-900 p-4 rounded-xl border border-gray-700">
+                    <p class="text-sm text-gray-500 mb-1">Precisão</p>
+                    <p id="res-acc" class="text-3xl font-black text-blue-400">0%</p>
+                </div>
+                <div class="bg-gray-900 p-4 rounded-xl border border-gray-700">
+                    <p class="text-sm text-gray-500 mb-1">Caracteres</p>
+                    <p id="res-chars" class="text-3xl font-black text-gray-200">0</p>
+                </div>
+                <div class="bg-gray-900 p-4 rounded-xl border border-gray-700">
+                    <p class="text-sm text-gray-500 mb-1">Erros</p>
+                    <p id="res-errors" class="text-3xl font-black text-red-400">0</p>
+                </div>
+            </div>
+
+            <!-- Resumo de XP -->
+            <div class="bg-gray-900/50 p-4 rounded-lg mb-8 inline-block text-left relative z-10 border border-gray-700">
+                <p class="text-sm text-gray-400">Recompensas da Sessão</p>
+                <p class="text-xl font-bold text-yellow-400"><i class="fa-solid fa-star"></i> +<span id="res-xp">0</span> XP</p>
+            </div>
+
+            <!-- Heatmap de Dificuldades da Sessão -->
+            <div class="mb-8 relative z-10 text-left bg-gray-900 p-6 rounded-xl border border-gray-700">
+                <h3 class="text-lg font-bold text-white border-b border-gray-700 pb-2 mb-4"><i class="fa-solid fa-fire text-orange-500"></i> Teclas Problemáticas (Sessão)</h3>
+                <div id="res-heatmap" class="heatmap-grid">
                     <!-- Gerado via JS -->
                 </div>
             </div>
-        </section>
 
-        <!-- TELA 4: RESULTADOS -->
-        <section id="screen-result" class="hidden-screen flex-1 flex flex-col items-center justify-center fade-in py-8">
-            <div class="glass-panel p-8 md:p-12 rounded-3xl w-full max-w-4xl shadow-2xl relative overflow-hidden border border-slate-700/50">
-                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-purple-500"></div>
-                
-                <div class="text-center mb-10">
-                    <h2 class="text-4xl font-black text-white mb-2" id="res-title">Sessão Concluída!</h2>
-                    <p class="text-slate-400 text-lg" id="res-subtitle">Analise seu desempenho e identifique onde melhorar.</p>
-                </div>
-
-                <div class="flex flex-col md:flex-row gap-10 items-center justify-center mb-12">
-                    
-                    <!-- Rank Hexagon -->
-                    <div class="relative flex items-center justify-center w-40 h-40">
-                        <svg class="absolute inset-0 w-full h-full drop-shadow-xl" viewBox="0 0 100 100">
-                            <polygon points="50 3, 93 25, 93 75, 50 97, 7 75, 7 25" fill="#1e293b" stroke="#334155" stroke-width="2"/>
-                        </svg>
-                        <div id="res-rank" class="relative z-10 text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-600">S</div>
-                        <div class="absolute bottom-6 z-10 text-[10px] text-slate-400 uppercase font-bold tracking-widest bg-slate-900 px-2 rounded-full">Rank</div>
-                    </div>
-
-                    <!-- Métricas -->
-                    <div class="grid grid-cols-2 gap-4 flex-1 w-full">
-                        <div class="bg-slate-800/80 p-5 rounded-2xl border border-slate-700">
-                            <div class="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">Velocidade (Líquida)</div>
-                            <div class="text-3xl font-black text-white"><span id="res-wpm">0</span> <span class="text-sm font-normal text-slate-500">PPM</span></div>
-                        </div>
-                        <div class="bg-slate-800/80 p-5 rounded-2xl border border-slate-700">
-                            <div class="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">Precisão Real</div>
-                            <div class="text-3xl font-black text-white"><span id="res-acc">0</span><span class="text-sm font-normal text-slate-500">%</span></div>
-                        </div>
-                        <div class="bg-emerald-900/20 p-5 rounded-2xl border border-emerald-900/50">
-                            <div class="text-xs text-emerald-400 uppercase font-bold tracking-wider mb-1">Caracteres Certos</div>
-                            <div class="text-2xl font-bold text-emerald-100" id="res-hits">0</div>
-                        </div>
-                        <div class="bg-red-900/20 p-5 rounded-2xl border border-red-900/50">
-                            <div class="text-xs text-red-400 uppercase font-bold tracking-wider mb-1">Erros Totais</div>
-                            <div class="text-2xl font-bold text-red-100" id="res-misses">0</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Painel de Feedback Pedagógico & Heatmap -->
-                <div class="bg-slate-900/50 rounded-2xl p-6 border border-slate-800 mb-8">
-                    <h4 class="text-lg font-bold text-white mb-4 border-b border-slate-700 pb-2"><i class="fa-solid fa-microscope text-purple-400 mr-2"></i>Análise de Dificuldades</h4>
-                    
-                    <div class="flex flex-col md:flex-row gap-8">
-                        <div class="flex-1">
-                            <p class="text-sm text-slate-400 mb-2">Teclas com maior índice de erro na sessão:</p>
-                            <div id="res-heatmap-list" class="flex flex-wrap gap-2">
-                                <!-- Preenchido via JS. Ex: <span class="bg-red-900/50 text-red-300 px-3 py-1 rounded font-mono border border-red-800">C (3 erros)</span> -->
-                            </div>
-                            <p id="res-recommendation" class="mt-4 text-sm font-medium text-blue-300 bg-blue-900/30 p-3 rounded-lg border border-blue-800/50">
-                                Excelente! Continue praticando para ganhar mais agilidade.
-                            </p>
-                        </div>
-                        
-                        <!-- Mini XP Card -->
-                        <div class="bg-slate-800 p-4 rounded-xl flex flex-col justify-center items-center text-center border border-slate-700 min-w-[150px]">
-                            <div class="text-xs text-slate-400 uppercase mb-1">XP Ganho</div>
-                            <div class="text-3xl font-black text-purple-400 mb-1" id="res-xp-gained">+0</div>
-                            <div class="text-xs font-semibold text-slate-500" id="res-xp-total">Total: 0 XP</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex justify-center gap-4">
-                    <button onclick="UI.showScreen('menu')" class="px-8 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold transition">Menu Principal</button>
-                    <button id="btn-next-action" onclick="Game.retryOrNext()" class="btn-primary px-8 py-3 rounded-xl font-bold">Tentar Novamente</button>
-                </div>
+            <div class="flex justify-center gap-4 relative z-10">
+                <button class="px-8 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-bold shadow-lg transition" onclick="UI.showScreen('menu')">
+                    Ir para o Menu
+                </button>
+                <button id="btn-next-action" class="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold shadow-lg transition shadow-blue-500/30">
+                    Próxima Etapa
+                </button>
             </div>
-        </section>
+        </div>
     </main>
 
-    <!-- Watermark / Rodapé do Autor -->
-    <footer class="w-full text-center py-4 px-6 text-[10px] sm:text-xs text-slate-500 border-t border-slate-800/80 mt-auto relative z-20 bg-slate-900/80 backdrop-blur-sm">
-        <p>Criado pelo <span class="font-semibold text-slate-300">Professor Yan Pereira de Lima</span>, Licenciado em Computação.</p>
-        <p class="mt-1">Projeto livre e de código aberto (criador original), sendo expressamente proibida a sua venda ou comercialização.</p>
+    <!-- MARCA D'ÁGUA FIXA EXIGIDA -->
+    <footer class="w-full bg-gray-900 text-gray-500 text-xs py-3 text-center border-t border-gray-800 mt-auto shadow-inner relative z-50">
+        <p>Projeto educacional de código aberto criado pelo professor <strong>Yan Pereira de Lima</strong>, Licenciado em Computação.</p>
+        <p class="opacity-75 mt-1">Este software é de uso livre para fins educativos. Proibida a venda comercial ou apropriação indevida.</p>
     </footer>
 
+    <!-- LÓGICA JAVASCRIPT DO SISTEMA -->
     <script>
-        /**
-         * ESTRUTURAS DE DADOS MASSIVAS
-         * Necessárias para criar uma arquitetura robusta, extensível e pedagogicamente correta.
-         */
-
-        // 1. Definição Física do Teclado ABNT2
-        // [id, main, shift, altgr, widthClass, fingerClass, keyCodes]
+        /************************************************************************
+         * 1. CONSTANTES E ESTRUTURAS DE DADOS PROFUNDAS
+         ************************************************************************/
+        
+        // Mapeamento Físico e Visual do Teclado ABNT2 Real (5 fileiras)
+        // code: event.code, main: default char, shift: char with shift, altgr: char with altgr,
+        // w: css class for width, finger: css class for color, hand: 'l' or 'r'
         const ABNT2_LAYOUT = [
+            // Row 1: Esc to Backspace
             [
-                ['k-apos', "'", '"', '', 'key-w-1', 'finger-pinkyL', ["'", '"']],
-                ['k-1', '1', '!', '¹', 'key-w-1', 'finger-pinkyL', ['1', '!']],
-                ['k-2', '2', '@', '²', 'key-w-1', 'finger-ringL', ['2', '@']],
-                ['k-3', '3', '#', '³', 'key-w-1', 'finger-middleL', ['3', '#']],
-                ['k-4', '4', '$', '£', 'key-w-1', 'finger-indexL', ['4', '$']],
-                ['k-5', '5', '%', '¢', 'key-w-1', 'finger-indexL', ['5', '%']],
-                ['k-6', '6', '¨', '¬', 'key-w-1', 'finger-indexR', ['6', '¨']],
-                ['k-7', '7', '&', '', 'key-w-1', 'finger-indexR', ['7', '&']],
-                ['k-8', '8', '*', '', 'key-w-1', 'finger-middleR', ['8', '*']],
-                ['k-9', '9', '(', '', 'key-w-1', 'finger-ringR', ['9', '(']],
-                ['k-0', '0', ')', '', 'key-w-1', 'finger-pinkyR', ['0', ')']],
-                ['k-minus', '-', '_', '', 'key-w-1', 'finger-pinkyR', ['-', '_']],
-                ['k-equal', '=', '+', '§', 'key-w-1', 'finger-pinkyR', ['=', '+']],
-                ['k-backspace', 'Back', '', '', 'key-w-2', 'finger-pinkyR', ['Backspace']]
+                { code: "Escape", main: "Esc", w: "key-tab", type: "ctrl" },
+                { code: "Backquote", main: "'", shift: "\"", finger: "finger-l-pinky", hand: "l" },
+                { code: "Digit1", main: "1", shift: "!", altgr: "¹", finger: "finger-l-pinky", hand: "l" },
+                { code: "Digit2", main: "2", shift: "@", altgr: "²", finger: "finger-l-ring", hand: "l" },
+                { code: "Digit3", main: "3", shift: "#", altgr: "³", finger: "finger-l-middle", hand: "l" },
+                { code: "Digit4", main: "4", shift: "$", altgr: "£", finger: "finger-l-index", hand: "l" },
+                { code: "Digit5", main: "5", shift: "%", altgr: "¢", finger: "finger-l-index", hand: "l" },
+                { code: "Digit6", main: "6", shift: "¨", altgr: "¬", finger: "finger-r-index", hand: "r" },
+                { code: "Digit7", main: "7", shift: "&", finger: "finger-r-index", hand: "r" },
+                { code: "Digit8", main: "8", shift: "*", finger: "finger-r-middle", hand: "r" },
+                { code: "Digit9", main: "9", shift: "(", finger: "finger-r-ring", hand: "r" },
+                { code: "Digit0", main: "0", shift: ")", finger: "finger-r-pinky", hand: "r" },
+                { code: "Minus", main: "-", shift: "_", finger: "finger-r-pinky", hand: "r" },
+                { code: "Equal", main: "=", shift: "+", altgr: "§", finger: "finger-r-pinky", hand: "r" },
+                { code: "Backspace", main: "Backspace", w: "key-backspace", type: "ctrl" }
             ],
+            // Row 2: Tab to Enter (top half)
             [
-                ['k-tab', 'Tab', '', '', 'key-w-1-5', 'finger-pinkyL', ['Tab']],
-                ['k-q', 'Q', '', '/', 'key-w-1', 'finger-pinkyL', ['q', 'Q']],
-                ['k-w', 'W', '', '?', 'key-w-1', 'finger-ringL', ['w', 'W']],
-                ['k-e', 'E', '', '°', 'key-w-1', 'finger-middleL', ['e', 'E']],
-                ['k-r', 'R', '', '', 'key-w-1', 'finger-indexL', ['r', 'R']],
-                ['k-t', 'T', '', '', 'key-w-1', 'finger-indexL', ['t', 'T']],
-                ['k-y', 'Y', '', '', 'key-w-1', 'finger-indexR', ['y', 'Y']],
-                ['k-u', 'U', '', '', 'key-w-1', 'finger-indexR', ['u', 'U']],
-                ['k-i', 'I', '', '', 'key-w-1', 'finger-middleR', ['i', 'I']],
-                ['k-o', 'O', '', '', 'key-w-1', 'finger-ringR', ['o', 'O']],
-                ['k-p', 'P', '', '', 'key-w-1', 'finger-pinkyR', ['p', 'P']],
-                ['k-acute', '´', '`', '', 'key-w-1', 'finger-pinkyR', ['´', '`', 'Dead']], // Dead key
-                ['k-bracket', '[', '{', 'ª', 'key-w-1', 'finger-pinkyR', ['[', '{', 'ª']],
-                ['k-enter', 'Enter', '', '', 'key-w-1-75', 'finger-pinkyR', ['Enter']]
+                { code: "Tab", main: "Tab", w: "key-tab", type: "ctrl" },
+                { code: "KeyQ", main: "q", shift: "Q", altgr: "/", finger: "finger-l-pinky", hand: "l" },
+                { code: "KeyW", main: "w", shift: "W", altgr: "?", finger: "finger-l-ring", hand: "l" },
+                { code: "KeyE", main: "e", shift: "E", altgr: "°", finger: "finger-l-middle", hand: "l" },
+                { code: "KeyR", main: "r", shift: "R", finger: "finger-l-index", hand: "l" },
+                { code: "KeyT", main: "t", shift: "T", finger: "finger-l-index", hand: "l" },
+                { code: "KeyY", main: "y", shift: "Y", finger: "finger-r-index", hand: "r" },
+                { code: "KeyU", main: "u", shift: "U", finger: "finger-r-index", hand: "r" },
+                { code: "KeyI", main: "i", shift: "I", finger: "finger-r-middle", hand: "r" },
+                { code: "KeyO", main: "o", shift: "O", finger: "finger-r-ring", hand: "r" },
+                { code: "KeyP", main: "p", shift: "P", finger: "finger-r-pinky", hand: "r" },
+                { code: "BracketLeft", main: "´", shift: "`", type: "dead", finger: "finger-r-pinky", hand: "r" }, // Acento Agudo / Crase
+                { code: "BracketRight", main: "[", shift: "{", altgr: "ª", finger: "finger-r-pinky", hand: "r" },
+                { code: "Enter", main: "Enter", w: "key-enter", type: "ctrl" } // Part 1 of physical ISO Enter
             ],
+            // Row 3: Caps to ]
             [
-                ['k-caps', 'Caps', '', '', 'key-w-1-75', 'finger-pinkyL', ['CapsLock']],
-                ['k-a', 'A', '', '', 'key-w-1', 'finger-pinkyL', ['a', 'A']],
-                ['k-s', 'S', '', '', 'key-w-1', 'finger-ringL', ['s', 'S']],
-                ['k-d', 'D', '', '', 'key-w-1', 'finger-middleL', ['d', 'D']],
-                ['k-f', 'F', '', '', 'key-w-1', 'finger-indexL', ['f', 'F']],
-                ['k-g', 'G', '', '', 'key-w-1', 'finger-indexL', ['g', 'G']],
-                ['k-h', 'H', '', '', 'key-w-1', 'finger-indexR', ['h', 'H']],
-                ['k-j', 'J', '', '', 'key-w-1', 'finger-indexR', ['j', 'J']],
-                ['k-k', 'K', '', '', 'key-w-1', 'finger-middleR', ['k', 'K']],
-                ['k-l', 'L', '', '', 'key-w-1', 'finger-ringR', ['l', 'L']],
-                ['k-cedilla', 'Ç', '', '', 'key-w-1', 'finger-pinkyR', ['ç', 'Ç']],
-                ['k-tilde', '~', '^', '', 'key-w-1', 'finger-pinkyR', ['~', '^', 'Dead']], // Dead key
-                ['k-backslash', ']', '}', 'º', 'key-w-1-5', 'finger-pinkyR', [']', '}', 'º']]
+                { code: "CapsLock", main: "Caps", w: "key-caps", type: "ctrl" },
+                { code: "KeyA", main: "a", shift: "A", finger: "finger-l-pinky", hand: "l" },
+                { code: "KeyS", main: "s", shift: "S", finger: "finger-l-ring", hand: "l" },
+                { code: "KeyD", main: "d", shift: "D", finger: "finger-l-middle", hand: "l" },
+                { code: "KeyF", main: "f", shift: "F", finger: "finger-l-index", hand: "l", bump: true }, // Repouso esq
+                { code: "KeyG", main: "g", shift: "G", finger: "finger-l-index", hand: "l" },
+                { code: "KeyH", main: "h", shift: "H", finger: "finger-r-index", hand: "r" },
+                { code: "KeyJ", main: "j", shift: "J", finger: "finger-r-index", hand: "r", bump: true }, // Repouso dir
+                { code: "KeyK", main: "k", shift: "K", finger: "finger-r-middle", hand: "r" },
+                { code: "KeyL", main: "l", shift: "L", finger: "finger-r-ring", hand: "r" },
+                { code: "KeyÇ", main: "ç", shift: "Ç", codeOverride: "Semicolon", finger: "finger-r-pinky", hand: "r" },
+                { code: "Quote", main: "~", shift: "^", type: "dead", finger: "finger-r-pinky", hand: "r" }, // Til / Circunflexo
+                { code: "Backslash", main: "]", shift: "}", altgr: "º", finger: "finger-r-pinky", hand: "r" }
             ],
+            // Row 4: Shift to Shift
             [
-                ['k-lshift', 'Shift', '', '', 'key-w-1-25', 'finger-pinkyL', ['ShiftLeft']],
-                ['k-intl', '\\', '|', '', 'key-w-1', 'finger-pinkyL', ['\\', '|']],
-                ['k-z', 'Z', '', '', 'key-w-1', 'finger-pinkyL', ['z', 'Z']],
-                ['k-x', 'X', '', '', 'key-w-1', 'finger-ringL', ['x', 'X']],
-                ['k-c', 'C', '', '₢', 'key-w-1', 'finger-middleL', ['c', 'C']],
-                ['k-v', 'V', '', '', 'key-w-1', 'finger-indexL', ['v', 'V']],
-                ['k-b', 'B', '', '', 'key-w-1', 'finger-indexL', ['b', 'B']],
-                ['k-n', 'N', '', '', 'key-w-1', 'finger-indexR', ['n', 'N']],
-                ['k-m', 'M', '', '', 'key-w-1', 'finger-indexR', ['m', 'M']],
-                ['k-comma', ',', '<', '', 'key-w-1', 'finger-middleR', [',', '<']],
-                ['k-period', '.', '>', '', 'key-w-1', 'finger-ringR', ['.', '>']],
-                ['k-slash', ';', ':', '', 'key-w-1', 'finger-pinkyR', [';', ':']],
-                ['k-ro', '/', '?', '°', 'key-w-1', 'finger-pinkyR', ['/', '?', '°']],
-                ['k-rshift', 'Shift', '', '', 'key-w-2-25', 'finger-pinkyR', ['ShiftRight']]
+                { code: "ShiftLeft", main: "Shift", w: "key-lshift", type: "mod", hand: "l" },
+                { code: "IntlBackslash", main: "\\", shift: "|", finger: "finger-l-pinky", hand: "l" },
+                { code: "KeyZ", main: "z", shift: "Z", finger: "finger-l-pinky", hand: "l" },
+                { code: "KeyX", main: "x", shift: "X", finger: "finger-l-ring", hand: "l" },
+                { code: "KeyC", main: "c", shift: "C", altgr: "₢", finger: "finger-l-middle", hand: "l" },
+                { code: "KeyV", main: "v", shift: "V", finger: "finger-l-index", hand: "l" },
+                { code: "KeyB", main: "b", shift: "B", finger: "finger-l-index", hand: "l" },
+                { code: "KeyN", main: "n", shift: "N", finger: "finger-r-index", hand: "r" },
+                { code: "KeyM", main: "m", shift: "M", finger: "finger-r-index", hand: "r" },
+                { code: "Comma", main: ",", shift: "<", finger: "finger-r-middle", hand: "r" },
+                { code: "Period", main: ".", shift: ">", finger: "finger-r-ring", hand: "r" },
+                { code: "Slash", main: ";", shift: ":", finger: "finger-r-pinky", hand: "r" },
+                { code: "IntlRo", main: "/", shift: "?", altgr: "°", finger: "finger-r-pinky", hand: "r" },
+                { code: "ShiftRight", main: "Shift", w: "key-rshift", type: "mod", hand: "r" }
             ],
+            // Row 5: Spacebar row
             [
-                ['k-lctrl', 'Ctrl', '', '', 'key-w-1-25', 'finger-pinkyL', ['ControlLeft']],
-                ['k-lwin', 'Win', '', '', 'key-w-1-25', 'finger-thumb', ['MetaLeft']],
-                ['k-lalt', 'Alt', '', '', 'key-w-1-25', 'finger-thumb', ['AltLeft']],
-                ['k-space', '', '', '', 'key-w-6-25', 'finger-thumb', [' ', 'Space']],
-                ['k-altgr', 'AltGr', '', '', 'key-w-1-25', 'finger-thumb', ['AltRight', 'AltGraph']],
-                ['k-rwin', 'Win', '', '', 'key-w-1-25', 'finger-thumb', ['MetaRight']],
-                ['k-menu', 'Menu', '', '', 'key-w-1-25', 'finger-thumb', ['ContextMenu']],
-                ['k-rctrl', 'Ctrl', '', '', 'key-w-1-25', 'finger-pinkyR', ['ControlRight']]
+                { code: "ControlLeft", main: "Ctrl", w: "key-ctrl", type: "ctrl" },
+                { code: "MetaLeft", main: "Win", w: "key-win", type: "ctrl" },
+                { code: "AltLeft", main: "Alt", w: "key-alt", type: "ctrl" },
+                { code: "Space", main: "", w: "key-space", finger: "finger-thumb", hand: "both" },
+                { code: "AltRight", main: "AltGr", w: "key-alt", type: "mod", hand: "r" },
+                { code: "ContextMenu", main: "Menu", w: "key-win", type: "ctrl" },
+                { code: "ControlRight", main: "Ctrl", w: "key-ctrl", type: "ctrl" }
             ]
         ];
 
-        // 2. Mapeamento Pedagógico de Caracteres -> Sequência Física Exata
-        // Formato: 'char': { keys: ['id1', 'id2'], enforceOppositeShift: true/false }
-        const CHAR_MAP = {};
-        
-        function initializeCharMap() {
-            // Mapeia letras minúsculas e símbolos básicos
-            ABNT2_LAYOUT.forEach(row => {
-                row.forEach(key => {
-                    const [id, main, shift, altgr, w, finger] = key;
-                    const isLeftHand = ['finger-pinkyL', 'finger-ringL', 'finger-middleL', 'finger-indexL'].includes(finger);
-                    
-                    // Minúsculas/Base
-                    if (main && main.length === 1) {
-                        const low = main.toLowerCase();
-                        if(!CHAR_MAP[low]) CHAR_MAP[low] = { keys: [id], side: isLeftHand ? 'L' : 'R' };
-                        
-                        // Letras maísculas (Shift Oposto Enforced)
-                        if (/[a-z]/.test(low)) {
-                            const reqShift = isLeftHand ? 'k-rshift' : 'k-lshift';
-                            CHAR_MAP[main] = { keys: [reqShift, id], side: isLeftHand ? 'L' : 'R', shift: true };
-                        }
-                    }
+        // Mapeamento de combinações complexas (Dead Keys)
+        const DEAD_KEYS_MAP = {
+            'á': { dead: 'BracketLeft', final: 'KeyA', shiftTarget: false },
+            'é': { dead: 'BracketLeft', final: 'KeyE', shiftTarget: false },
+            'í': { dead: 'BracketLeft', final: 'KeyI', shiftTarget: false },
+            'ó': { dead: 'BracketLeft', final: 'KeyO', shiftTarget: false },
+            'ú': { dead: 'BracketLeft', final: 'KeyU', shiftTarget: false },
+            'Á': { dead: 'BracketLeft', final: 'KeyA', shiftTarget: true },
+            'É': { dead: 'BracketLeft', final: 'KeyE', shiftTarget: true },
+            'Í': { dead: 'BracketLeft', final: 'KeyI', shiftTarget: true },
+            'Ó': { dead: 'BracketLeft', final: 'KeyO', shiftTarget: true },
+            'Ú': { dead: 'BracketLeft', final: 'KeyU', shiftTarget: true },
+            
+            'à': { dead: 'BracketLeft', final: 'KeyA', shiftDead: true, shiftTarget: false },
+            'À': { dead: 'BracketLeft', final: 'KeyA', shiftDead: true, shiftTarget: true },
+            
+            'ã': { dead: 'Quote', final: 'KeyA', shiftTarget: false },
+            'õ': { dead: 'Quote', final: 'KeyO', shiftTarget: false },
+            'ñ': { dead: 'Quote', final: 'KeyN', shiftTarget: false },
+            'Ã': { dead: 'Quote', final: 'KeyA', shiftTarget: true },
+            'Õ': { dead: 'Quote', final: 'KeyO', shiftTarget: true },
+            
+            'â': { dead: 'Quote', final: 'KeyA', shiftDead: true, shiftTarget: false },
+            'ê': { dead: 'Quote', final: 'KeyE', shiftDead: true, shiftTarget: false },
+            'ô': { dead: 'Quote', final: 'KeyO', shiftDead: true, shiftTarget: false },
+            'Â': { dead: 'Quote', final: 'KeyA', shiftDead: true, shiftTarget: true },
+            'Ê': { dead: 'Quote', final: 'KeyE', shiftDead: true, shiftTarget: true },
+            'Ô': { dead: 'Quote', final: 'KeyO', shiftDead: true, shiftTarget: true },
+        };
 
-                    // Caracteres com Shift (Símbolos)
-                    if (shift && shift.length === 1) {
-                        const reqShift = isLeftHand ? 'k-rshift' : 'k-lshift';
-                        CHAR_MAP[shift] = { keys: [reqShift, id], side: isLeftHand ? 'L' : 'R', shift: true };
-                    }
+        // Textos longos para o Modo 3 (Maratona)
+        const MARATHON_TEXTS = [
+            "A tecnologia moderna exige que todos saibamos digitar com velocidade e precisão. O computador é uma ferramenta essencial no mundo atual, e dominá-lo abre portas para o mercado de trabalho.",
+            "O uso correto do teclado ABNT2 no Brasil facilita a escrita de e-mails, relatórios e códigos de programação. Saber usar os acentos sem olhar para as teclas aumenta a produtividade.",
+            "Não basta ser rápido, é preciso ser preciso! Um erro de digitação pode mudar o sentido de uma frase inteira. Por isso, treinar a coordenação motora fina é fundamental para qualquer profissional.",
+            "A posição inicial dos dedos, descansando sobre as teclas F e J, permite que as mãos alcancem todas as outras fileiras com o mínimo de esforço. Essa técnica previne lesões por esforço repetitivo (LER).",
+            "Muitas pessoas utilizam apenas os dedos indicadores para digitar, o famoso método 'catar milho'. Essa prática limita muito a velocidade e exige que os olhos fiquem fixos no teclado em vez da tela.",
+            "Com dedicação e prática diária de quinze minutos, qualquer pessoa pode dobrar sua velocidade de digitação em poucas semanas. A memória muscular se encarrega de automatizar os movimentos."
+        ];
 
-                    // Caracteres com AltGr
-                    if (altgr && altgr.length === 1) {
-                        CHAR_MAP[altgr] = { keys: ['k-altgr', id], side: isLeftHand ? 'L' : 'R', altgr: true };
-                    }
-                });
-            });
+        // Lições da Trilha de Aprendizagem
+        const CAMPAIGN_LESSONS = [
+            { id: 1, title: "Repouso: F e J", desc: "Use apenas os indicadores na posição base.", text: "f j f j fj jf ff jj fj jf", minAcc: 90, minWpm: 0 },
+            { id: 2, title: "Fileira do Meio (Esq)", desc: "Mão esquerda completa (A, S, D, F).", text: "asdf asdf fds a s d f asdf fad sad", minAcc: 90, minWpm: 0 },
+            { id: 3, title: "Fileira do Meio (Dir)", desc: "Mão direita completa (J, K, L, Ç).", text: "jklç jklç çlk j k l ç jklç lk jç", minAcc: 90, minWpm: 0 },
+            { id: 4, title: "Fileira Central Completa", desc: "Misturando as duas mãos. Sem velocidade, foque na precisão.", text: "asdf jklç fasd çlkj as jç df kl", minAcc: 95, minWpm: 0 },
+            { id: 5, title: "Palavras Base", desc: "Palavras reais usando apenas a fileira do meio.", text: "sala fala casa faca cada saca alas", minAcc: 95, minWpm: 10 },
+            { id: 6, title: "Indicadores em Ação", desc: "Alcançando G e H (no centro).", text: "fg jh gh hg fgh jhg gata haja gaja", minAcc: 90, minWpm: 12 },
+            { id: 7, title: "Fileira Superior (Esq)", desc: "Q W E R T. Use os dedos correspondentes.", text: "qwert rewq tera reta teste arte", minAcc: 90, minWpm: 12 },
+            { id: 8, title: "Fileira Superior (Dir)", desc: "Y U I O P. Mão direita subindo.", text: "yuiop poiu tipo outo pião", minAcc: 90, minWpm: 15 },
+            { id: 9, title: "Shift Oposto (Direito)", desc: "Letras da mão esquerda exigem o Shift Direito.", text: "A S D F Q W E R T Asas Feras", minAcc: 95, minWpm: 10 },
+            { id: 10, title: "Shift Oposto (Esquerdo)", desc: "Letras da mão direita exigem o Shift Esquerdo.", text: "J K L Ç Y U I O P Jato Pipa", minAcc: 95, minWpm: 10 },
+            { id: 11, title: "Fileira Inferior", desc: "Z X C V B N M e vírgula/ponto.", text: "zxcvbnm, . banana cama nabo", minAcc: 90, minWpm: 15 },
+            { id: 12, title: "Acentos Agudos", desc: "Use a tecla de acento antes da vogal.", text: "já pé só baú avó café sofá pajé", minAcc: 95, minWpm: 15 },
+            { id: 13, title: "Til e Circunflexo", desc: "O til direto, circunflexo com Shift.", text: "mão cão pão avô três português", minAcc: 95, minWpm: 15 },
+            { id: 14, title: "AltGr e Símbolos", desc: "Use o AltGr direito para terceira função.", text: "1º lugar, 2ª série, temperatura de 30°C.", minAcc: 90, minWpm: 15 },
+            { id: 15, title: "Teste Final Profissional", desc: "Junte tudo: maiúsculas, pontuação e velocidade.", text: "Olá, mundo! A linguagem de programação C (criada em 1972) mudou a história. Você sabia?", minAcc: 95, minWpm: 25 },
+        ];
 
-            // Adiciona Espaço e Enter
-            CHAR_MAP[' '] = { keys: ['k-space'], side: 'Thumb' };
-            CHAR_MAP['\n'] = { keys: ['k-enter'], side: 'R' };
 
-            // Trata Acentos Compositores (Sequências)
-            // No ABNT2 real, você pressiona o acento, solta, pressiona a letra.
-            // Para UI pedagógica, vamos iluminar o modificador de acento + base.
-            const accents = {
-                'á': ['k-acute', 'k-a'], 'é': ['k-acute', 'k-e'], 'í': ['k-acute', 'k-i'], 'ó': ['k-acute', 'k-o'], 'ú': ['k-acute', 'k-u'],
-                'ã': ['k-tilde', 'k-a'], 'õ': ['k-tilde', 'k-o'],
-                'â': ['k-lshift', 'k-tilde', 'k-a'], 'ê': ['k-lshift', 'k-tilde', 'k-e'], 'ô': ['k-lshift', 'k-tilde', 'k-o'],
-                'à': ['k-lshift', 'k-acute', 'k-a'], // Crase = Shift + ´, depois A
-                'Á': ['k-acute', 'k-rshift', 'k-a'], 'É': ['k-acute', 'k-lshift', 'k-e'], // Na prática: bate agudo, bate shift+letra
-                'Ã': ['k-tilde', 'k-rshift', 'k-a'], 'Õ': ['k-tilde', 'k-lshift', 'k-o']
-            };
+        /************************************************************************
+         * 2. SISTEMA DE PERFIL E DADOS DO USUÁRIO
+         ************************************************************************/
+        class UserProfile {
+            constructor() {
+                this.load();
+            }
 
-            for (const [char, seq] of Object.entries(accents)) {
-                CHAR_MAP[char] = { keys: seq, isAccent: true };
+            load() {
+                this.xp = parseInt(localStorage.getItem('abnt2_xp')) || 0;
+                this.level = parseInt(localStorage.getItem('abnt2_level')) || 1;
+                this.nextLevelXp = parseInt(localStorage.getItem('abnt2_nextXp')) || 100;
+                this.lessonsCompleted = JSON.parse(localStorage.getItem('abnt2_lessons')) || [];
+                this.recordWpm = parseInt(localStorage.getItem('abnt2_recordWpm')) || 0;
+                
+                // Array de objetos { date, wpm, acc }
+                this.history = JSON.parse(localStorage.getItem('abnt2_history')) || [];
+                // Heatmap: { "KeyA": 5, "ShiftRight": 12 }
+                this.errorHeatmap = JSON.parse(localStorage.getItem('abnt2_heatmap')) || {};
+            }
+
+            save() {
+                localStorage.setItem('abnt2_xp', this.xp);
+                localStorage.setItem('abnt2_level', this.level);
+                localStorage.setItem('abnt2_nextXp', this.nextLevelXp);
+                localStorage.setItem('abnt2_lessons', JSON.stringify(this.lessonsCompleted));
+                localStorage.setItem('abnt2_recordWpm', this.recordWpm);
+                localStorage.setItem('abnt2_history', JSON.stringify(this.history));
+                localStorage.setItem('abnt2_heatmap', JSON.stringify(this.errorHeatmap));
+                UI.updateProfileView();
+            }
+
+            addXP(amount) {
+                if (amount <= 0) return false;
+                this.xp += amount;
+                let leveledUp = false;
+                
+                // Laço While robusto para múltiplos level-ups
+                while (this.xp >= this.nextLevelXp) {
+                    this.xp -= this.nextLevelXp;
+                    this.level++;
+                    this.nextLevelXp = Math.floor(this.nextLevelXp * 1.5);
+                    leveledUp = true;
+                }
+                
+                this.save();
+                if (leveledUp) AudioEngine.playLevelUp();
+                return leveledUp;
+            }
+
+            registerSession(wpm, acc, sessionErrors) {
+                if (wpm > this.recordWpm) this.recordWpm = wpm;
+                
+                this.history.push({ date: Date.now(), wpm, acc });
+                if (this.history.length > 50) this.history.shift(); // Manter apenas últimas 50
+                
+                // Mesclar erros da sessão no heatmap persistente
+                for (let key in sessionErrors) {
+                    if (!this.errorHeatmap[key]) this.errorHeatmap[key] = 0;
+                    this.errorHeatmap[key] += sessionErrors[key];
+                }
+                
+                this.save();
+            }
+
+            completeLesson(id) {
+                if (!this.lessonsCompleted.includes(id)) {
+                    this.lessonsCompleted.push(id);
+                    this.save();
+                }
             }
         }
-        initializeCharMap();
+        const user = new UserProfile();
 
-        // 3. Biblioteca de Textos e Palavras
-        const WORDS_DB = {
-            base: ['fada', 'dada', 'fala', 'sala', 'casa', 'jaca', 'lata', 'mala', 'nada', 'pata', 'rato', 'vaca'],
-            mid: ['gato', 'homem', 'tecla', 'jogo', 'vida', 'novo', 'pulo', 'ruim', 'sapo', 'tatu'],
-            long: ['computador', 'teclado', 'programador', 'tecnologia', 'desenvolvimento', 'javascript'],
-            accents: ['maçã', 'café', 'avião', 'pão', 'coração', 'você', 'ótimo', 'saúde', 'fácil']
-        };
 
-        const TEXT_LIBRARY = [
-            "O aprendizado da digitação correta é um investimento para a vida toda. Quando você não precisa mais olhar para o teclado, seus pensamentos fluem diretamente para a tela do computador, aumentando enormemente a sua produtividade diária.",
-            "O lobo e o cordeiro estavam bebendo água no mesmo riacho. O lobo, querendo arrumar desculpa para devorar o cordeiro, começou a acusá-lo de sujar a água, mesmo estando rio abaixo. Moral: o tirano sempre arranja pretexto.",
-            "O Brasil é o maior país da América do Sul. Sua imensa extensão territorial abrange biomas variados como a Floresta Amazônica, o Cerrado, a Caatinga e o Pantanal. É uma nação conhecida por sua vasta biodiversidade e cultura plural.",
-            "Para se tornar um bom programador, é necessário escrever muito código. Símbolos como chaves {}, colchetes [] e barras // são comuns. A agilidade em encontrar esses caracteres especiais sem olhar para as mãos reduz a fadiga mental.",
-            "A invenção do transistor mudou o mundo. Os primeiros computadores usavam válvulas e ocupavam salas inteiras. Hoje, bilhões de transistores cabem em um chip do tamanho de uma unha, permitindo a existência dos smartphones modernos.",
-            "O sistema solar é fascinante. Júpiter é o maior planeta, composto principalmente de gases. Marte é conhecido como o planeta vermelho, e a Terra é o único lugar conhecido no universo que abriga vida. As estrelas cadentes são apenas pequenos meteoros."
-        ];
-
-        // 4. Trilha de Aprendizagem (15 Níveis)
-        const CAMPAIGN_LESSONS = [
-            { id: 1, title: 'Posição de Repouso', desc: 'Coloque os indicadores no F e J. Sinta os pequenos relevos.', type: 'chars', data: 'ff jj fj jf ffj jjf f j f j', reqWpm: 10, reqAcc: 95 },
-            { id: 2, title: 'Dedos Médios', desc: 'As teclas D e K são alcançadas pelos dedos médios.', type: 'chars', data: 'dd kk dk kd ddd kkk df jk fd kj', reqWpm: 12, reqAcc: 95 },
-            { id: 3, title: 'Anelares', desc: 'Use os dedos anelares para as teclas S e L.', type: 'chars', data: 'ss ll sl ls sss lll sdf jkl', reqWpm: 15, reqAcc: 95 },
-            { id: 4, title: 'Mindinhos Base', desc: 'As teclas A e Ç. Cuidado, o mindinho é mais fraco.', type: 'chars', data: 'aa çç aça çaa asdf jklç a ç a ç', reqWpm: 15, reqAcc: 95 },
-            { id: 5, title: 'Linha Central (Meio)', desc: 'Os indicadores alcançam o G e o H.', type: 'chars', data: 'gg hh gh hg fg jh gf hj fghj', reqWpm: 18, reqAcc: 92 },
-            { id: 6, title: 'Palavras: Linha Central', desc: 'Formando palavras apenas com a linha central.', type: 'words', data: 'fala sala laça faça gado lago halas chaga', reqWpm: 20, reqAcc: 92 },
-            { id: 7, title: 'Subindo: E e I', desc: 'Use os dedos médios para alcançar a linha superior.', type: 'chars', data: 'ee ii de ki ed ik eiei deki', reqWpm: 20, reqAcc: 92 },
-            { id: 8, title: 'Subindo: R e U', desc: 'Indicadores sobem para o R e U.', type: 'chars', data: 'rr uu fr ju rf uj furu rufu', reqWpm: 22, reqAcc: 92 },
-            { id: 9, title: 'Descendo: C e M', desc: 'Dedo médio esquerdo desce no C, indicador direito no M.', type: 'chars', data: 'cc mm dc jm cd mj moca maco', reqWpm: 22, reqAcc: 92 },
-            { id: 10, title: 'Mão Esquerda Inferior', desc: 'Mindinho no Z, anelar no X, indicador no V e B.', type: 'chars', data: 'zz xx vv bb zx vb zv bx az sx fv fb', reqWpm: 25, reqAcc: 90 },
-            { id: 11, title: 'Alfabeto Básico', desc: 'Palavras misturando todas as linhas, sem acentos.', type: 'words', data: 'carro tempo bola livro casa mundo teclado vidro pedra flor', reqWpm: 25, reqAcc: 90 },
-            { id: 12, title: 'Maiúsculas: Shift Oposto', desc: 'Use o Shift da mão OPOSTA à letra. (A -> Shift Dir).', type: 'words', data: 'Ana Brasil Carlos Daniel Fada Gato Hoje', reqWpm: 20, reqAcc: 90, strictShift: true },
-            { id: 13, title: 'Acentos Básicos (´ e ~)', desc: 'Aperte o acento com o mindinho direito, solte, aperte a vogal.', type: 'words', data: 'pão maçã avião café chulé cipó baú', reqWpm: 20, reqAcc: 90 },
-            { id: 14, title: 'Pontuação', desc: 'Ponto, vírgula, interrogação e exclamação.', type: 'words', data: 'Olá! Tudo bem? Sim, tudo. Fim.', reqWpm: 20, reqAcc: 90 },
-            { id: 15, title: 'O Mestre: Símbolos e AltGr', desc: 'Mistura completa: números, símbolos, ° e ª.', type: 'chars', data: '1º lugar! (100%) A água a 25°C. R$ 50,00.', reqWpm: 25, reqAcc: 90 }
-        ];
-
-        // 5. Gerenciamento de Estado e Usuário
-        const StorageMap = {
-            profile: 'mestreTeclado_profile',
-            audio: 'mestreTeclado_audio'
-        };
-
-        let User = {
-            xp: 0,
-            level: 1,
-            completedLessons: [],
-            heatmap: {}, // { 'a': missesCount, '´': missesCount }
-            
-            load() {
-                const saved = localStorage.getItem(StorageMap.profile);
-                if (saved) {
-                    const data = JSON.parse(saved);
-                    this.xp = data.xp || 0;
-                    this.level = data.level || 1;
-                    this.completedLessons = data.completedLessons || [];
-                    this.heatmap = data.heatmap || {};
-                }
-                this.updateUI();
-            },
-            save() {
-                localStorage.setItem(StorageMap.profile, JSON.stringify({
-                    xp: this.xp, level: this.level, completedLessons: this.completedLessons, heatmap: this.heatmap
-                }));
-            },
-            addXP(amount) {
-                this.xp += amount;
-                const nextLevelReq = this.level * 500; // Escalada simples: lvl 2 = 500, lvl 3 = 1000
-                if (this.xp >= nextLevelReq) {
-                    this.level++;
-                    AudioEngine.playLevelUp();
-                }
-                this.save();
-                this.updateUI();
-            },
-            recordMiss(expectedChar) {
-                const keyId = (CHAR_MAP[expectedChar] && CHAR_MAP[expectedChar].keys.slice(-1)[0]) || expectedChar;
-                this.heatmap[keyId] = (this.heatmap[keyId] || 0) + 1;
-            },
-            updateUI() {
-                document.getElementById('hdr-lvl').innerText = this.level;
-                const nextLevelReq = this.level * 500;
-                const prevLevelReq = (this.level - 1) * 500;
-                const progress = ((this.xp - prevLevelReq) / (nextLevelReq - prevLevelReq)) * 100;
-                document.getElementById('hdr-xp-bar').style.width = `${Math.min(100, Math.max(0, progress))}%`;
-            }
-        };
-
-        // 6. Motor de Áudio
+        /************************************************************************
+         * 3. MOTOR DE ÁUDIO (Tone.js)
+         ************************************************************************/
         const AudioEngine = {
-            initialized: false,
-            muted: false,
-            synthHit: null,
-            synthMiss: null,
-            synthLvl: null,
-            bgm: null,
+            enabled: true,
+            synths: {},
+            bgMusic: null,
+            chordPattern: null,
 
-            async init() {
-                if (this.initialized) return;
-                await Tone.start();
-                
-                // Synth para acertos (Curto, estilo 'click' mecânico ou gota)
-                this.synthHit = new Tone.PolySynth(Tone.Synth, {
-                    oscillator: { type: "triangle" },
-                    envelope: { attack: 0.005, decay: 0.1, sustain: 0, release: 0.1 }
-                }).toDestination();
-                this.synthHit.volume.value = -12;
-
-                // Synth para erros (Buzz áspero)
-                this.synthMiss = new Tone.Synth({
-                    oscillator: { type: "sawtooth" },
-                    envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 }
-                }).toDestination();
-                this.synthMiss.volume.value = -10;
-
-                // Synth Level Up
-                this.synthLvl = new Tone.PolySynth(Tone.Synth).toDestination();
-                this.synthLvl.volume.value = -8;
-
-                // BGM Chords Lo-fi
-                const bgmSynth = new Tone.PolySynth(Tone.Synth, {
+            init() {
+                // Sintetizador para teclas corretas (Suave e curto)
+                this.synths.type = new Tone.PolySynth(Tone.Synth, {
                     oscillator: { type: "sine" },
-                    envelope: { attack: 2, decay: 1, sustain: 0.8, release: 3 }
+                    envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.1 }
                 }).toDestination();
-                bgmSynth.volume.value = -25;
+                this.synths.type.volume.value = -12;
 
-                const chords = [["C4", "E4", "G4", "B4"], ["A3", "C4", "E4", "G4"], ["F3", "A3", "C4", "E4"]];
-                let step = 0;
-                this.bgm = new Tone.Loop(time => {
-                    bgmSynth.triggerAttackRelease(chords[step % chords.length], "2n", time);
-                    step++;
-                }, "1m");
-                Tone.Transport.bpm.value = 75;
+                // Sintetizador para erro (Buzz áspero)
+                this.synths.error = new Tone.Synth({
+                    oscillator: { type: "sawtooth" },
+                    envelope: { attack: 0.01, decay: 0.2, sustain: 0, release: 0.2 }
+                }).toDestination();
+                this.synths.error.volume.value = -8;
 
-                // Load Settings
-                this.muted = localStorage.getItem(StorageMap.audio) === 'true';
-                this.updateBtnUI();
-
-                this.initialized = true;
+                // Sintetizador de Sucesso/Level Up
+                this.synths.success = new Tone.PolySynth(Tone.AMSynth).toDestination();
+                this.synths.success.volume.value = -5;
+                
+                // Sintetizador de Música de Fundo
+                this.bgMusic = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: "triangle" },
+                    envelope: { attack: 0.5, decay: 0.5, sustain: 0.5, release: 1 }
+                }).toDestination();
+                this.bgMusic.volume.value = -25;
             },
-            playHit() { if (!this.muted && this.initialized) this.synthHit.triggerAttackRelease("E5", "32n"); },
-            playMiss() { if (!this.muted && this.initialized) this.synthMiss.triggerAttackRelease("G2", "8n"); },
-            playLevelUp() { 
-                if (!this.muted && this.initialized) {
-                    const now = Tone.now();
-                    this.synthLvl.triggerAttackRelease(["C4", "E4", "G4"], "8n", now);
-                    this.synthLvl.triggerAttackRelease(["E4", "G4", "C5"], "4n", now + 0.2);
+
+            playType() {
+                if (!this.enabled) return;
+                const notes = ["C5", "E5", "G5", "B5", "C6"];
+                const note = notes[Math.floor(Math.random() * notes.length)];
+                this.synths.type.triggerAttackRelease(note, "32n");
+            },
+
+            playError() {
+                if (!this.enabled) return;
+                this.synths.error.triggerAttackRelease("G2", "16n");
+            },
+
+            playSuccess() {
+                if (!this.enabled) return;
+                this.synths.success.triggerAttackRelease(["C4", "E4", "G4", "C5"], "2n");
+            },
+
+            playLevelUp() {
+                if (!this.enabled) return;
+                const now = Tone.now();
+                this.synths.success.triggerAttackRelease(["C4", "E4", "G4"], "8n", now);
+                this.synths.success.triggerAttackRelease(["F4", "A4", "C5"], "8n", now + 0.2);
+                this.synths.success.triggerAttackRelease(["G4", "B4", "D5"], "8n", now + 0.4);
+                this.synths.success.triggerAttackRelease(["C5", "E5", "G5", "C6"], "2n", now + 0.6);
+            },
+
+            startBgMusic() {
+                if (!this.enabled) return;
+                if (Tone.Transport.state !== "started") {
+                    Tone.start();
+                    const chords = [
+                        ["C3", "E3", "G3", "B3"],
+                        ["A2", "C3", "E3", "G3"],
+                        ["F2", "A2", "C3", "E3"],
+                        ["G2", "B2", "D3", "F3"]
+                    ];
+                    let step = 0;
+                    this.chordPattern = new Tone.Loop((time) => {
+                        this.bgMusic.triggerAttackRelease(chords[step], "1m", time);
+                        step = (step + 1) % chords.length;
+                    }, "1m").start(0);
+                    
+                    Tone.Transport.bpm.value = 75;
+                    Tone.Transport.start();
                 }
             },
-            startBGM() { if (!this.muted && this.initialized) { Tone.Transport.start(); this.bgm.start(0); } },
-            stopBGM() { if (this.initialized) { this.bgm.stop(); Tone.Transport.stop(); } },
-            toggleMute() {
-                this.muted = !this.muted;
-                localStorage.setItem(StorageMap.audio, this.muted);
-                this.updateBtnUI();
-                if(this.muted) this.stopBGM();
-                else if(Engine.active) this.startBGM();
+
+            stopBgMusic() {
+                if (this.chordPattern) {
+                    this.chordPattern.stop();
+                    this.chordPattern.dispose();
+                    this.chordPattern = null;
+                }
+                Tone.Transport.stop();
             },
-            updateBtnUI() {
-                const icon = document.getElementById('icon-audio');
-                icon.className = this.muted ? 'fa-solid fa-volume-xmark text-slate-500' : 'fa-solid fa-volume-up text-blue-400';
+
+            toggleAudio() {
+                this.enabled = !this.enabled;
+                const btn = document.getElementById('btn-audio-toggle');
+                if (this.enabled) {
+                    btn.innerHTML = '<i class="fa-solid fa-volume-up"></i>';
+                    btn.classList.replace('text-red-400', 'text-gray-300');
+                    if(document.getElementById('screen-game').classList.contains('active-screen')){
+                        this.startBgMusic();
+                    }
+                } else {
+                    btn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>';
+                    btn.classList.replace('text-gray-300', 'text-red-400');
+                    this.stopBgMusic();
+                }
             }
         };
 
-        // 7. Sistema de Interface de Usuário
+
+        /************************************************************************
+         * 4. INTERFACE E RENDERIZAÇÃO DOM
+         ************************************************************************/
         const UI = {
-            screens: ['menu', 'campaign', 'game', 'result'],
+            screens: ['menu', 'lessons', 'game', 'results'],
             
-            showScreen(id) {
-                this.screens.forEach(s => document.getElementById(`screen-${s}`).classList.add('hidden-screen'));
-                document.getElementById(`screen-${id}`).classList.remove('hidden-screen');
+            init() {
+                this.renderKeyboard();
+                this.updateProfileView();
+                this.renderLessons();
+            },
+
+            showScreen(screenId) {
+                // GC rigoroso: sempre que mudar de tela, limpar qualquer estado de jogo ativo
+                Engine.cleanupAndExit(false); // false = não force ir pro menu, deixa o switch abaixo agir
                 
-                if (id === 'campaign') this.renderCampaignMap();
-                if (id !== 'game') {
-                    Engine.active = false;
-                    AudioEngine.stopBGM();
+                this.screens.forEach(id => {
+                    const el = document.getElementById(`screen-${id}`);
+                    if (id === screenId) {
+                        el.classList.add('active-screen');
+                    } else {
+                        el.classList.remove('active-screen');
+                    }
+                });
+
+                if (screenId === 'game') {
+                    AudioEngine.startBgMusic();
+                    document.getElementById('hidden-input').focus();
                 }
             },
 
-            buildKeyboard() {
-                const container = document.getElementById('virtual-keyboard');
+            renderKeyboard() {
+                const container = document.getElementById('keyboard-ui');
                 container.innerHTML = '';
                 
                 ABNT2_LAYOUT.forEach(row => {
                     const rowDiv = document.createElement('div');
                     rowDiv.className = 'kb-row';
+                    
                     row.forEach(key => {
-                        const [id, main, shift, altgr, wClass, fingerClass] = key;
-                        const btn = document.createElement('div');
-                        btn.id = id;
-                        btn.className = `kb-key ${wClass} ${fingerClass}`;
-                        
-                        // F e J ganham marcador táctil
-                        if (id === 'k-f' || id === 'k-j') btn.classList.add('homing-bump');
+                        const keyDiv = document.createElement('div');
+                        keyDiv.className = `key ${key.w \vert{}\vert{} ''}${key.finger || ''}`;
+                        keyDiv.id = `key-${key.codeOverride || key.code}`; // codeOverride útil para Ç que vira Semicolon dependendo do SO
 
-                        if (!shift && !altgr) {
-                            btn.classList.add('center-label');
-                            btn.innerHTML = `<span class="main">${main}</span>`;
+                        if (key.type !== 'ctrl' && key.type !== 'mod' && key.main !== '') {
+                            let innerHtml = `<span class="main-char">${key.main}</span>`;
+                            if (key.shift) innerHtml += `<span class="shift-char">${key.shift}</span>`;
+                            if (key.altgr) innerHtml += `<span class="altgr-char">${key.altgr}</span>`;
+                            keyDiv.innerHTML = innerHtml;
                         } else {
-                            btn.innerHTML = `
-                                ${shift ? `<span class="sub">${shift}</span>` : ''}
-                                ${altgr ? `<span class="alt">${altgr}</span>` : ''}
-                                <span class="main">${main}</span>
-                            `;
+                            keyDiv.innerHTML = `<span class="main-char">${key.main}</span>`;
                         }
-                        rowDiv.appendChild(btn);
+
+                        // Bump tátil nas teclas F e J
+                        if (key.bump) {
+                            keyDiv.innerHTML += `<div class="absolute bottom-1 w-4 h-1 bg-gray-500 rounded-full opacity-50"></div>`;
+                        }
+
+                        rowDiv.appendChild(keyDiv);
                     });
+                    
                     container.appendChild(rowDiv);
                 });
             },
 
-            renderCampaignMap() {
+            updateProfileView() {
+                document.getElementById('nav-level').textContent = user.level;
+                document.getElementById('nav-xp').textContent = `${user.xp} /${user.nextLevelXp} XP`;
+                
+                document.getElementById('profile-level').textContent = user.level;
+                document.getElementById('profile-xp-text').textContent = `${user.xp} /${user.nextLevelXp} XP`;
+                document.getElementById('profile-record-wpm').textContent = user.recordWpm;
+                
+                const percent = (user.xp / user.nextLevelXp) * 100;
+                document.getElementById('profile-xp-bar').style.width = `${percent}%`;
+
+                // Calcular precisão média do histórico
+                if (user.history.length > 0) {
+                    const sumAcc = user.history.reduce((sum, s) => sum + s.acc, 0);
+                    document.getElementById('profile-avg-acc').textContent = (sumAcc / user.history.length).toFixed(1) + '%';
+                }
+
+                this.renderRecommendations();
+            },
+
+            renderLessons() {
                 const grid = document.getElementById('lessons-grid');
                 grid.innerHTML = '';
                 
-                let completedCount = 0;
-
                 CAMPAIGN_LESSONS.forEach((lesson, index) => {
-                    const isCompleted = User.completedLessons.includes(lesson.id);
-                    const isLocked = index > 0 && !User.completedLessons.includes(CAMPAIGN_LESSONS[index-1].id);
-                    if (isCompleted) completedCount++;
-
-                    const card = document.createElement('div');
-                    card.className = `p-5 rounded-xl border transition-all ${isLocked ? 'bg-slate-800/30 border-slate-800 opacity-50 cursor-not-allowed' : isCompleted ? 'bg-emerald-900/20 border-emerald-700/50 hover:bg-emerald-900/40 cursor-pointer' : 'glass-panel border-blue-500/50 hover:border-blue-400 cursor-pointer hover:-translate-y-1'}`;
+                    const isUnlocked = index === 0 || user.lessonsCompleted.includes(CAMPAIGN_LESSONS[index-1].id);
+                    const isCompleted = user.lessonsCompleted.includes(lesson.id);
                     
-                    const icon = isLocked ? '<i class="fa-solid fa-lock text-slate-600"></i>' : 
-                                 isCompleted ? '<i class="fa-solid fa-check-circle text-emerald-400"></i>' : 
-                                 '<i class="fa-solid fa-play-circle text-blue-400"></i>';
+                    const card = document.createElement('div');
+                    card.className = `p-6 rounded-xl border relative transition ${isUnlocked ? 'bg-gray-800 border-gray-600 hover:border-blue-500 cursor-pointer' : 'bg-gray-900 border-gray-800 opacity-60 cursor-not-allowed'}`;
+                    
+                    if (isCompleted) {
+                        card.innerHTML += `<div class="absolute -top-3 -right-3 bg-green-500 text-white w-8 h-8 flex justify-center items-center rounded-full shadow"><i class="fa-solid fa-check"></i></div>`;
+                        card.classList.add('border-green-500', 'bg-green-900/20');
+                    } else if (!isUnlocked) {
+                        card.innerHTML += `<div class="absolute top-4 right-4 text-gray-600"><i class="fa-solid fa-lock"></i></div>`;
+                    }
 
-                    card.innerHTML = `
-                        <div class="flex justify-between items-start mb-2">
-                            <span class="text-xs font-mono font-bold text-slate-500">Lição ${lesson.id}</span>
-                            ${icon}
+                    card.innerHTML += `
+                        <h3 class="font-bold text-lg text-white mb-1">Lição ${lesson.id}:${lesson.title}</h3>
+                        <p class="text-sm text-gray-400 mb-3 h-10">${lesson.desc}</p>
+                        <div class="flex gap-4 text-xs font-bold ${isUnlocked ? 'text-gray-300' : 'text-gray-600'}">
+                            <span title="Precisão Mínima"><i class="fa-solid fa-bullseye"></i> ${lesson.minAcc}%</span>
+                            <span title="Velocidade Mínima"><i class="fa-solid fa-gauge-high"></i> ${lesson.minWpm} PPM</span>
                         </div>
-                        <h4 class="font-bold text-white mb-1 ${isLocked ? 'text-slate-500' : ''}">${lesson.title}</h4>
-                        <p class="text-xs text-slate-400 leading-snug">${lesson.desc}</p>
                     `;
 
-                    if (!isLocked) {
-                        card.onclick = () => Game.startMode('campaign', lesson.id);
+                    if (isUnlocked) {
+                        card.onclick = () => Engine.startLesson(lesson.id);
                     }
                     grid.appendChild(card);
                 });
-
-                const pct = Math.round((completedCount / CAMPAIGN_LESSONS.length) * 100);
-                document.getElementById('camp-progress-text').innerText = `${pct}%`;
             },
 
-            highlightPhysicalKeys(charExpected) {
-                // Remove destaques anteriores
-                document.querySelectorAll('.kb-key').forEach(el => {
-                    el.classList.remove('target', 'modifier-target');
-                });
-                document.getElementById('guide-left').classList.remove('text-blue-400', 'font-bold');
-                document.getElementById('guide-right').classList.remove('text-blue-400', 'font-bold');
+            renderRecommendations() {
+                const container = document.getElementById('adaptive-recommendations');
+                if (Object.keys(user.errorHeatmap).length === 0) return;
 
-                if(!charExpected) return;
+                // Ordenar erros do maior pro menor
+                const sortedErrors = Object.entries(user.errorHeatmap).sort((a, b) => b[1] - a[1]);
+                let html = '<ul class="list-disc pl-4 space-y-2">';
+                
+                // Analisar top 3 erros
+                let suggestions = 0;
+                for (let i = 0; i < Math.min(3, sortedErrors.length); i++) {
+                    const [key, count] = sortedErrors[i];
+                    if (count < 5) continue; // Só recomenda se houver repetição de erro
 
-                const mapInfo = CHAR_MAP[charExpected];
-                if (!mapInfo) return; // Caractere não mapeado
-
-                mapInfo.keys.forEach((keyId, idx) => {
-                    const el = document.getElementById(keyId);
-                    if (el) {
-                        el.classList.add('target');
-                        // Se for um shift/altgr/acento, pisca como modifier
-                        if (mapInfo.keys.length > 1 && idx < mapInfo.keys.length - 1) {
-                            el.classList.add('modifier-target');
-                        }
+                    suggestions++;
+                    if (key.includes('Shift')) {
+                        html += `<li><strong>Problema de Técnica:</strong> Você errou o uso do Shift ${count} vezes. Pratique as <a href="#" onclick="UI.showScreen('lessons')" class="text-blue-400 hover:underline">Lições 9 e 10</a>.</li>`;
+                    } else if (key.includes('Bracket') || key.includes('Quote')) {
+                        html += `<li><strong>Acentos:</strong> Dificuldade com teclas mortas (acentos). Refaça a <a href="#" onclick="UI.showScreen('lessons')" class="text-blue-400 hover:underline">Lição 12 e 13</a>.</li>`;
+                    } else {
+                        html += `<li><strong>Tecla Específica:</strong> Você errou a tecla associada a [${key}]${count} vezes. Identifique qual dedo é responsável por ela.</li>`;
                     }
-                });
-
-                // Destaca a mão
-                if(mapInfo.side === 'L') document.getElementById('guide-left').classList.add('text-blue-400', 'font-bold');
-                else if(mapInfo.side === 'R') document.getElementById('guide-right').classList.add('text-blue-400', 'font-bold');
+                }
+                
+                html += '</ul>';
+                if (suggestions > 0) {
+                    container.innerHTML = html;
+                }
             },
 
-            showWarning(msg) {
-                const w = document.getElementById('game-warning');
-                w.innerText = msg;
-                w.classList.remove('opacity-0');
-                w.classList.add('opacity-100');
-                setTimeout(() => w.classList.replace('opacity-100', 'opacity-0'), 2000);
+            renderText(text, currentIndex, errorsMap) {
+                const display = document.getElementById('text-display');
+                let html = '';
+                for (let i = 0; i < text.length; i++) {
+                    let classes = 'char ';
+                    if (i < currentIndex) {
+                        // Verifica se no índice específico houve erro gravado
+                        classes += errorsMap.has(i) ? 'typed-wrong' : 'typed-correct';
+                    } else if (i === currentIndex) {
+                        classes += 'current';
+                    } else {
+                        classes += 'untyped';
+                    }
+                    let charToDisplay = text[i] === ' ' ? '&nbsp;' : text[i];
+                    html += `<span class="${classes}">${charToDisplay}</span>`;
+                }
+                display.innerHTML = html;
+            },
+
+            flashTechniqueError() {
+                const alertEl = document.getElementById('technique-alert');
+                alertEl.style.opacity = '1';
+                AudioEngine.playError();
+                setTimeout(() => { alertEl.style.opacity = '0'; }, 1500);
             }
         };
 
-        // 8. Motor Principal de Digitação
+
+        /************************************************************************
+         * 5. MOTOR DE JOGO (Lógica Central)
+         ************************************************************************/
         const Engine = {
-            active: false,
-            mode: null,
-            targetText: "",
-            currentIndex: 0,
-            
-            hits: 0,
-            misses: 0,
-            sessionMisses: {}, // Para o heatmap atual
-            
-            startTime: 0,
-            timerInterval: null,
-            timeLeft: 0,
-            lessonData: null,
-            
-            // Estado físico do teclado (Para checar regras estritas como Shift oposto)
-            keysHeld: new Set(),
+            state: {
+                active: false,
+                mode: '', // 'lesson', 'rush', 'marathon', 'accents'
+                text: '',
+                currentIndex: 0,
+                errorsCount: 0,
+                charErrorsLog: new Map(), // Erros por índice exato da string alvo
+                sessionHeatmap: {}, // Contagem de erros por código físico da tecla
+                startTime: 0,
+                timerInterval: null,
+                timeRemaining: 0,
+                
+                // Controle de Dead Keys
+                deadKeyPending: null, // Guardará 'BracketLeft' ou 'Quote' esperando a vogal
+                
+                // Controle de Sessão de Maratona
+                marathonTextsRemaining: [],
+                
+                // Configurações do modo atual
+                lessonRef: null
+            },
 
-            initEvents() {
-                const input = document.getElementById('core-input');
-                const display = document.getElementById('text-display');
-                const msg = document.getElementById('focus-lost-msg');
+            // Rastreamento das teclas pressionadas fisicamente (vital para Shift Oposto e AltGr)
+            physicalKeysDown: new Set(),
 
-                // Garante que o input escondido mantenha o foco
-                document.addEventListener('click', (e) => {
-                    if (this.active && e.target.closest('#screen-game')) {
-                        input.focus();
-                        msg.classList.add('hidden');
+            init() {
+                // Registrar event listeners de captura física
+                window.addEventListener('keydown', (e) => this.handleKeyDown(e));
+                window.addEventListener('keyup', (e) => this.handleKeyUp(e));
+                
+                // O Input é a fonte da verdade para o caractere final montado pelo SO
+                const hiddenInput = document.getElementById('hidden-input');
+                hiddenInput.addEventListener('input', (e) => this.handleInput(e));
+                hiddenInput.addEventListener('blur', () => {
+                    if (this.state.active) hiddenInput.focus();
+                });
+            },
+
+            // 1. Limpeza rigorosa para evitar fantasmas
+            cleanupAndExit(goToMenu = true) {
+                this.state.active = false;
+                clearInterval(this.state.timerInterval);
+                AudioEngine.stopBgMusic();
+                this.physicalKeysDown.clear();
+                this.state.deadKeyPending = null;
+                document.getElementById('hidden-input').value = '';
+                
+                // Descolorir teclado virtual
+                document.querySelectorAll('.key').forEach(k => {
+                    k.classList.remove('active', 'correct', 'wrong', 'technique-error');
+                });
+
+                if (goToMenu) UI.showScreen('menu');
+            },
+
+            // 2. Iniciar Modo Lição
+            startLesson(lessonId) {
+                const lesson = CAMPAIGN_LESSONS.find(l => l.id === lessonId);
+                if (!lesson) return;
+                
+                this.cleanupAndExit(false);
+                this.state.mode = 'lesson';
+                this.state.lessonRef = lesson;
+                this.state.text = lesson.text;
+                document.getElementById('game-title').textContent = `Lição ${lesson.id}:${lesson.title}`;
+                document.getElementById('game-objective').textContent = `Meta: ${lesson.minAcc}% de precisão${lesson.minWpm > 0 ? ` | ${lesson.minWpm} PPM` : ''}`;
+                
+                this.setupSession();
+            },
+
+            // 3. Iniciar Corrida
+            startMode(modeName) {
+                this.cleanupAndExit(false);
+                this.state.mode = modeName;
+                this.state.lessonRef = null;
+                
+                if (modeName === 'rush') {
+                    this.state.timeRemaining = 90;
+                    this.state.text = this.generateRandomText(150); // Texto longo
+                    document.getElementById('game-title').textContent = "Corrida 90s";
+                    document.getElementById('game-objective').textContent = "Digite o máximo que puder sem errar!";
+                } 
+                else if (modeName === 'marathon') {
+                    // Clona e embaralha os 6 textos
+                    this.state.marathonTextsRemaining = [...MARATHON_TEXTS].sort(() => Math.random() - 0.5);
+                    this.state.text = this.state.marathonTextsRemaining.pop();
+                    this.state.timeRemaining = 0; // Conta para cima
+                    document.getElementById('game-title').textContent = "Maratona (Texto 1 de 6)";
+                    document.getElementById('game-objective').textContent = "Conclua a bateria completa de textos.";
+                }
+                else if (modeName === 'accents') {
+                    this.state.timeRemaining = 0; // Conta para cima
+                    this.state.text = "Água, café, história. É óbvio que o açaí e o pão são bons. A pontuação é 100% (cem por cento). João, você quer um número? 1º lugar, 2ª vez, temperatura de 35°C.";
+                    document.getElementById('game-title').textContent = "Mestre dos Acentos";
+                    document.getElementById('game-objective').textContent = "Domine as teclas mortas (Dead Keys) e o AltGr.";
+                }
+
+                this.setupSession();
+            },
+
+            setupSession() {
+                this.state.currentIndex = 0;
+                this.state.errorsCount = 0;
+                this.state.charErrorsLog.clear();
+                this.state.sessionHeatmap = {};
+                this.state.deadKeyPending = null;
+                document.getElementById('hidden-input').value = '';
+                
+                this.updateStatsUI();
+                UI.renderText(this.state.text, 0, this.state.charErrorsLog);
+                UI.showScreen('game');
+                
+                // Aguarda o primeiro input para disparar o relógio
+                this.state.startTime = 0; 
+                this.state.active = true;
+                
+                this.highlightNextExpectedKeys();
+            },
+
+            startTimer() {
+                this.state.startTime = Date.now();
+                this.state.timerInterval = setInterval(() => {
+                    if (this.state.mode === 'rush') {
+                        this.state.timeRemaining--;
+                        if (this.state.timeRemaining <= 0) this.endSession();
+                    } else {
+                        // Modos de contagem progressiva
+                        this.state.timeRemaining = Math.floor((Date.now() - this.state.startTime) / 1000);
                     }
+                    this.updateStatsUI();
+                }, 1000);
+            },
+
+            // 4. Captura Física de Modificadores (KEYDOWN)
+            handleKeyDown(e) {
+                if (!this.state.active) return;
+                
+                // Impedir atalhos indesejados e scroll, exceto controles vitais
+                if (['Space', 'Backspace', 'Tab'].includes(e.code) || e.code.startsWith('Arrow')) {
+                    e.preventDefault();
+                }
+
+                this.physicalKeysDown.add(e.code);
+                
+                // Tratar Dead Keys fisicamente
+                // Se o usuário aperta a tecla de acento, não dispara o evento Input imediatamente com a letra.
+                // Mas precisamos iluminar a próxima tecla na interface e validar.
+                if (e.code === 'BracketLeft' || e.code === 'Quote') {
+                    const targetChar = this.state.text[this.state.currentIndex];
+                    const mapping = DEAD_KEYS_MAP[targetChar];
+                    if (mapping && mapping.dead === e.code) {
+                        // Ele apertou a dead key certa
+                        this.state.deadKeyPending = e.code;
+                        this.highlightNextExpectedKeys(); // Vai iluminar a vogal agora
+                    } else {
+                        // Errou logo no acento
+                        this.registerError(e.code);
+                        UI.flashTechniqueError();
+                    }
+                }
+            },
+
+            handleKeyUp(e) {
+                this.physicalKeysDown.delete(e.code);
+            },
+
+            // 5. Validação de Caractere Final (INPUT)
+            handleInput(e) {
+                if (!this.state.active) return;
+                
+                const inputEl = document.getElementById('hidden-input');
+                const data = inputEl.value;
+                inputEl.value = ''; // Limpa rápido
+                
+                if (!data || data.length === 0) return;
+                
+                // Tratar apenas o último caractere digitado (mesmo se colar)
+                const charTyped = data.slice(-1);
+                const targetChar = this.state.text[this.state.currentIndex];
+
+                if (this.state.startTime === 0) this.startTimer();
+
+                // Regras de validação Técnica de Maiúsculas e Shift Oposto
+                if (this.validateTechnique(targetChar)) {
+                    // Passou pela validação de técnica física
+                    if (charTyped === targetChar) {
+                        this.handleCorrectChar();
+                    } else {
+                        this.handleWrongChar(charTyped, targetChar);
+                    }
+                } else {
+                    // Erro de técnica (ex: Shift do mesmo lado, faltou AltGr)
+                    this.registerError('Technique');
+                    UI.flashTechniqueError();
+                    // Para fins pedagógicos rigorosos, não avança no texto se a técnica for errada
+                }
+            },
+
+            // Verifica as regras de ouro: Shift Oposto e uso real do AltGr
+            validateTechnique(targetChar) {
+                // 1. Procurar o targetChar nas definições normais (Row 1-4)
+                let targetKeyDef = null;
+                let requiresShift = false;
+                let requiresAltGr = false;
+
+                for (let r of ABNT2_LAYOUT) {
+                    const found = r.find(k => k.main === targetChar || k.shift === targetChar || k.altgr === targetChar);
+                    if (found) {
+                        targetKeyDef = found;
+                        if (found.shift === targetChar) requiresShift = true;
+                        if (found.altgr === targetChar) requiresAltGr = true;
+                        break;
+                    }
+                }
+
+                // 2. Se for Dead Key composta (ex: Á)
+                if (!targetKeyDef && DEAD_KEYS_MAP[targetChar]) {
+                    const dk = DEAD_KEYS_MAP[targetChar];
+                    if (dk.shiftTarget) requiresShift = true;
+                    // Procura a vogal final (ex: KeyA)
+                    for (let r of ABNT2_LAYOUT) {
+                        targetKeyDef = r.find(k => k.code === dk.final);
+                        if (targetKeyDef) break;
+                    }
+                }
+
+                if (!targetKeyDef) return true; // Se não achou regra (ex: espaço), deixa passar.
+
+                // Validação de AltGr
+                if (requiresAltGr && !this.physicalKeysDown.has('AltRight')) {
+                    return false;
+                }
+
+                // Validação Rigorosa do Shift Oposto
+                if (requiresShift) {
+                    const hand = targetKeyDef.hand;
+                    if (hand === 'l') {
+                        // Mão esquerda digita a letra -> Mão direita (ShiftRight) obrigatoriamente
+                        if (!this.physicalKeysDown.has('ShiftRight')) return false;
+                    } else if (hand === 'r') {
+                        // Mão direita digita a letra -> Mão esquerda (ShiftLeft) obrigatoriamente
+                        if (!this.physicalKeysDown.has('ShiftLeft')) return false;
+                    }
+                }
+
+                return true;
+            },
+
+            handleCorrectChar() {
+                AudioEngine.playType();
+                this.state.currentIndex++;
+                this.state.deadKeyPending = null; // Reseta dead key local
+                
+                UI.renderText(this.state.text, this.state.currentIndex, this.state.charErrorsLog);
+                this.updateStatsUI();
+
+                // Fim do texto?
+                if (this.state.currentIndex >= this.state.text.length) {
+                    // Lógica para Maratona (encadeia textos)
+                    if (this.state.mode === 'marathon' && this.state.marathonTextsRemaining.length > 0) {
+                        this.state.text = this.state.marathonTextsRemaining.pop();
+                        this.state.currentIndex = 0;
+                        document.getElementById('game-title').textContent = `Maratona (Texto ${6 - this.state.marathonTextsRemaining.length} de 6)`;
+                        UI.renderText(this.state.text, this.state.currentIndex, this.state.charErrorsLog);
+                        this.highlightNextExpectedKeys();
+                    } else {
+                        // Concluiu sessão
+                        this.endSession();
+                    }
+                } else {
+                    this.highlightNextExpectedKeys();
+                }
+            },
+
+            handleWrongChar(typedChar, targetChar) {
+                AudioEngine.playError();
+                
+                // Grava o erro
+                this.state.errorsCount++;
+                this.state.charErrorsLog.set(this.state.currentIndex, true);
+                
+                // Gravar no Heatmap físico
+                let errorKeyCode = 'Unknown';
+                for (let r of ABNT2_LAYOUT) {
+                    let found = r.find(k => k.main === targetChar || k.shift === targetChar || k.altgr === targetChar);
+                    if (found) { errorKeyCode = found.code; break; }
+                }
+                if (DEAD_KEYS_MAP[targetChar]) errorKeyCode = DEAD_KEYS_MAP[targetChar].final;
+                this.registerError(errorKeyCode);
+
+                // No modo Rush, permite avançar mesmo errando. Nos outros, força corrigir.
+                if (this.state.mode === 'rush') {
+                    this.state.currentIndex++;
+                    if (this.state.currentIndex >= this.state.text.length) this.endSession();
+                } else {
+                    // Piscar UI vermelha
+                    const targetEl = document.querySelector('#text-display .current');
+                    if (targetEl) {
+                        targetEl.classList.add('bg-red-500/50');
+                        setTimeout(() => targetEl.classList.remove('bg-red-500/50'), 200);
+                    }
+                }
+                
+                UI.renderText(this.state.text, this.state.currentIndex, this.state.charErrorsLog);
+                this.updateStatsUI();
+            },
+
+            registerError(keyCode) {
+                if (!this.state.sessionHeatmap[keyCode]) this.state.sessionHeatmap[keyCode] = 0;
+                this.state.sessionHeatmap[keyCode]++;
+            },
+
+            // 6. Iluminação Didática do Teclado Virtual
+            highlightNextExpectedKeys() {
+                // Remove destaques anteriores
+                document.querySelectorAll('.key').forEach(k => {
+                    k.classList.remove('active', 'correct');
                 });
 
-                input.addEventListener('blur', () => {
-                    if (this.active) msg.classList.remove('hidden');
-                });
-
-                // Tratamento Físico Visual (keydown/keyup)
-                document.addEventListener('keydown', (e) => {
-                    if(!this.active) return;
-                    this.keysHeld.add(e.code);
-                    
-                    // Impedir atalhos que atrapalham o jogo (Exceto F5/DevTools)
-                    if (e.key === 'Tab' || e.code === 'Space') e.preventDefault();
-
-                    // Identifica visualmente a tecla pressionada baseada no ABNT2 físico
-                    let visualId = null;
-                    if (e.code === 'Space') visualId = 'k-space';
-                    else if (e.code === 'Backspace') visualId = 'k-backspace';
-                    else if (e.code === 'Enter') visualId = 'k-enter';
-                    else if (e.code === 'ShiftLeft') visualId = 'k-lshift';
-                    else if (e.code === 'ShiftRight') visualId = 'k-rshift';
-                    else if (e.code === 'AltRight' || e.key === 'AltGraph') visualId = 'k-altgr';
-                    else if (e.code === 'ControlLeft') visualId = 'k-lctrl';
-                    else if (e.code === 'ControlRight') visualId = 'k-rctrl';
-                    else {
-                        // Letras normais, busca pelo charMap base
-                        const mapInfo = CHAR_MAP[e.key.toLowerCase()];
-                        if (mapInfo && mapInfo.keys.length > 0) {
-                            visualId = mapInfo.keys.slice(-1)[0]; // Pega o último (a tecla física base)
-                        } else if (e.key === 'Dead') {
-                            // Se for dead key, verificamos o que era esperado para iluminar
-                            const exp = this.targetText[this.currentIndex];
-                            if (exp && CHAR_MAP[exp] && CHAR_MAP[exp].isAccent) {
-                                visualId = CHAR_MAP[exp].keys[0]; // ex: k-acute
-                            }
+                if (this.state.currentIndex >= this.state.text.length) return;
+                const targetChar = this.state.text[this.state.currentIndex];
+                
+                // Caso seja uma Dead Key Composta (ex: 'Á')
+                if (DEAD_KEYS_MAP[targetChar]) {
+                    const dk = DEAD_KEYS_MAP[targetChar];
+                    if (!this.state.deadKeyPending) {
+                        // Passo 1: Esperando o acento (e possivelmente shift nele, ex: '`' em 'à')
+                        document.getElementById(`key-${dk.dead}`)?.classList.add('active');
+                        if (dk.shiftDead) {
+                            // Destaca shift oposto para a mão que bate o acento (mão direita -> Shift Esquerdo)
+                            document.getElementById('key-ShiftLeft')?.classList.add('active');
                         }
-                    }
-
-                    if (visualId) {
-                        const el = document.getElementById(visualId);
-                        if(el) el.classList.add('pressed');
-                    }
-                });
-
-                document.addEventListener('keyup', (e) => {
-                    this.keysHeld.delete(e.code);
-                    document.querySelectorAll('.kb-key.pressed').forEach(el => el.classList.remove('pressed'));
-                });
-
-                // Tratamento Lógico de Caracteres (input event, resolve OS composition/dead keys)
-                input.addEventListener('input', (e) => {
-                    if (!this.active) return;
-                    
-                    // Evita colagem
-                    if (e.inputType === 'insertFromPaste') {
-                        input.value = '';
-                        UI.showWarning("Sem colar! Digite você mesmo.");
+                        return; 
+                    } else {
+                        // Passo 2: Já bateu o acento, iluminar a vogal (e o shift se vogal maiúscula)
+                        document.getElementById(`key-${dk.final}`)?.classList.add('active');
+                        if (dk.shiftTarget) {
+                            // Descobre a mão da vogal
+                            let targetHand = 'l'; // A, E são esquerda
+                            if (dk.final === 'KeyI' || dk.final === 'KeyO' || dk.final === 'KeyU') targetHand = 'r';
+                            const shiftId = targetHand === 'l' ? 'key-ShiftRight' : 'key-ShiftLeft';
+                            document.getElementById(shiftId)?.classList.add('active');
+                        }
                         return;
                     }
+                }
 
-                    const val = input.value;
-                    if (val.length === 0) return;
-                    
-                    const charTyped = val.slice(-1);
-                    input.value = ''; // Reseta imediatamente
-                    
-                    this.processChar(charTyped);
+                // Caso normal (Letras, números, Shift, AltGr)
+                for (let r of ABNT2_LAYOUT) {
+                    const keyDef = r.find(k => k.main === targetChar || k.shift === targetChar || k.altgr === targetChar);
+                    if (keyDef) {
+                        document.getElementById(`key-${keyDef.codeOverride || keyDef.code}`)?.classList.add('active');
+                        
+                        if (keyDef.shift === targetChar) {
+                            // Shift oposto didático visual
+                            const shiftId = keyDef.hand === 'l' ? 'key-ShiftRight' : 'key-ShiftLeft';
+                            document.getElementById(shiftId)?.classList.add('active');
+                        }
+                        if (keyDef.altgr === targetChar) {
+                            document.getElementById('key-AltRight')?.classList.add('active');
+                        }
+                        break;
+                    }
+                }
+            },
+
+            // 7. Cálculos Contínuos de Status (PPM, Precisão)
+            updateStatsUI() {
+                // Evitar divisão por zero ou saltos no primeiro segundo
+                let mins = 0;
+                if (this.state.mode === 'rush') {
+                    document.getElementById('stat-time').textContent = `00:${this.state.timeRemaining.toString().padStart(2, '0')}`;
+                    mins = (90 - this.state.timeRemaining) / 60;
+                } else {
+                    const secs = this.state.timeRemaining;
+                    const m = Math.floor(secs / 60);
+                    const s = secs % 60;
+                    document.getElementById('stat-time').textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                    mins = secs / 60;
+                }
+
+                let wpm = 0;
+                if (mins > 0.05) { // Esperar 3 segundos para estabilizar a métrica e não dar WPM 900
+                    wpm = Math.max(0, Math.round(((this.state.currentIndex / 5) - this.state.errorsCount) / mins));
+                }
+                
+                let acc = 100;
+                const totalKeystrokes = this.state.currentIndex + this.state.errorsCount;
+                if (totalKeystrokes > 0) {
+                    acc = Math.round((this.state.currentIndex / totalKeystrokes) * 100);
+                }
+
+                document.getElementById('stat-wpm').textContent = wpm;
+                document.getElementById('stat-acc').textContent = acc + '%';
+                document.getElementById('stat-errors').textContent = this.state.errorsCount;
+            },
+
+            // 8. Fim de Sessão e Avaliação Pedagógica
+            endSession() {
+                this.state.active = false;
+                clearInterval(this.state.timerInterval);
+                AudioEngine.stopBgMusic();
+                
+                // Cálculo Final
+                let durationMins = 0;
+                if (this.state.mode === 'rush') {
+                    durationMins = (90 - this.state.timeRemaining) / 60;
+                } else {
+                    durationMins = (Date.now() - this.state.startTime) / 60000;
+                }
+                
+                if (durationMins < 0.05) durationMins = 0.05; // clamp
+                const netWpm = Math.max(0, Math.round(((this.state.currentIndex / 5) - this.state.errorsCount) / durationMins));
+                const acc = Math.round((this.state.currentIndex / (this.state.currentIndex + this.state.errorsCount)) * 100) || 100;
+
+                // Verificação de Aprovação (Modo Lição)
+                let passed = true;
+                let title = "Desempenho Concluído!";
+                let msg = "Você completou o exercício.";
+                
+                if (this.state.mode === 'lesson' && this.state.lessonRef) {
+                    const l = this.state.lessonRef;
+                    if (acc < l.minAcc || netWpm < l.minWpm) {
+                        passed = false;
+                        title = "Lição Reprovada";
+                        msg = `A meta era: Precisão ${l.minAcc}% | Velocidade ${l.minWpm} PPM. Tente usar a técnica correta sem pressa.`;
+                    } else {
+                        title = "Lição Aprovada!";
+                        msg = "Parabéns, você dominou esta técnica e desbloqueou a próxima etapa.";
+                        user.completeLesson(l.id);
+                    }
+                }
+
+                // Distribuição de XP (Prioriza a precisão)
+                let earnedXp = 0;
+                if (passed) {
+                    earnedXp = Math.floor((netWpm * 1.5) + (acc > 90 ? (acc - 90) * 10 : 0));
+                    if (earnedXp < 10) earnedXp = 10;
+                    if (this.state.mode === 'lesson') earnedXp += 50; // Bônus de lição
+                } else {
+                    earnedXp = 5; // XP de consolação
+                }
+
+                if (passed) AudioEngine.playSuccess();
+                else AudioEngine.playError();
+
+                // Persistir
+                user.addXP(earnedXp);
+                user.registerSession(netWpm, acc, this.state.sessionHeatmap);
+
+                // Renderizar Tela de Resultados
+                document.getElementById('result-title').textContent = title;
+                document.getElementById('result-msg').textContent = msg;
+                document.getElementById('res-wpm').textContent = netWpm;
+                document.getElementById('res-acc').textContent = acc + '%';
+                document.getElementById('res-chars').textContent = this.state.currentIndex;
+                document.getElementById('res-errors').textContent = this.state.errorsCount;
+                document.getElementById('res-xp').textContent = earnedXp;
+
+                // Botão de Próxima Ação Dinâmico
+                const btnNext = document.getElementById('btn-next-action');
+                if (this.state.mode === 'lesson') {
+                    if (passed) {
+                        btnNext.textContent = "Próxima Lição";
+                        btnNext.onclick = () => this.startLesson(this.state.lessonRef.id + 1);
+                    } else {
+                        btnNext.textContent = "Tentar Novamente";
+                        btnNext.onclick = () => this.startLesson(this.state.lessonRef.id);
+                    }
+                } else {
+                    btnNext.textContent = "Tentar Novamente";
+                    btnNext.onclick = () => this.startMode(this.state.mode);
+                }
+
+                this.renderSessionHeatmap();
+                UI.showScreen('results');
+            },
+
+            renderSessionHeatmap() {
+                const container = document.getElementById('res-heatmap');
+                container.innerHTML = '';
+                
+                const errors = Object.entries(this.state.sessionHeatmap).sort((a,b) => b[1] - a[1]);
+                if (errors.length === 0) {
+                    container.innerHTML = '<p class="text-green-400 font-bold text-center col-span-12">Digitação Perfeita! Nenhum erro registrado.</p>';
+                    return;
+                }
+
+                errors.forEach(([code, count]) => {
+                    const div = document.createElement('div');
+                    div.className = 'heat-cell bg-red-900/60 border border-red-500/30';
+                    let label = code.replace('Key', '');
+                    if (code === 'Technique') label = 'Shift'; // Simplifica na visualização
+                    div.innerHTML = `<span class="block text-gray-400 text-xs">${label}</span><span class="text-red-400">${count}x</span>`;
+                    container.appendChild(div);
                 });
             },
 
-            processChar(charTyped) {
-                const charExpected = this.targetText[this.currentIndex];
-
-                // Checagem Rigorosa de Shift Oposto (se configurado na lição)
-                let shiftViolation = false;
-                if (this.lessonData && this.lessonData.strictShift && CHAR_MAP[charExpected] && CHAR_MAP[charExpected].shift) {
-                    const reqShift = CHAR_MAP[charExpected].keys[0]; // k-lshift ou k-rshift
-                    const usedLeft = this.keysHeld.has('ShiftLeft');
-                    const usedRight = this.keysHeld.has('ShiftRight');
-                    
-                    if (reqShift === 'k-rshift' && !usedRight && usedLeft) shiftViolation = true;
-                    if (reqShift === 'k-lshift' && !usedLeft && usedRight) shiftViolation = true;
+            // Gerador de strings compridas para o Modo Rush
+            generateRandomText(length) {
+                const words = ["para", "que", "não", "uma", "com", "mais", "por", "como", "mas", "foi", "ao", "ele", "das", "tem", "à", "seu", "sua", "ou", "ser", "quando", "muito", "nos", "já", "está", "eu", "também", "só", "pelo", "pela", "até", "isso", "ela", "entre", "era", "depois", "sem", "mesmo", "aos", "ter", "seus", "quem", "nas", "me", "esse", "eles", "estão", "você", "tinha", "foram", "essa", "num", "nem", "suas", "meu", "às", "minha", "têm", "numa", "pelos", "elas", "havia", "seja", "qual", "será", "nós", "tenho", "lhe", "deles", "essas", "esses", "pelas", "este", "fosse"];
+                const result = [];
+                for (let i = 0; i < length; i++) {
+                    result.push(words[Math.floor(Math.random() * words.length)]);
                 }
-
-                if (charTyped === charExpected && !shiftViolation) {
-                    // ACERTO
-                    AudioEngine.playHit();
-                    this.hits++;
-                    this.currentIndex++;
-                    this.updateUI();
-                    
-                    if (this.currentIndex >= this.targetText.length) {
-                        Game.endSession();
-                    } else {
-                        UI.highlightPhysicalKeys(this.targetText[this.currentIndex]);
-                    }
-                } else {
-                    // ERRO
-                    AudioEngine.playMiss();
-                    if (charTyped.trim() !== '' || charExpected === ' ' || charExpected === '\n') {
-                        this.misses++;
-                        User.recordMiss(charExpected);
-                        this.sessionMisses[charExpected] = (this.sessionMisses[charExpected] || 0) + 1;
-                        this.updateUI();
-                        
-                        if(shiftViolation) {
-                            UI.showWarning("Ops! Use o Shift da MÃO OPOSTA.");
-                        }
-
-                        // Animação de erro na tela
-                        const spanEl = document.getElementById(`char-${this.currentIndex}`);
-                        if (spanEl) {
-                            spanEl.classList.add('wrong', 'shake-animation');
-                            setTimeout(() => spanEl.classList.remove('wrong', 'shake-animation'), 200);
-                        }
-                    }
-                }
-            },
-
-            focusInput() {
-                document.getElementById('core-input').focus();
-            },
-
-            updateUI() {
-                document.getElementById('hud-misses').innerText = this.misses;
-                
-                const minPassed = (Date.now() - this.startTime) / 60000;
-                // Gross WPM: (Total Keystrokes / 5) / Min
-                // Net WPM: ( (Gross WPM) - (Uncorrected Errors / Min) )
-                let netWpm = 0;
-                if (minPassed > 0) {
-                    const grossWpm = (this.hits / 5) / minPassed;
-                    const errPerMin = this.misses / minPassed;
-                    netWpm = Math.max(0, Math.round(grossWpm - errPerMin));
-                }
-                document.getElementById('hud-wpm').innerText = netWpm;
-
-                const totalAttempts = this.hits + this.misses;
-                const acc = totalAttempts > 0 ? Math.round((this.hits / totalAttempts) * 100) : 100;
-                document.getElementById('hud-acc').innerText = `${acc}%`;
-
-                // Renderiza janela deslizante do texto (performance otimizada)
-                const display = document.getElementById('text-display');
-                const winSize = 60;
-                const start = Math.max(0, this.currentIndex - 15);
-                const end = Math.min(this.targetText.length, start + winSize);
-
-                let html = '';
-                if (start > 0) html += `<span class="opacity-30">...</span>`;
-
-                for (let i = start; i < end; i++) {
-                    const c = this.targetText[i];
-                    let cls = 'char';
-                    if (i < this.currentIndex) cls += ' correct';
-                    else if (i === this.currentIndex) cls += ' active';
-
-                    let d = c;
-                    if (c === '\n') d = '↵<br>';
-                    html += `<span id="char-${i}" class="${cls}">${d}</span>`;
-                }
-
-                if (end < this.targetText.length) html += `<span class="opacity-30">...</span>`;
-                display.innerHTML = html;
+                return result.join(' ');
             }
         };
 
-        // 9. Fluxo Principal do Jogo
-        const Game = {
-            async startMode(mode, lessonId = null) {
-                await AudioEngine.init();
-                User.load();
-
-                Engine.mode = mode;
-                Engine.hits = 0;
-                Engine.misses = 0;
-                Engine.currentIndex = 0;
-                Engine.sessionMisses = {};
-                Engine.lessonData = null;
-                
-                let title = "";
-                let sub = "";
-
-                if (mode === 'campaign') {
-                    const lesson = CAMPAIGN_LESSONS.find(l => l.id === lessonId);
-                    Engine.lessonData = lesson;
-                    Engine.targetText = lesson.data;
-                    Engine.timeLeft = 0;
-                    title = `Lição ${lesson.id}`;
-                    sub = lesson.title;
-                    document.getElementById('hud-timer-container').classList.add('hidden');
-                } 
-                else if (mode === 'speed') {
-                    // Gera 150 palavras aleatórias da DB base e mid
-                    let txt = [];
-                    const pool = [...WORDS_DB.base, ...WORDS_DB.mid, ...WORDS_DB.long];
-                    for(let i=0; i<150; i++) txt.push(pool[Math.floor(Math.random() * pool.length)]);
-                    Engine.targetText = txt.join(' ');
-                    Engine.timeLeft = 90;
-                    title = "Corrida contra o Tempo";
-                    sub = "90 segundos. Acelere!";
-                    document.getElementById('hud-timer-container').classList.remove('hidden');
-                }
-                else if (mode === 'texts') {
-                    // Pick random text but try to avoid the very last one played if possible
-                    Engine.targetText = TEXT_LIBRARY[Math.floor(Math.random() * TEXT_LIBRARY.length)];
-                    Engine.timeLeft = 0;
-                    title = "Texto Completo";
-                    sub = "Resistência e Precisão";
-                    document.getElementById('hud-timer-container').classList.add('hidden');
-                }
-
-                document.getElementById('hud-title').innerText = title;
-                document.getElementById('hud-subtitle').innerText = sub;
-
-                UI.showScreen('game');
-                UI.buildKeyboard();
-                UI.highlightPhysicalKeys(Engine.targetText[0]);
-                Engine.updateUI();
-                
-                const input = document.getElementById('core-input');
-                input.value = '';
-                input.focus();
-
-                Engine.startTime = Date.now();
-                Engine.active = true;
-                AudioEngine.startBGM();
-
-                if(Engine.timerInterval) clearInterval(Engine.timerInterval);
-                Engine.timerInterval = setInterval(() => this.tick(), 1000);
-            },
-
-            tick() {
-                if(!Engine.active) return;
-                
-                if(Engine.mode === 'speed') {
-                    Engine.timeLeft--;
-                    const m = Math.floor(Engine.timeLeft / 60).toString().padStart(2, '0');
-                    const s = (Engine.timeLeft % 60).toString().padStart(2, '0');
-                    document.getElementById('hud-time').innerText = `${m}:${s}`;
-                    
-                    if(Engine.timeLeft <= 0) this.endSession();
-                } else {
-                    // Update tempo corrido para HUD
-                    const passed = Math.floor((Date.now() - Engine.startTime) / 1000);
-                    const m = Math.floor(passed / 60).toString().padStart(2, '0');
-                    const s = (passed % 60).toString().padStart(2, '0');
-                    document.getElementById('hud-time').innerText = `${m}:${s}`;
-                }
-                // Garante que WPM atualize a cada segundo
-                Engine.updateUI();
-            },
-
-            endSession() {
-                Engine.active = false;
-                clearInterval(Engine.timerInterval);
-                AudioEngine.stopBGM();
-
-                const minPassed = (Date.now() - Engine.startTime) / 60000;
-                let finalWpm = 0;
-                if(minPassed > 0) {
-                    const gwpm = (Engine.hits / 5) / minPassed;
-                    finalWpm = Math.max(0, Math.round(gwpm - (Engine.misses / minPassed)));
-                }
-
-                const totalAtt = Engine.hits + Engine.misses;
-                const acc = totalAtt > 0 ? Math.round((Engine.hits / totalAtt) * 100) : 0;
-
-                // Análise e Recompensa
-                let xpGained = Math.round(Engine.hits * 0.5); // Base XP
-                
-                // Determina Rank
-                let rank = 'C';
-                let rColor = 'from-red-400 to-red-600';
-                let msg = "Precisamos praticar mais a precisão. Foco nas teclas corretas!";
-
-                if (acc >= 98 && finalWpm >= 40) { rank = 'S'; rColor = 'from-yellow-300 to-yellow-600'; xpGained *= 2; msg = "Desempenho Impecável! Você domina o teclado."; }
-                else if (acc >= 95 && finalWpm >= 25) { rank = 'A'; rColor = 'from-emerald-300 to-emerald-600'; xpGained = Math.round(xpGained * 1.5); msg = "Excelente! Mantenha a precisão e aumente a velocidade gradualmente."; }
-                else if (acc >= 90) { rank = 'B'; rColor = 'from-blue-300 to-blue-600'; msg = "Bom trabalho. Tente não olhar para as mãos."; }
-
-                // Verifica condições de vitória na Campanha
-                if (Engine.mode === 'campaign' && Engine.lessonData) {
-                    const reqAcc = Engine.lessonData.reqAcc;
-                    const reqWpm = Engine.lessonData.reqWpm;
-                    if (acc >= reqAcc && finalWpm >= reqWpm) {
-                        if (!User.completedLessons.includes(Engine.lessonData.id)) {
-                            User.completedLessons.push(Engine.lessonData.id);
-                            xpGained += 200; // Bônus por primeira conclusão
-                        }
-                        msg = `Lição ${Engine.lessonData.id} Concluída! Você atingiu os requisitos.`;
-                        document.getElementById('btn-next-action').innerText = "Próxima Lição";
-                        document.getElementById('btn-next-action').onclick = () => {
-                            if(Engine.lessonData.id < CAMPAIGN_LESSONS.length) Game.startMode('campaign', Engine.lessonData.id + 1);
-                            else UI.showScreen('campaign');
-                        };
-                    } else {
-                        msg = `Quase! Para passar, você precisa de ${reqAcc}% de precisão e ${reqWpm} PPM.`;
-                        document.getElementById('btn-next-action').innerText = "Repetir Lição";
-                        document.getElementById('btn-next-action').onclick = () => Game.startMode('campaign', Engine.lessonData.id);
-                        rank = '-'; rColor = 'from-slate-400 to-slate-600';
-                        xpGained = Math.round(xpGained * 0.2); // Reduz XP se falhar
-                    }
-                } else {
-                    document.getElementById('btn-next-action').innerText = "Jogar Novamente";
-                    document.getElementById('btn-next-action').onclick = () => Game.startMode(Engine.mode);
-                }
-
-                User.addXP(xpGained);
-
-                // Prepara Tela de Resultados
-                document.getElementById('res-wpm').innerText = finalWpm;
-                document.getElementById('res-acc').innerText = acc;
-                document.getElementById('res-hits').innerText = Engine.hits;
-                document.getElementById('res-misses').innerText = Engine.misses;
-                
-                const rEl = document.getElementById('res-rank');
-                rEl.innerText = rank;
-                rEl.className = `relative z-10 text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b ${rColor}`;
-                
-                document.getElementById('res-xp-gained').innerText = `+${xpGained}`;
-                document.getElementById('res-xp-total').innerText = `Total: ${User.xp} XP`;
-                document.getElementById('res-recommendation').innerText = msg;
-
-                // Prepara Heatmap Local
-                const hmList = document.getElementById('res-heatmap-list');
-                hmList.innerHTML = '';
-                const sortedMisses = Object.entries(Engine.sessionMisses).sort((a,b) => b[1] - a[1]).slice(0, 5);
-                
-                if (sortedMisses.length === 0) {
-                    hmList.innerHTML = '<span class="text-emerald-400 text-sm">Nenhum erro registrado! Perfeito!</span>';
-                } else {
-                    sortedMisses.forEach(([char, count]) => {
-                        const dispChar = char === ' ' ? 'Espaço' : char;
-                        hmList.innerHTML += `<span class="bg-red-900/40 text-red-300 px-3 py-1 rounded font-mono border border-red-800 text-sm">${dispChar} (${count} erros)</span>`;
-                    });
-                }
-
-                UI.showScreen('result');
-            },
-
-            retryOrNext() {
-                // Handled via dynamic onclick binding in endSession
-            }
-        };
-
-        // Inicialização Principal
+        // BOOTSTRAP INICIAL
         window.onload = () => {
-            User.load();
-            Engine.initEvents();
+            AudioEngine.init();
+            UI.init();
+            Engine.init();
         };
-
     </script>
 </body>
 </html>

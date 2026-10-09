@@ -167,16 +167,13 @@
             padding: 8px 4px;
             font-size: 0.85rem;
             font-weight: 600;
-            min-width: 45px;
-            height: 55px;
+            flex: 1 1 0; min-width: 0; height: 55px; overflow: hidden; white-space: nowrap;
             user-select: none;
             transition: all 0.1s;
         }
 
         body.large-font .key { 
-            min-width: 55px; 
-            height: 65px; 
-            font-size: 1rem; 
+            height: 65px; font-size: 1rem; 
         }
 
         /* Posições dos caracteres na tecla (Principal, Shift, AltGr) */
@@ -233,14 +230,15 @@
         .finger-r-pinky { border-top: 2px solid #ec4899; }
 
         /* Dimensões específicas para manter o padrão físico ABNT2 */
-        .key-space { width: 300px; }
-        .key-backspace { width: 90px; }
-        .key-tab { width: 65px; }
-        .key-caps { width: 80px; }
-        .key-enter { width: 100px; }
-        .key-lshift { width: 60px; }
-        .key-rshift { width: 130px; }
-        .key-ctrl, .key-alt, .key-win { width: 60px; }
+        .key-space { flex: 7 1 0; }
+        .key-backspace { flex: 1.5 1 0; }
+        .key-tab { flex: 1.5 1 0; }
+        .key-caps { flex: 2.25 1 0; }
+        .key-enter { flex: 2.5 1 0; }
+        .key-lshift { flex: 1.25 1 0; }
+        .key-rshift { flex: 2.75 1 0; }
+        .key-ctrl, .key-alt, .key-win { flex: 1.5 1 0; }
+        .kb-row-home { padding-right: 10%; }
 
         /* ==========================================================================
            ÁREA DE EXIBIÇÃO DE TEXTO
@@ -253,9 +251,7 @@
             border-radius: 12px;
             box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
             margin-bottom: 30px;
-            position: relative;
-            white-space: pre-wrap;
-            word-break: break-word;
+            position: relative; white-space: pre-wrap; max-height: 18rem; overflow-y: auto;
         }
 
         body.large-font .text-display { 
@@ -319,13 +315,9 @@
         }
 
         /* SPA Flow (Telas) */
-        .screen { 
-            display: none; 
-        }
-        .screen.active-screen { 
-            display: block; 
-            animation: float-up 0.4s ease-out; 
-        }
+        .screen { display: none !important; }
+        .screen.active-screen { display: block !important; animation: float-up 0.4s ease-out; }
+        #screen-game.active-screen { display: flex !important; flex-direction: column; }
 
         /* Sistema de Conquistas (Badges) */
         .badge { 
@@ -363,6 +355,62 @@
             margin-top: auto; 
             border-top: 1px solid #1e293b; 
         }
+
+        /* ==========================================================================
+           AJUSTES ADICIONAIS (correções de layout e acessibilidade)
+           ========================================================================== */
+        /* O teclado ocupa toda a largura disponível (limitada pelo max-width original).
+           Sem isto, margin:auto num flex em coluna o encolhia ao tamanho do conteúdo. */
+        .keyboard-container { width: 100%; box-sizing: border-box; }
+
+        /* Rótulos de teclas de controle menores para caberem em qualquer largura */
+        .key.key-backspace span.main-char, .key.key-tab span.main-char, .key.key-caps span.main-char,
+        .key.key-enter span.main-char, .key.key-ctrl span.main-char, .key.key-alt span.main-char,
+        .key.key-win span.main-char, .key.key-lshift span.main-char, .key.key-rshift span.main-char { font-size: 0.8rem; }
+        .key.key-backspace span.main-char { font-size: 0.7rem; }
+
+        /* Palavra inteira nunca quebra no meio da linha */
+        .word { display: inline-block; white-space: nowrap; }
+
+        /* Marca tátil das teclas F e J, centralizada na base da tecla */
+        .key .bump {
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 16px;
+            height: 3px;
+            background: #64748b;
+            border-radius: 999px;
+            opacity: 0.8;
+        }
+
+        /* Tecla destacada: todos os textos internos legíveis sobre o fundo claro */
+        .key.active span { color: #000; }
+
+        /* Alto contraste: textos secundários mais legíveis */
+        body.high-contrast .char.untyped { color: #d1d5db; }
+        body.high-contrast .key span.shift-char,
+        body.high-contrast .key span.altgr-char { color: #ffffff; }
+
+        /* Telas pequenas / tablets: teclado compacto, sem estourar a largura */
+        @media (max-width: 720px) {
+            .keyboard-container { padding: 8px; gap: 3px; }
+            .kb-row { gap: 3px; }
+            .key { height: 40px; font-size: 0.6rem; padding: 3px 1px; border-radius: 4px; }
+            .key span.main-char { font-size: 0.8rem; }
+            .key.key-backspace span.main-char, .key.key-tab span.main-char, .key.key-caps span.main-char,
+            .key.key-enter span.main-char, .key.key-ctrl span.main-char, .key.key-alt span.main-char,
+            .key.key-win span.main-char, .key.key-lshift span.main-char, .key.key-rshift span.main-char { font-size: 0.45rem; }
+            /* Teclas estreitas demais para texto: usam símbolos */
+            .key.key-backspace span.main-char, .key.key-lshift span.main-char, .key.key-rshift span.main-char { font-size: 0; }
+            .key.key-backspace span.main-char::before { content: '\2326'; font-size: 0.8rem; }
+            .key.key-lshift span.main-char::before, .key.key-rshift span.main-char::before { content: '\21E7'; font-size: 0.9rem; }
+            .key span.shift-char, .key span.altgr-char { font-size: 0.5rem; }
+            .key span.shift-char { top: 2px; left: 3px; }
+            .key span.altgr-char { bottom: 2px; right: 3px; }
+            .text-display { font-size: 1.3rem; padding: 16px; }
+        }
     </style>
 </head>
 <body>
@@ -385,12 +433,12 @@
             </div>
             
             <!-- Botão de Acessibilidade (Alto Contraste) -->
-            <button id="btn-a11y" class="p-2 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 transition" onclick="A11y.toggleHighContrast()" title="Alto Contraste / Fonte Grande">
+            <button id="btn-a11y" aria-label="Alternar alto contraste e fonte grande" aria-pressed="false" class="p-2 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 transition" onclick="A11y.toggleHighContrast()" title="Alto Contraste / Fonte Grande">
                 <i class="fa-solid fa-eye"></i>
             </button>
             
             <!-- Botão de Áudio -->
-            <button id="btn-audio-toggle" class="p-2 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 transition" onclick="AudioEngine.toggleAudio()" title="Som/Música">
+            <button id="btn-audio-toggle" aria-label="Ligar ou desligar o som" aria-pressed="false" class="p-2 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 transition" onclick="AudioEngine.toggleAudio()" title="Som/Música">
                 <i class="fa-solid fa-volume-up"></i>
             </button>
             
@@ -408,7 +456,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
             <!-- Coluna Esquerda: Modos de Jogo -->
-            <div class="col-span-2 space-y-6">
+            <div class="lg:col-span-2 space-y-6">
                 <h2 class="text-2xl font-bold border-b border-gray-700 pb-2">
                     <i class="fa-solid fa-gamepad mr-2 text-blue-400"></i> Atividades
                 </h2>
@@ -553,7 +601,7 @@
     <!-- =======================================================================
          TELA 3: TELA DE JOGO / DIGITAÇÃO
          ======================================================================= -->
-    <main id="screen-game" class="screen p-4 md:p-8 w-full max-w-6xl mx-auto flex-grow flex flex-col relative">
+    <main id="screen-game" class="screen p-4 md:p-8 w-full max-w-6xl mx-auto flex-grow relative">
         
         <!-- Contêiner Flutuante para as animações de Combo -->
         <div id="combo-container"></div> 
@@ -595,7 +643,7 @@
         
         <!-- Alerta visual de técnica incorreta (ex: Shift do lado errado) -->
         <div id="technique-alert" class="h-6 mb-2 text-center text-yellow-400 font-bold text-sm opacity-0 transition-opacity">
-            <i class="fa-solid fa-triangle-exclamation"></i> ERRO DE TÉCNICA! Use o Shift ou AltGr do lado oposto.
+            <i class="fa-solid fa-triangle-exclamation"></i> ERRO DE TÉCNICA! Confira o acento e use o Shift ou AltGr do lado oposto.
         </div>
 
         <!-- Teclado Virtual ABNT2 (Renderizado pelo JS) -->
@@ -611,7 +659,7 @@
         </div>
 
         <!-- Input Oculto responsável por capturar o texto montado pelo S.O. -->
-        <input type="text" id="hidden-input" autocomplete="off" spellcheck="false" autocorrect="off">
+        <input type="text" id="hidden-input" autocomplete="off" autocapitalize="off" spellcheck="false" autocorrect="off" aria-label="Campo de captura da digitação">
         
         <!-- Botão de Abandono de Sessão -->
         <div class="mt-6 flex justify-center">
@@ -1005,10 +1053,7 @@
                     hand: "r" 
                 },
                 { 
-                    code: "KeyÇ", 
-                    main: "ç", 
-                    shift: "Ç", 
-                    codeOverride: "Semicolon", 
+                    code: "Semicolon", main: "ç", shift: "Ç", 
                     finger: "finger-r-pinky", 
                     hand: "r" 
                 },
@@ -1222,7 +1267,7 @@
         };
 
         /**
-         * Coleção de textos ricos do Modo 3 (Maratona).[cite: 1]
+         * Coleção de textos ricos do Modo 3 (Maratona).
          * Textos desenvolvidos para medir consistência em vocabulário profissional.
          */
         const MARATHON_TEXTS = [
@@ -1274,42 +1319,183 @@
 
         /**
          * ----------------------------------------------------------------------
-         * 2. GESTÃO DE PERFIL E LABORATÓRIO (LOCALSTORAGE + EXPORT/IMPORT)
+         * 2. CONSTANTES E FUNÇÕES AUXILIARES DO TECLADO
+         * ----------------------------------------------------------------------
+         * Funções puras compartilhadas pela Engine, pela UI e pelo Perfil.
+         */
+        const RUSH_SECONDS = 90;
+        const STORAGE_KEY = 'abnt2_pro_profile';
+        const A11Y_KEY = 'abnt2_pro_a11y';
+
+        // Palavras usadas para estender indefinidamente o texto da Corrida
+        const RUSH_WORDS = "para que não uma com mais por como mas foi ao ele das tem seu sua ou ser quando muito nos já está eu também só pelo pela até isso ela entre era depois sem mesmo aos ter seus quem nas me esse eles estão você tinha foram essa num nem suas meu minha".split(' ');
+
+        // Índice rápido: código físico -> definição da tecla
+        const LAYOUT_BY_CODE = {};
+        ABNT2_LAYOUT.forEach(row => row.forEach(k => { LAYOUT_BY_CODE[k.code] = k; }));
+
+        /** Embaralhamento imparcial (Fisher-Yates). O sort(random) antigo era enviesado. */
+        function shuffle(list) {
+            const a = [...list];
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        /** Converte segundos em "mm:ss" (a Corrida de 90s agora mostra 01:30, e não 00:90). */
+        function formatTime(totalSeconds) {
+            const s = Math.max(0, Math.floor(totalSeconds));
+            return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+        }
+
+        /** Shift que deve ser usado: sempre o do lado OPOSTO ao da mão que digita a letra. */
+        function oppositeShift(key) {
+            return key.hand === 'l' ? 'ShiftRight' : 'ShiftLeft';
+        }
+
+        /**
+         * Localiza a tecla que produz um caractere.
+         * A busca respeita prioridade (principal > Shift > AltGr). Antes, o "/" e o "?"
+         * eram achados primeiro como AltGr+Q / AltGr+W e o aluno era obrigado a usar AltGr.
+         */
+        function findKeyForChar(ch) {
+            if (!ch) return null;
+            for (const field of ['main', 'shift', 'altgr']) {
+                for (const row of ABNT2_LAYOUT) {
+                    const k = row.find(x => x.type !== 'ctrl' && x.type !== 'mod' && x[field] === ch);
+                    if (k) return { key: k, needShift: field === 'shift', needAltGr: field === 'altgr' };
+                }
+            }
+            return null;
+        }
+
+        /**
+         * Descreve TUDO o que o aluno precisa pressionar para produzir um caractere.
+         * Retorna null para caracteres sem tecla específica (ex: espaço).
+         *  - code:       tecla principal (a vogal, no caso de acentos)
+         *  - finalShift: Shift (do lado oposto) exigido junto da tecla principal
+         *  - altGr:      se exige AltGr
+         *  - dead:       entrada do DEAD_KEYS_MAP quando é um caractere acentuado
+         *  - deadShift:  Shift exigido na tecla do acento (crase e circunflexo)
+         */
+        function analyzeChar(ch) {
+            if (!ch) return null;
+            const dk = DEAD_KEYS_MAP[ch];
+            if (dk) {
+                const finalKey = LAYOUT_BY_CODE[dk.final];
+                return {
+                    code: dk.final,
+                    finalShift: dk.shiftTarget ? oppositeShift(finalKey) : null,
+                    altGr: false,
+                    dead: dk,
+                    deadShift: dk.shiftDead ? 'ShiftLeft' : null
+                };
+            }
+            const found = findKeyForChar(ch);
+            if (!found) return null;
+            return {
+                code: found.key.code,
+                finalShift: found.needShift ? oppositeShift(found.key) : null,
+                altGr: found.needAltGr,
+                dead: null,
+                deadShift: null
+            };
+        }
+
+        /** Nome legível de uma tecla para o mapa de calor e o tutor. */
+        function keyLabel(code) {
+            if (code === 'Technique') return 'Técnica';
+            if (code === 'Unknown') return '?';
+            const k = LAYOUT_BY_CODE[code];
+            if (!k) return String(code);
+            if (k.main === '') return 'Espaço';
+            return k.main.length === 1 ? k.main.toUpperCase() : k.main;
+        }
+
+        /**
+         * ----------------------------------------------------------------------
+         * 3. GESTÃO DE PERFIL E LABORATÓRIO (LOCALSTORAGE + EXPORT/IMPORT)
          * ----------------------------------------------------------------------
          * Arquitetura projetada para computadores compartilhados. O aluno
          * pode exportar seu avanço como um arquivo JSON e levar para casa ou
          * para outro PC no dia seguinte.
          */
         const Profile = {
-            // Objeto de dados principal
-            data: { 
-                xp: 0, 
-                level: 1, 
-                nextLevelXp: 100, 
-                lessonsCompleted: [], 
-                recordWpm: 0, 
-                avgAcc: 0, 
-                totalSessions: 0, 
-                errorHeatmap: {}, 
-                badges: [] 
+            data: null,
+
+            /** Perfil novo e vazio */
+            defaults() {
+                return {
+                    xp: 0,
+                    level: 1,
+                    nextLevelXp: 100,
+                    lessonsCompleted: [],
+                    recordWpm: 0,
+                    avgAcc: 0,
+                    totalSessions: 0,
+                    errorHeatmap: {},
+                    badges: []
+                };
             },
-            
+
             /**
-             * Carrega o perfil salvo no navegador (se existir)
+             * Valida e normaliza qualquer objeto vindo do localStorage ou de um arquivo importado.
+             * Garante tipos corretos (evita travamentos) e descarta lixo ou conteúdo malicioso.
+             */
+            sanitize(raw) {
+                const d = this.defaults();
+                if (!raw || typeof raw !== 'object') return d;
+
+                const num = (v, min, fallback) => (Number.isFinite(v) && v >= min) ? v : fallback;
+                d.level = Math.floor(num(raw.level, 1, 1));
+                d.nextLevelXp = Math.floor(num(raw.nextLevelXp, 1, 100));
+                d.xp = num(raw.xp, 0, 0);
+                if (d.xp >= d.nextLevelXp) d.xp = 0;
+                d.recordWpm = num(raw.recordWpm, 0, 0);
+                d.avgAcc = Math.min(100, num(raw.avgAcc, 0, 0));
+                d.totalSessions = Math.floor(num(raw.totalSessions, 0, 0));
+
+                const validIds = CAMPAIGN_LESSONS.map(l => l.id);
+                if (Array.isArray(raw.lessonsCompleted)) {
+                    d.lessonsCompleted = [...new Set(raw.lessonsCompleted.filter(id => validIds.includes(id)))];
+                }
+                if (Array.isArray(raw.badges)) {
+                    d.badges = [...new Set(raw.badges.filter(b => Number.isInteger(b) && b >= 1 && b <= 5))];
+                }
+                if (raw.errorHeatmap && typeof raw.errorHeatmap === 'object') {
+                    for (const [k, v] of Object.entries(raw.errorHeatmap)) {
+                        if (k.length <= 30 && Number.isFinite(v) && v > 0) d.errorHeatmap[k] = Math.floor(v);
+                    }
+                }
+                return d;
+            },
+
+            /**
+             * Carrega o perfil salvo no navegador (se existir).
+             * Nunca lança erro: JSON corrompido ou localStorage bloqueado viram perfil novo.
              */
             load() {
-                const saved = localStorage.getItem('abnt2_pro_profile');
-                if (saved) {
-                    this.data = { ...this.data, ...JSON.parse(saved) };
+                this.data = this.defaults();
+                try {
+                    const saved = localStorage.getItem(STORAGE_KEY);
+                    if (saved) this.data = this.sanitize(JSON.parse(saved));
+                } catch (err) {
+                    console.warn('Perfil salvo ilegível; iniciando um novo.', err);
                 }
-                this.checkBadges();
+                this.checkBadges(true); // silencioso: sem som nem aviso durante a abertura
             },
 
             /**
              * Persiste os dados na memória do navegador e atualiza a interface
              */
             save() {
-                localStorage.setItem('abnt2_pro_profile', JSON.stringify(this.data));
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+                } catch (err) {
+                    console.warn('Não foi possível salvar (armazenamento bloqueado ou cheio).', err);
+                }
                 UI.updateProfileView();
             },
 
@@ -1322,7 +1508,7 @@
                 if (amount <= 0) return false;
                 this.data.xp += amount;
                 let leveledUp = false;
-                
+
                 // Laço para permitir múltiplos level-ups se necessário
                 while (this.data.xp >= this.data.nextLevelXp) {
                     this.data.xp -= this.data.nextLevelXp;
@@ -1330,7 +1516,7 @@
                     this.data.nextLevelXp = Math.floor(this.data.nextLevelXp * 1.5);
                     leveledUp = true;
                 }
-                
+
                 this.save();
                 if (leveledUp) AudioEngine.playLevelUp();
                 return leveledUp;
@@ -1343,209 +1529,285 @@
              * @param {number} acc Porcentagem de precisão
              */
             registerSession(wpm, sessionErrors, acc) {
-                // Atualiza Recorde
                 if (wpm > this.data.recordWpm) {
                     this.data.recordWpm = wpm;
                 }
-                
+
                 // Mescla os erros da sessão no Heatmap global do perfil
-                for (let key in sessionErrors) {
-                    if (!this.data.errorHeatmap[key]) {
-                        this.data.errorHeatmap[key] = 0;
-                    }
-                    this.data.errorHeatmap[key] += sessionErrors[key];
+                for (const key in sessionErrors) {
+                    this.data.errorHeatmap[key] = (this.data.errorHeatmap[key] || 0) + sessionErrors[key];
                 }
-                
-                // Calcula a nova Precisão Média (Média Ponderada)[cite: 1]
+
+                // Nova Precisão Média (média ponderada pelo número de sessões)
                 if (acc !== undefined) {
                     this.data.totalSessions = (this.data.totalSessions || 0) + 1;
                     const currentAvg = this.data.avgAcc || 0;
                     this.data.avgAcc = Math.round(((currentAvg * (this.data.totalSessions - 1)) + acc) / this.data.totalSessions);
                 }
-                
+
+                this.checkBadges(); // não-silencioso: avisa o aluno das conquistas de lição
                 this.save();
-                this.checkBadges();
             },
 
             /**
              * Concede uma conquista/medalha ao jogador se ele ainda não tiver
+             * @param {number} badgeId Identificador da medalha (1 a 5)
+             * @param {boolean} silent Se true, não toca som, não avisa e não salva (o chamador salva)
              */
-            awardBadge(badgeId) {
-                if (!this.data.badges.includes(badgeId)) {
-                    this.data.badges.push(badgeId);
-                    this.save();
-                    AudioEngine.playSuccess();
-                    UI.notify(`Conquista Desbloqueada!`);
-                }
+            awardBadge(badgeId, silent = false) {
+                if (this.data.badges.includes(badgeId)) return;
+                this.data.badges.push(badgeId);
+                if (silent) return;
+                this.save();
+                AudioEngine.playSuccess();
+                UI.notify('Conquista Desbloqueada!');
             },
 
             /**
              * Analisa os dados do perfil e concede conquistas pendentes
              */
-            checkBadges() {
-                if (this.data.lessonsCompleted.includes(1)) this.awardBadge(1);
-                if (this.data.lessonsCompleted.includes(5)) this.awardBadge(2);
-                if (this.data.lessonsCompleted.includes(30)) this.awardBadge(5);
-                // Badge 3 e 4 são condicionados durante o gameplay
+            checkBadges(silent = false) {
+                const done = this.data.lessonsCompleted;
+                if (done.includes(1)) this.awardBadge(1, silent);
+                if (done.includes(5)) this.awardBadge(2, silent);
+                // "Curso Inteiro" só vale com as 30 lições concluídas (antes bastava a lição 30)
+                if (CAMPAIGN_LESSONS.every(l => done.includes(l.id))) this.awardBadge(5, silent);
+                // Badges 3 e 4 são concedidas durante o gameplay
             },
 
             /**
              * Transforma os dados em JSON e aciona o download para o aluno
              */
             exportData() {
-                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.data));
-                const dlAnchorElem = document.createElement('a');
-                dlAnchorElem.setAttribute("href", dataStr);
-                dlAnchorElem.setAttribute("download", `mestre_teclado_perfil_n${this.data.level}.json`);
-                dlAnchorElem.click();
+                const blob = new Blob([JSON.stringify(this.data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `mestre_teclado_perfil_n${this.data.level}.json`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
             },
 
             /**
-             * Lê um arquivo JSON fornecido pelo aluno e injeta no perfil
+             * Lê um arquivo JSON fornecido pelo aluno e substitui o perfil atual
              */
             importData(event) {
-                const file = event.target.files[0];
+                const input = event.target;
+                const file = input.files[0];
                 if (!file) return;
-                
+
+                if (file.size > 1000000) {
+                    alert('Arquivo grande demais para ser um perfil do Mestre do Teclado.');
+                    input.value = '';
+                    return;
+                }
+
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     try {
                         const imported = JSON.parse(e.target.result);
-                        if (imported && imported.xp !== undefined) {
-                            this.data = { ...this.data, ...imported };
-                            this.save();
-                            alert("Perfil carregado com sucesso!");
+                        if (!imported || typeof imported !== 'object' || !Number.isFinite(imported.xp)) {
+                            throw new Error('Formato inesperado');
                         }
-                    } catch (err) { 
-                        alert("Arquivo inválido. Certifique-se de que é um perfil do Mestre do Teclado."); 
+                        if (!confirm('Isso vai substituir o progresso salvo neste computador. Continuar?')) return;
+                        this.data = this.sanitize(imported);
+                        this.checkBadges(true);
+                        this.save();
+                        alert('Perfil carregado com sucesso!');
+                    } catch (err) {
+                        alert('Arquivo inválido. Certifique-se de que é um perfil do Mestre do Teclado.');
                     }
                 };
+                // Limpa o campo para permitir importar o MESMO arquivo outra vez
+                reader.onloadend = () => { input.value = ''; };
                 reader.readAsText(file);
             }
         };
 
         /**
          * ----------------------------------------------------------------------
-         * 3. MÓDULOS DE ACESSIBILIDADE E ÁUDIO (A11Y)
+         * 4. MÓDULOS DE ACESSIBILIDADE E ÁUDIO (A11Y)
          * ----------------------------------------------------------------------
          */
         const A11y = {
             highContrast: false,
             synth: window.speechSynthesis,
-            
+
+            /** Restaura a preferência salva (laboratórios: o aluno não precisa reativar a cada aula) */
+            init() {
+                let on = false;
+                try { on = localStorage.getItem(A11Y_KEY) === '1'; } catch (err) { /* ignorar */ }
+                this.apply(on);
+            },
+
+            apply(on) {
+                this.highContrast = on;
+                document.body.classList.toggle('high-contrast', on);
+                document.body.classList.toggle('large-font', on);
+                document.getElementById('btn-a11y').setAttribute('aria-pressed', String(on));
+            },
+
             /**
              * Alterna as classes CSS no <body> para transformar a visualização
              */
             toggleHighContrast() {
-                this.highContrast = !this.highContrast;
-                document.body.classList.toggle('high-contrast', this.highContrast);
-                document.body.classList.toggle('large-font', this.highContrast);
+                this.apply(!this.highContrast);
+                try { localStorage.setItem(A11Y_KEY, this.highContrast ? '1' : '0'); } catch (err) { /* ignorar */ }
             },
-            
+
             /**
              * Utiliza o TTS (Text-to-Speech) nativo do SO para ler a missão atual
              */
             readInstructions() {
-                if (!this.synth) return;
+                if (!this.synth || typeof SpeechSynthesisUtterance === 'undefined') return;
                 this.synth.cancel(); // Para leituras anteriores pendentes
-                const text = document.getElementById('game-title').innerText + ". " + document.getElementById('game-objective').innerText;
+                const lesson = Engine.state.lessonRef;
+                const text = [
+                    document.getElementById('game-title').textContent,
+                    lesson ? lesson.desc : '',
+                    document.getElementById('game-objective').textContent
+                ].filter(Boolean).join('. ');
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'pt-BR';
                 this.synth.speak(utterance);
             }
         };
 
+        /**
+         * Motor de áudio (Tone.js).
+         * Os sintetizadores são criados só no primeiro uso (após um gesto do usuário),
+         * e qualquer falha (ex: laboratório sem internet e Tone.js não carregado)
+         * apenas desliga o som, sem derrubar o resto do jogo.
+         */
         const AudioEngine = {
             enabled: true,
-            synths: {}, 
-            bgMusic: null, 
+            ready: false,
+            failed: false,
+            synths: {},
+            bgMusic: null,
             chordPattern: null,
 
-            /**
-             * Configura os sintetizadores do Tone.js para feedback sonoro em tempo real
-             */
-            init() {
-                // Som de Tecla (Pequeno e Suave)
-                this.synths.type = new Tone.PolySynth(Tone.Synth, { 
-                    oscillator: { type: "sine" }, 
-                    envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.1 } 
-                }).toDestination();
-                this.synths.type.volume.value = -15;
+            /** Cria os sintetizadores uma única vez. Retorna false se o áudio estiver indisponível. */
+            ensure() {
+                if (this.ready) return true;
+                if (this.failed) return false;
+                try {
+                    if (typeof Tone === 'undefined') throw new Error('Tone.js não foi carregado');
 
-                // Som de Erro (Grave e áspero)
-                this.synths.error = new Tone.Synth({ 
-                    oscillator: { type: "sawtooth" }, 
-                    envelope: { attack: 0.01, decay: 0.2, sustain: 0, release: 0.2 } 
-                }).toDestination();
-                this.synths.error.volume.value = -10;
+                    // Som de Tecla (Pequeno e Suave)
+                    this.synths.type = new Tone.PolySynth(Tone.Synth, {
+                        oscillator: { type: "sine" },
+                        envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.1 }
+                    }).toDestination();
+                    this.synths.type.volume.value = -15;
 
-                // Som de Sucesso/Vitória (Acordes agradáveis)
-                this.synths.success = new Tone.PolySynth(Tone.AMSynth).toDestination();
-                this.synths.success.volume.value = -5;
+                    // Som de Erro (Grave e áspero)
+                    this.synths.error = new Tone.Synth({
+                        oscillator: { type: "sawtooth" },
+                        envelope: { attack: 0.01, decay: 0.2, sustain: 0, release: 0.2 }
+                    }).toDestination();
+                    this.synths.error.volume.value = -10;
 
-                // Sintetizador de Música de Fundo
-                this.bgMusic = new Tone.PolySynth(Tone.Synth, { 
-                    oscillator: { type: "triangle" }, 
-                    envelope: { attack: 0.5, decay: 0.5, sustain: 0.5, release: 1 } 
-                }).toDestination();
-                this.bgMusic.volume.value = -25;
+                    // Som de Sucesso/Vitória (Acordes agradáveis)
+                    this.synths.success = new Tone.PolySynth(Tone.AMSynth).toDestination();
+                    this.synths.success.volume.value = -5;
+
+                    // Sintetizador de Música de Fundo
+                    this.bgMusic = new Tone.PolySynth(Tone.Synth, {
+                        oscillator: { type: "triangle" },
+                        envelope: { attack: 0.5, decay: 0.5, sustain: 0.5, release: 1 }
+                    }).toDestination();
+                    this.bgMusic.volume.value = -25;
+
+                    this.ready = true;
+                    return true;
+                } catch (err) {
+                    console.warn('Áudio indisponível:', err);
+                    this.failed = true;
+                    return false;
+                }
             },
 
-            playType() { 
-                if (this.enabled) this.synths.type.triggerAttackRelease(["C5", "E5", "G5"][Math.floor(Math.random() * 3)], "32n"); 
+            /** Executa um som com segurança (respeita o botão mudo e captura erros) */
+            play(fn) {
+                if (!this.enabled || !this.ensure()) return;
+                try {
+                    if (Tone.context.state !== 'running') Tone.start();
+                    fn();
+                } catch (err) {
+                    console.warn('Falha ao tocar som:', err);
+                }
             },
-            
-            playError() { 
-                if (this.enabled) this.synths.error.triggerAttackRelease("G2", "16n"); 
+
+            playType() {
+                this.play(() => this.synths.type.triggerAttackRelease(["C5", "E5", "G5"][Math.floor(Math.random() * 3)], "32n"));
             },
-            
-            playSuccess() { 
-                if (this.enabled) this.synths.success.triggerAttackRelease(["C4", "E4", "G4", "C5"], "2n"); 
+
+            playError() {
+                this.play(() => this.synths.error.triggerAttackRelease("G2", "16n"));
             },
-            
+
+            playSuccess() {
+                this.play(() => this.synths.success.triggerAttackRelease(["C4", "E4", "G4", "C5"], "2n"));
+            },
+
             playLevelUp() {
-                if (!this.enabled) return;
-                const now = Tone.now();
-                this.synths.success.triggerAttackRelease(["C4", "E4"], "8n", now);
-                this.synths.success.triggerAttackRelease(["F4", "A4"], "8n", now + 0.2);
-                this.synths.success.triggerAttackRelease(["C5", "E5", "G5", "C6"], "2n", now + 0.4);
+                this.play(() => {
+                    const now = Tone.now();
+                    this.synths.success.triggerAttackRelease(["C4", "E4"], "8n", now);
+                    this.synths.success.triggerAttackRelease(["F4", "A4"], "8n", now + 0.2);
+                    this.synths.success.triggerAttackRelease(["C5", "E5", "G5", "C6"], "2n", now + 0.4);
+                });
             },
 
             startBgMusic() {
-                if (!this.enabled || Tone.Transport.state === "started") return;
-                Tone.start(); // Requere interação prévia do usuário no navegador moderno
-                const chords = [["C3", "E3", "G3"], ["A2", "C3", "E3"], ["F2", "A2", "C3"], ["G2", "B2", "D3"]];
-                let step = 0;
-                
-                this.chordPattern = new Tone.Loop((time) => {
-                    this.bgMusic.triggerAttackRelease(chords[step], "1m", time);
-                    step = (step + 1) % chords.length;
-                }, "1m").start(0);
-                
-                Tone.Transport.bpm.value = 75; 
-                Tone.Transport.start();
+                if (!this.enabled || !this.ensure() || this.chordPattern) return;
+                try {
+                    Tone.start(); // Requer interação prévia do usuário nos navegadores modernos
+                    const chords = [["C3", "E3", "G3"], ["A2", "C3", "E3"], ["F2", "A2", "C3"], ["G2", "B2", "D3"]];
+                    let step = 0;
+
+                    this.chordPattern = new Tone.Loop((time) => {
+                        this.bgMusic.triggerAttackRelease(chords[step], "1m", time);
+                        step = (step + 1) % chords.length;
+                    }, "1m").start(0);
+
+                    Tone.Transport.bpm.value = 75;
+                    Tone.Transport.start();
+                } catch (err) {
+                    console.warn('Falha ao iniciar a música:', err);
+                }
             },
 
             stopBgMusic() {
-                if (this.chordPattern) { 
-                    this.chordPattern.stop(); 
-                    this.chordPattern.dispose(); 
-                    this.chordPattern = null; 
+                if (!this.ready) return;
+                try {
+                    if (this.chordPattern) {
+                        this.chordPattern.stop();
+                        this.chordPattern.dispose();
+                        this.chordPattern = null;
+                    }
+                    Tone.Transport.stop();
+                    this.bgMusic.releaseAll(); // corta notas ainda soando
+                } catch (err) {
+                    console.warn('Falha ao parar a música:', err);
                 }
-                Tone.Transport.stop();
             },
 
             toggleAudio() {
                 this.enabled = !this.enabled;
                 const btn = document.getElementById('btn-audio-toggle');
+                btn.setAttribute('aria-pressed', String(!this.enabled));
                 if (this.enabled) {
-                    btn.innerHTML = '<i class="fa-solid fa-volume-up"></i>'; 
+                    btn.innerHTML = '<i class="fa-solid fa-volume-up"></i>';
                     btn.classList.replace('text-red-400', 'text-gray-300');
-                    if(document.getElementById('screen-game').classList.contains('active-screen')) {
+                    if (document.getElementById('screen-game').classList.contains('active-screen')) {
                         this.startBgMusic();
                     }
                 } else {
-                    btn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>'; 
+                    btn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>';
                     btn.classList.replace('text-gray-300', 'text-red-400');
                     this.stopBgMusic();
                 }
@@ -1554,17 +1816,19 @@
 
         /**
          * ----------------------------------------------------------------------
-         * 4. INTERFACE E MANIPULAÇÃO DO DOM (UI)
+         * 5. INTERFACE E MANIPULAÇÃO DO DOM (UI)
          * ----------------------------------------------------------------------
          * Módulo responsável por atualizar HTML, criar teclados dinamicamente
          * e manipular transições de tela do Single Page Application (SPA).
          */
         const UI = {
             screens: ['menu', 'lessons', 'game', 'results'],
-            
+            defaultTutorHtml: '',
+
             init() {
+                this.defaultTutorHtml = document.getElementById('adaptive-recommendations').innerHTML;
                 this.renderKeyboard();
-                this.renderLessons();
+                this.updateProfileView(); // também desenha a grade de lições
             },
 
             /**
@@ -1572,50 +1836,59 @@
              */
             showScreen(screenId) {
                 // Parada de segurança caso saia do meio de um jogo
-                Engine.cleanupAndExit(false); 
-                
+                Engine.cleanupAndExit(false);
+
                 this.screens.forEach(id => {
                     const el = document.getElementById(`screen-${id}`);
                     el.classList.toggle('active-screen', id === screenId);
                 });
-                
-                if (screenId === 'game') { 
-                    AudioEngine.startBgMusic(); 
-                    document.getElementById('hidden-input').focus(); 
+                window.scrollTo(0, 0);
+
+                if (screenId === 'game') {
+                    AudioEngine.startBgMusic();
+                    document.getElementById('hidden-input').focus({ preventScroll: true });
                 }
             },
 
             /**
-             * Constrói o layout visual do teclado em HTML a partir da matriz ABNT2_LAYOUT
+             * Constrói o layout visual do teclado em HTML a partir da matriz ABNT2_LAYOUT.
+             * Usa textContent (e não innerHTML) para que símbolos como < & " nunca sejam interpretados como HTML.
              */
             renderKeyboard() {
                 const container = document.getElementById('keyboard-ui');
                 container.innerHTML = '';
-                
-                ABNT2_LAYOUT.forEach(row => {
+                container.setAttribute('aria-hidden', 'true'); // recurso puramente visual
+
+                const addSpan = (parent, cls, text) => {
+                    const s = document.createElement('span');
+                    s.className = cls;
+                    s.textContent = text;
+                    parent.appendChild(s);
+                };
+
+                ABNT2_LAYOUT.forEach((row, rowIndex) => {
                     const rowDiv = document.createElement('div');
-                    rowDiv.className = 'kb-row';
-                    
+                    rowDiv.className = 'kb-row' + (rowIndex === 2 ? ' kb-row-home' : '');
+
                     row.forEach(key => {
                         const keyDiv = document.createElement('div');
-                        keyDiv.className = `key ${key.w || ''} ${key.finger || ''}`;
-                        keyDiv.id = `key-${key.codeOverride || key.code}`;
-                        
-                        // Renderização condicional dos 3 espaços de caracteres na tecla
-                        if (key.type !== 'ctrl' && key.type !== 'mod' && key.main !== '') {
-                            let content = `<span class="main-char">${key.main}</span>`;
-                            if (key.shift) content += `<span class="shift-char">${key.shift}</span>`;
-                            if (key.altgr) content += `<span class="altgr-char">${key.altgr}</span>`;
-                            keyDiv.innerHTML = content;
-                        } else {
-                            keyDiv.innerHTML = `<span class="main-char">${key.main}</span>`;
+                        keyDiv.className = `key ${key.w || ''} ${key.finger || ''}`.replace(/\s+/g, ' ').trim();
+                        keyDiv.id = `key-${key.code}`;
+
+                        addSpan(keyDiv, 'main-char', key.main);
+                        // Caracteres secundários só nas teclas "de verdade"
+                        if (key.type !== 'ctrl' && key.type !== 'mod') {
+                            if (key.shift) addSpan(keyDiv, 'shift-char', key.shift);
+                            if (key.altgr) addSpan(keyDiv, 'altgr-char', key.altgr);
                         }
-                        
-                        // Adiciona marcação tátil para as teclas âncora (F e J)
+
+                        // Marcação tátil para as teclas âncora (F e J)
                         if (key.bump) {
-                            keyDiv.innerHTML += `<div class="absolute bottom-1 w-4 h-1 bg-gray-500 rounded-full opacity-50"></div>`;
+                            const bump = document.createElement('div');
+                            bump.className = 'bump';
+                            keyDiv.appendChild(bump);
                         }
-                        
+
                         rowDiv.appendChild(keyDiv);
                     });
                     container.appendChild(rowDiv);
@@ -1626,56 +1899,65 @@
              * Sincroniza a tela de Perfil com os dados salvos em Profile.data
              */
             updateProfileView() {
-                document.getElementById('nav-level').textContent = Profile.data.level;
-                document.getElementById('nav-xp').textContent = `${Profile.data.xp} / ${Profile.data.nextLevelXp} XP`;
-                
-                document.getElementById('profile-level').textContent = Profile.data.level;
-                document.getElementById('profile-xp-text').textContent = `${Profile.data.xp} / ${Profile.data.nextLevelXp} XP`;
-                document.getElementById('profile-record-wpm').textContent = Profile.data.recordWpm;
-                document.getElementById('profile-avg-acc').textContent = `${Profile.data.avgAcc || 0}%`;[cite: 1]
-                
-                const percentage = (Profile.data.xp / Profile.data.nextLevelXp) * 100;
+                const d = Profile.data;
+                document.getElementById('nav-level').textContent = d.level;
+                document.getElementById('nav-xp').textContent = `${d.xp} / ${d.nextLevelXp} XP`;
+
+                document.getElementById('profile-level').textContent = d.level;
+                document.getElementById('profile-xp-text').textContent = `${d.xp} / ${d.nextLevelXp} XP`;
+                document.getElementById('profile-record-wpm').textContent = d.recordWpm;
+                document.getElementById('profile-avg-acc').textContent = `${d.avgAcc || 0}%`;
+
+                const percentage = Math.min(100, (d.xp / d.nextLevelXp) * 100);
                 document.getElementById('profile-xp-bar').style.width = `${percentage}%`;
-                
+
                 // Exibição de Badges/Conquistas
-                for(let i=1; i<=5; i++){
+                for (let i = 1; i <= 5; i++) {
                     const b = document.getElementById(`badge-${i}`);
-                    if (b) {
-                        if (Profile.data.badges.includes(i)) {
-                            b.classList.add('unlocked');
-                        } else {
-                            b.classList.remove('unlocked');
-                        }
-                    }
+                    if (b) b.classList.toggle('unlocked', d.badges.includes(i));
                 }
 
-                // Recomendação de Tutor Inteligente Baseada em Heatmap
+                this.renderTutor();
+                this.renderLessons(); // atualiza a trilha para destravar as novas lições
+            },
+
+            /**
+             * Tutor: recomendações baseadas no mapa de calor global.
+             * Montado com DOM/textContent para ser imune a conteúdo malicioso em perfis importados.
+             */
+            renderTutor() {
                 const container = document.getElementById('adaptive-recommendations');
-                if (Object.keys(Profile.data.errorHeatmap).length > 0) {
-                    const sorted = Object.entries(Profile.data.errorHeatmap).sort((a, b) => b[1] - a[1]);
-                    let html = '<ul class="list-disc pl-4 space-y-2">';
-                    let found = 0;
-                    
-                    for (let i = 0; i < Math.min(3, sorted.length); i++) {
-                        const [key, count] = sorted[i];
-                        if (count < 5) continue; // Filtro de irrelevância
-                        
-                        found++;
-                        if (key === 'Technique') {
-                            html += `<li><strong>Técnica Incorreta:</strong> Você usou o Shift ou AltGr do lado errado ${count}x. Reveja a Lição 17.</li>`;
-                        } else if (key.includes('Bracket') || key.includes('Quote')) {
-                            html += `<li><strong>Acentos:</strong> Falha de sincronia nas teclas mortas ${count}x. Pratique a Lição 20.</li>`;
-                        } else {
-                            html += `<li><strong>Tecla [${key.replace('Key','')}]</strong>: Errada ${count}x. Observe a cor do dedo que deve alcançá-la.</li>`;
-                        }
-                    }
-                    if (found > 0) {
-                        container.innerHTML = html + '</ul>';
-                    }
+                const top = Object.entries(Profile.data.errorHeatmap)
+                    .filter(([, count]) => count >= 5) // Filtro de irrelevância
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 3);
+
+                if (top.length === 0) {
+                    container.innerHTML = this.defaultTutorHtml;
+                    return;
                 }
-                
-                // Atualiza a tela de lições para destravar as novas
-                this.renderLessons(); 
+
+                const ul = document.createElement('ul');
+                ul.className = 'list-disc pl-4 space-y-2';
+                top.forEach(([key, count]) => {
+                    const li = document.createElement('li');
+                    const strong = document.createElement('strong');
+                    let text;
+                    if (key === 'Technique') {
+                        strong.textContent = 'Técnica Incorreta:';
+                        text = ` Você usou o Shift ou AltGr do lado errado ${count}x. Reveja a Lição 17.`;
+                    } else if (key === 'BracketLeft' || key === 'Quote') {
+                        strong.textContent = 'Acentos:';
+                        text = ` Falha de sincronia nas teclas mortas ${count}x. Pratique a Lição 20.`;
+                    } else {
+                        strong.textContent = `Tecla [${keyLabel(key)}]:`;
+                        text = ` Errada ${count}x. Observe a cor do dedo que deve alcançá-la.`;
+                    }
+                    li.append(strong, text);
+                    ul.appendChild(li);
+                });
+                container.innerHTML = '';
+                container.appendChild(ul);
             },
 
             /**
@@ -1684,51 +1966,66 @@
             renderLessons() {
                 const grid = document.getElementById('lessons-grid');
                 grid.innerHTML = '';
-                
+                const done = Profile.data.lessonsCompleted;
+
                 CAMPAIGN_LESSONS.forEach((lesson, index) => {
                     // A lição está destravada se for a primeira, ou se a anterior foi concluída
-                    const isUnlocked = index === 0 || Profile.data.lessonsCompleted.includes(CAMPAIGN_LESSONS[index-1].id);
-                    const isCompleted = Profile.data.lessonsCompleted.includes(lesson.id);
-                    
+                    const isUnlocked = index === 0 || done.includes(CAMPAIGN_LESSONS[index - 1].id);
+                    const isCompleted = done.includes(lesson.id);
+
                     const card = document.createElement('div');
                     card.className = `p-6 rounded-xl border relative transition ${isUnlocked ? 'bg-gray-800 border-gray-600 hover:border-blue-500 cursor-pointer' : 'bg-gray-900 border-gray-800 opacity-60 cursor-not-allowed'}`;
-                    
+
+                    let html = '';
                     // Decoração Visual de Conclusão/Cadeado
                     if (isCompleted) {
-                        card.innerHTML += `<div class="absolute -top-3 -right-3 bg-green-500 text-white w-8 h-8 flex justify-center items-center rounded-full shadow"><i class="fa-solid fa-check"></i></div>`;
+                        html += `<div class="absolute -top-3 -right-3 bg-green-500 text-white w-8 h-8 flex justify-center items-center rounded-full shadow"><i class="fa-solid fa-check"></i></div>`;
                         card.classList.add('border-green-500', 'bg-green-900/20');
                     } else if (!isUnlocked) {
-                        card.innerHTML += `<div class="absolute top-4 right-4 text-gray-600"><i class="fa-solid fa-lock"></i></div>`;
+                        html += `<div class="absolute top-4 right-4 text-gray-600"><i class="fa-solid fa-lock"></i></div>`;
                     }
 
-                    card.innerHTML += `
+                    html += `
                         <h3 class="font-bold text-lg text-white mb-1">Lição ${lesson.id}: ${lesson.title}</h3>
-                        <p class="text-sm text-gray-400 mb-3 h-10">${lesson.desc}</p>
+                        <p class="text-sm text-gray-400 mb-3 min-h-[2.5rem]">${lesson.desc}</p>
                         <div class="flex gap-4 text-xs font-bold ${isUnlocked ? 'text-gray-300' : 'text-gray-600'}">
                             <span title="Precisão Mínima Exigida"><i class="fa-solid fa-bullseye"></i> ${lesson.minAcc}%</span>
                             <span title="Velocidade Mínima Exigida"><i class="fa-solid fa-gauge-high"></i> ${lesson.minWpm} PPM</span>
                         </div>
                     `;
-                    
-                    // Associa o clique à inicialização do motor de jogo
+                    card.innerHTML = html;
+
+                    // Acessibilidade: o card precisa ser alcançável e acionável pelo teclado
+                    card.setAttribute('role', 'button');
+                    card.setAttribute('aria-disabled', String(!isUnlocked));
                     if (isUnlocked) {
+                        card.tabIndex = 0;
                         card.onclick = () => Engine.startLesson(lesson.id);
+                        card.onkeydown = (e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                Engine.startLesson(lesson.id);
+                            }
+                        };
                     }
-                    
+
                     grid.appendChild(card);
                 });
             },
 
             /**
-             * Renderiza os caracteres da sessão atual com base nos erros
+             * Renderiza os caracteres da sessão atual com base nos erros.
+             * Cada palavra fica num bloco "sem quebra", para que a linha nunca corte
+             * uma palavra no meio (antes cada letra era um bloco independente).
              * @param {string} text Texto completo alvo
              * @param {number} currentIndex Onde o cursor está
              * @param {Map} errorsMap Histórico exato dos erros por índice
              */
             renderText(text, currentIndex, errorsMap) {
                 const display = document.getElementById('text-display');
-                let html = '';
-                
+                const frag = document.createDocumentFragment();
+                let wordEl = null;
+
                 for (let i = 0; i < text.length; i++) {
                     let classes = 'char ';
                     if (i < currentIndex) {
@@ -1738,12 +2035,39 @@
                     } else {
                         classes += 'untyped';
                     }
-                    // Substituir espaços puros por espaços não-quebráveis no HTML
-                    let content = text[i] === ' ' ? '&nbsp;' : text[i];
-                    html += `<span class="${classes}">${content}</span>`;
+
+                    const span = document.createElement('span');
+                    span.className = classes;
+
+                    if (text[i] === ' ') {
+                        span.textContent = '\u00A0'; // espaço não-quebrável para o sublinhado aparecer
+                        frag.appendChild(span);
+                        wordEl = null; // o espaço é o ponto onde a linha pode quebrar
+                    } else {
+                        span.textContent = text[i];
+                        if (!wordEl) {
+                            wordEl = document.createElement('span');
+                            wordEl.className = 'word';
+                            frag.appendChild(wordEl);
+                        }
+                        wordEl.appendChild(span);
+                    }
                 }
-                
-                display.innerHTML = html;
+
+                display.innerHTML = '';
+                display.appendChild(frag);
+
+                // Mantém o caractere atual visível quando o texto é longo (Corrida)
+                const cur = display.querySelector('.current');
+                if (cur) {
+                    const top = cur.offsetTop;
+                    const bottom = top + cur.offsetHeight;
+                    if (bottom > display.scrollTop + display.clientHeight) {
+                        display.scrollTop = bottom - display.clientHeight + 12;
+                    } else if (top < display.scrollTop) {
+                        display.scrollTop = top - 12;
+                    }
+                }
             },
 
             /**
@@ -1753,14 +2077,14 @@
                 const container = document.getElementById('combo-container');
                 const div = document.createElement('div');
                 div.className = 'combo-text';
-                div.innerText = `${combo}x COMBO!`;
+                div.textContent = `${combo}x COMBO!`;
                 container.appendChild(div);
-                
+
                 // Conquista Específica por Combo
-                if(combo === 50) {
+                if (combo === 50) {
                     Profile.awardBadge(4);
                 }
-                
+
                 setTimeout(() => div.remove(), 1000);
             },
 
@@ -1770,7 +2094,8 @@
             notify(msg) {
                 const el = document.createElement('div');
                 el.className = 'fixed bottom-4 right-4 bg-yellow-500 text-black px-4 py-2 rounded font-bold shadow-lg z-50 animate-bounce';
-                el.innerText = msg;
+                el.setAttribute('role', 'status');
+                el.textContent = msg;
                 document.body.appendChild(el);
                 setTimeout(() => el.remove(), 3000);
             }
@@ -1778,236 +2103,325 @@
 
         /**
          * ----------------------------------------------------------------------
-         * 5. ENGINE DE JOGO E VALIDAÇÃO FÍSICA ABNT2
+         * 6. ENGINE DE JOGO E VALIDAÇÃO FÍSICA ABNT2
          * ----------------------------------------------------------------------
          * Coração lógico responsável pelo rastreamento híbrido (Físico + S.O.)
          * Processa a cronometragem contínua e as regras de pontuação.
+         *
+         * Contabilidade da sessão:
+         *   correctChars = acertos | errorsCount = tentativas erradas
+         *   Precisão     = acertos / (acertos + erros)
+         *   PPM Líquida  = ((acertos / 5) - erros) / minutos
          */
         const Engine = {
             state: {
-                active: false, 
-                mode: '', 
-                text: '', 
-                currentIndex: 0, 
-                totalChars: 0, // Contador global de digitações (Corrige modo Rush e Maratona)[cite: 1]
-                errorsCount: 0, 
+                active: false,
+                mode: '',
+                text: '',
+                currentIndex: 0,
+                correctChars: 0,       // Total de caracteres acertados na sessão
+                errorsCount: 0,
+                shiftCharsDone: 0,     // Acertos que exigiram Shift/AltGr/acento (para a conquista de técnica)
                 charErrorsLog: new Map(),
-                sessionHeatmap: {}, 
-                startTime: 0, 
-                timerInterval: null, 
-                timeRemaining: 0, 
+                sessionHeatmap: {},
+                startTime: 0,
+                timerInterval: null,
+                timeRemaining: 0,      // Corrida: segundos restantes | demais modos: segundos decorridos
                 deadKeyPending: null,
-                marathonTextsRemaining: [], 
-                lessonRef: null, 
-                currentCombo: 0, 
-                maxCombo: 0
+                marathonTextsRemaining: [],
+                lessonRef: null,
+                currentCombo: 0,
+                maxCombo: 0,
+                capsWarned: false
             },
-            
+
             // Set que guarda chaves pressionadas fisicamente (vital para validação do Shift e AltGr)
             physicalKeysDown: new Set(),
+            composing: false,     // true enquanto o S.O. monta um caractere acentuado
+            lastComposed: null,   // evita processar duas vezes o mesmo caractere composto
+            lastCode: '',         // última tecla física pressionada (usada nos efeitos visuais)
+            alertTimer: null,
 
             init() {
+                const hi = document.getElementById('hidden-input');
+
                 // Eventos Nativos
                 window.addEventListener('keydown', (e) => this.handleKeyDown(e));
                 window.addEventListener('keyup', (e) => this.handleKeyUp(e));
-                
-                // A validação final de caractere confia no 'input' que já foi montado pelo Sistema Operacional
-                const hiddenInp = document.getElementById('hidden-input');
-                hiddenInp.addEventListener('input', (e) => this.handleInput(e));
-                hiddenInp.addEventListener('blur', () => { 
-                    if (this.state.active) hiddenInp.focus(); 
+                // Se a janela perder o foco com uma tecla pressionada, o keyup nunca chega: limpamos tudo
+                window.addEventListener('blur', () => this.physicalKeysDown.clear());
+
+                // A validação final confia no caractere já montado pelo Sistema Operacional.
+                // Teclas mortas (´ ~ ^ `) geram "composição": só processamos quando ela termina.
+                hi.addEventListener('compositionstart', () => { this.composing = true; });
+                hi.addEventListener('compositionend', (e) => {
+                    this.composing = false;
+                    this.lastComposed = { data: e.data || '', time: performance.now() };
+                    hi.value = '';
+                    this.processTyped(e.data);
                 });
+                hi.addEventListener('input', (e) => this.handleInput(e));
+
+                // Colar texto burlaria o exercício
+                hi.addEventListener('paste', (e) => e.preventDefault());
+
+                // Mantém o foco no campo oculto durante o jogo
+                hi.addEventListener('blur', () => {
+                    this.composing = false;
+                    if (this.state.active) setTimeout(() => hi.focus({ preventScroll: true }), 0);
+                });
+                document.getElementById('text-display').addEventListener('click', () => hi.focus({ preventScroll: true }));
             },
 
             /**
              * Rotina de segurança e coleta de lixo (Garbage Collection)
              */
             cleanupAndExit(goToMenu = true) {
-                this.state.active = false; 
-                clearInterval(this.state.timerInterval); 
+                this.state.active = false;
+                clearInterval(this.state.timerInterval);
+                clearTimeout(this.alertTimer);
                 AudioEngine.stopBgMusic();
-                
-                this.physicalKeysDown.clear(); 
+
+                this.physicalKeysDown.clear();
+                this.composing = false;
                 this.state.deadKeyPending = null;
                 document.getElementById('hidden-input').value = '';
-                
+                document.getElementById('technique-alert').style.opacity = '0';
+
                 // Reseta UI
                 document.querySelectorAll('.key').forEach(k => {
                     k.classList.remove('active', 'correct', 'wrong', 'technique-error');
                 });
-                
+
                 if (goToMenu) UI.showScreen('menu');
             },
 
             startLesson(id) {
-                const l = CAMPAIGN_LESSONS.find(x => x.id === id);
-                if (!l) return;
-                
-                this.cleanupAndExit(false); 
-                this.state.mode = 'lesson'; 
-                this.state.lessonRef = l; 
+                const idx = CAMPAIGN_LESSONS.findIndex(x => x.id === id);
+                if (idx === -1) return;
+
+                // Impede abrir uma lição ainda bloqueada
+                if (idx > 0 && !Profile.data.lessonsCompleted.includes(CAMPAIGN_LESSONS[idx - 1].id)) return;
+
+                const l = CAMPAIGN_LESSONS[idx];
+                this.cleanupAndExit(false);
+                this.state.mode = 'lesson';
+                this.state.lessonRef = l;
                 this.state.text = l.text;
-                
+
                 document.getElementById('game-title').textContent = `Lição ${l.id}: ${l.title}`;
                 document.getElementById('game-objective').textContent = `Meta: ${l.minAcc}% Precisão${l.minWpm > 0 ? ` | ${l.minWpm} PPM` : ''}`;
-                
+
                 this.setupSession();
             },
 
             startMode(modeName) {
-                this.cleanupAndExit(false); 
-                this.state.mode = modeName; 
+                if (!['rush', 'marathon', 'accents'].includes(modeName)) return;
+
+                this.cleanupAndExit(false);
+                this.state.mode = modeName;
                 this.state.lessonRef = null;
-                
+
                 if (modeName === 'rush') {
-                    this.state.timeRemaining = 90; 
                     this.state.text = "A digitação rápida requer foco total. O segredo não é a força, mas a memória muscular e a precisão nos toques. Se errar não pare, siga em frente sem olhar para trás.";
-                    document.getElementById('game-title').textContent = "Corrida 90s"; 
+                    document.getElementById('game-title').textContent = "Corrida 90s";
                     document.getElementById('game-objective').textContent = "Escreva o máximo que puder sem pausas!";
-                } 
+                }
                 else if (modeName === 'marathon') {
-                    // Prepara a fila com os 6 textos randomizados
-                    this.state.marathonTextsRemaining = [...MARATHON_TEXTS].sort(() => Math.random() - 0.5);[cite: 1]
-                    this.state.text = this.state.marathonTextsRemaining.pop(); 
-                    this.state.timeRemaining = 0; // Contagem progressiva
-                    document.getElementById('game-title').textContent = "Maratona (Texto 1 de 6)"; 
-                    document.getElementById('game-objective').textContent = "Conclua toda a bateria seqüencialmente.";
+                    // Prepara a fila com os textos randomizados
+                    this.state.marathonTextsRemaining = shuffle(MARATHON_TEXTS);
+                    this.state.text = this.state.marathonTextsRemaining.pop();
+                    document.getElementById('game-title').textContent = `Maratona (Texto 1 de ${MARATHON_TEXTS.length})`;
+                    document.getElementById('game-objective').textContent = "Conclua toda a bateria sequencialmente.";
                 }
                 else if (modeName === 'accents') {
-                    this.state.timeRemaining = 0; 
                     this.state.text = "A água do café é essencial. O Brasil possui 1º lugar em produção? A pontuação (100%) é §1º na lei ª.";
-                    document.getElementById('game-title').textContent = "Mestre dos Símbolos"; 
+                    document.getElementById('game-title').textContent = "Mestre dos Símbolos";
                     document.getElementById('game-objective').textContent = "Domine as Dead Keys (Acentos) e o AltGr.";
                 }
-                
+
                 this.setupSession();
             },
 
             setupSession() {
+                const s = this.state;
                 // Reset de estado da sessão
-                this.state.currentIndex = 0; 
-                this.state.totalChars = 0; // Essencial para os cálculos não quebrarem no Rush[cite: 1]
-                this.state.errorsCount = 0; 
-                this.state.currentCombo = 0; 
-                this.state.maxCombo = 0;
-                this.state.charErrorsLog.clear(); 
-                this.state.sessionHeatmap = {}; 
-                this.state.deadKeyPending = null;
-                
+                s.currentIndex = 0;
+                s.correctChars = 0;
+                s.errorsCount = 0;
+                s.shiftCharsDone = 0;
+                s.currentCombo = 0;
+                s.maxCombo = 0;
+                s.charErrorsLog.clear();
+                s.sessionHeatmap = {};
+                s.deadKeyPending = null;
+                s.capsWarned = false;
+                // Corrida conta regressivamente; os demais modos contam de 0 (antes a lição herdava o tempo da Corrida)
+                s.timeRemaining = s.mode === 'rush' ? RUSH_SECONDS : 0;
+
                 document.getElementById('hidden-input').value = '';
-                this.updateStatsUI(); 
-                UI.renderText(this.state.text, 0, this.state.charErrorsLog);
-                UI.showScreen('game');
-                
+                UI.showScreen('game'); // limpa o estado anterior (cleanupAndExit) antes de ativarmos a sessão
+
                 // O temporizador só inicia após a primeira tecla
-                this.state.startTime = 0; 
-                this.state.active = true;
-                
+                s.startTime = 0;
+                s.active = true;
+
+                this.updateStatsUI();
+                UI.renderText(s.text, 0, s.charErrorsLog);
                 this.highlightNextExpectedKeys();
             },
 
             startTimer() {
                 this.state.startTime = Date.now();
-                this.state.timerInterval = setInterval(() => {
-                    if (this.state.mode === 'rush') {
-                        this.state.timeRemaining--; 
-                        if (this.state.timeRemaining <= 0) this.endSession();
-                    } else {
-                        this.state.timeRemaining = Math.floor((Date.now() - this.state.startTime) / 1000);
-                    }
+                // Baseado no relógio real (Date.now), e não em contagem de ticks:
+                // não atrasa se a aba ficar em segundo plano.
+                this.state.timerInterval = setInterval(() => this.tick(), 250);
+            },
+
+            tick() {
+                const s = this.state;
+                const elapsed = Math.floor((Date.now() - s.startTime) / 1000);
+
+                if (s.mode === 'rush') {
+                    s.timeRemaining = Math.max(0, RUSH_SECONDS - elapsed);
                     this.updateStatsUI();
-                }, 1000);
+                    if (s.timeRemaining <= 0) this.endSession();
+                } else {
+                    s.timeRemaining = elapsed;
+                    this.updateStatsUI();
+                }
+            },
+
+            /** Minutos decorridos desde a primeira tecla (limitado a 90s na Corrida) */
+            getElapsedMins() {
+                const s = this.state;
+                if (!s.startTime) return 0;
+                let ms = Date.now() - s.startTime;
+                if (s.mode === 'rush') ms = Math.min(ms, RUSH_SECONDS * 1000);
+                return ms / 60000;
+            },
+
+            /** Calcula PPM líquida e precisão a partir dos contadores da sessão */
+            calcStats(mins) {
+                const correct = this.state.correctChars;
+                const errs = this.state.errorsCount;
+                const attempts = correct + errs;
+                const acc = attempts > 0 ? Math.round((correct / attempts) * 100) : 100;
+                const wpm = mins > 0 ? Math.max(0, Math.round(((correct / 5) - errs) / mins)) : 0;
+                return { wpm, acc };
             },
 
             /**
-             * Tratador Físico: Usado unicamente para identificar dead keys 
+             * Tratador Físico: Usado para identificar teclas mortas
              * e modificadores retidos (Shift, AltGr)
              */
             handleKeyDown(e) {
                 if (!this.state.active) return;
-                
-                // Bloqueia rolagem acidental por atalhos
-                if (['Space', 'Backspace', 'Tab'].includes(e.code) || e.code.startsWith('Arrow')) {
+
+                // Evita que Tab/setas tirem o foco do campo de digitação.
+                // ATENÇÃO: o Espaço NÃO pode ser bloqueado aqui, senão o espaço nunca chega ao campo de texto.
+                const code = e.code || '';
+                if (code === 'Tab' || code.startsWith('Arrow')) {
                     e.preventDefault();
                 }
-                this.physicalKeysDown.add(e.code);
 
-                // Acompanhamento Rigoroso de Tecla Morta (Acentos)[cite: 1]
-                if (e.code === 'BracketLeft' || e.code === 'Quote') {
-                    const targetChar = this.state.text[this.state.currentIndex];
-                    const mapping = DEAD_KEYS_MAP[targetChar];
-                    
-                    if (mapping && mapping.dead === e.code) {
-                        let shiftValid = true;
-                        
-                        // Validação Física do Shift na Dead Key (ex: crase ou circunflexo)
-                        if (mapping.shiftDead && !this.physicalKeysDown.has('ShiftLeft')) {
-                            shiftValid = false;
-                        }
-                        
-                        // Não permite uso errado do shift (pode gerar acentos indesejados)
-                        if (!mapping.shiftDead && (this.physicalKeysDown.has('ShiftLeft') || this.physicalKeysDown.has('ShiftRight'))) {
-                            shiftValid = false;
-                        }
+                this.physicalKeysDown.add(code);
+                this.lastCode = code;
 
-                        if (shiftValid) {
-                            this.state.deadKeyPending = e.code;
-                            this.highlightNextExpectedKeys();
-                        } else {
-                            this.registerError('Technique');
-                            this.breakCombo();
-                            const alertEl = document.getElementById('technique-alert');
-                            alertEl.style.opacity = '1'; 
-                            AudioEngine.playError();
-                            setTimeout(() => { alertEl.style.opacity = '0'; }, 1500);
-                        }
-                    } else {
-                        // Bateu o acento na hora errada ou o acento errado
-                        this.registerError(e.code);
-                        this.breakCombo();
-                        const alertEl = document.getElementById('technique-alert');
-                        alertEl.style.opacity = '1'; 
-                        AudioEngine.playError();
-                        setTimeout(() => { alertEl.style.opacity = '0'; }, 1500);
-                    }
+                // Aviso de Caps Lock (todas as letras sairiam maiúsculas e o aluno não entenderia o erro)
+                if (!this.state.capsWarned && e.getModifierState && e.getModifierState('CapsLock')) {
+                    this.state.capsWarned = true;
+                    UI.notify('Caps Lock está ativado! Desligue-o para continuar.');
+                }
+
+                // Acompanhamento Rigoroso de Tecla Morta (Acentos)
+                if (!e.repeat && (code === 'BracketLeft' || code === 'Quote')) {
+                    this.checkDeadKey(code);
                 }
             },
 
-            handleKeyUp(e) { 
-                this.physicalKeysDown.delete(e.code); 
+            handleKeyUp(e) {
+                this.physicalKeysDown.delete(e.code);
+            },
+
+            /** Valida a tecla do acento (´ ~ ^ `) no momento exato em que é pressionada */
+            checkDeadKey(code) {
+                const s = this.state;
+                const info = analyzeChar(s.text[s.currentIndex]);
+
+                if (info && info.dead && info.dead.dead === code) {
+                    const shiftHeld = this.physicalKeysDown.has('ShiftLeft') || this.physicalKeysDown.has('ShiftRight');
+                    // Crase e circunflexo exigem o Shift esquerdo; o agudo e o til não aceitam Shift
+                    const shiftValid = info.deadShift ? this.physicalKeysDown.has(info.deadShift) : !shiftHeld;
+
+                    if (shiftValid) {
+                        s.deadKeyPending = code;
+                        this.highlightNextExpectedKeys();
+                    } else {
+                        this.registerError('Technique');
+                        this.breakCombo();
+                        this.signalTechniqueError();
+                    }
+                } else {
+                    // Bateu o acento na hora errada ou o acento errado
+                    this.registerError(code);
+                    this.breakCombo();
+                    this.signalTechniqueError();
+                }
             },
 
             /**
-             * Tratador Lógico (S.O.): O input já traz o caractere composto,
+             * Tratador Lógico (S.O.): o campo já traz o caractere composto,
              * só precisamos ver se ele bate com as regras do professor.
              */
             handleInput(e) {
                 if (!this.state.active) return;
-                
-                const hi = document.getElementById('hidden-input');
-                const data = hi.value; 
-                hi.value = '';
-                
-                if (!data) return;
-                
-                const charTyped = data.slice(-1); // Resiliência contra colar texto
-                const targetChar = this.state.text[this.state.currentIndex];
-                
-                if (this.state.startTime === 0) this.startTimer();
+                // Durante a composição de um acento o campo guarda um caractere provisório (ex: "´"):
+                // apagá-lo agora quebraria a composição. Esperamos o evento compositionend.
+                if (e.isComposing || this.composing) return;
 
-                // Regra Máxima: Técnica sempre sobrepõe digitação 
-                if (this.validateTechnique(targetChar)) {
-                    if (charTyped === targetChar) {
-                        this.handleCorrectChar();
-                    } else {
-                        this.handleWrongChar(charTyped, targetChar);
-                    }
-                } else {
-                    this.registerError('Technique'); 
+                const hi = document.getElementById('hidden-input');
+                const data = hi.value;
+                hi.value = '';
+                if (!data) return;
+
+                // Alguns navegadores disparam 'input' logo após 'compositionend': ignora a duplicata
+                const lc = this.lastComposed;
+                if (lc && performance.now() - lc.time < 80 && lc.data.normalize('NFC') === data.normalize('NFC')) {
+                    this.lastComposed = null;
+                    return;
+                }
+
+                this.processTyped(data);
+            },
+
+            /** Recebe o texto digitado já finalizado e decide se é acerto, erro ou erro de técnica */
+            processTyped(raw) {
+                const s = this.state;
+                if (!s.active || !raw) return;
+
+                // NFC: junta "a" + "~" em "ã", garantindo comparação correta
+                const typed = raw.normalize('NFC');
+                const target = s.text[s.currentIndex];
+                if (target === undefined) return;
+
+                if (s.startTime === 0) this.startTimer();
+
+                // Regra Máxima: Técnica sempre sobrepõe digitação
+                if (!this.validateTechnique(target)) {
+                    this.registerError('Technique');
                     this.breakCombo();
-                    document.getElementById('technique-alert').style.opacity = '1'; 
-                    AudioEngine.playError();
-                    setTimeout(() => document.getElementById('technique-alert').style.opacity = '0', 1500);
+                    s.deadKeyPending = null;
+                    this.signalTechniqueError();
+                    this.highlightNextExpectedKeys();
+                    return;
+                }
+
+                // Mais de um caractere (ex: acento + letra que não combina, como "´x") é sempre erro
+                if (typed === target) {
+                    this.handleCorrectChar(target);
+                } else {
+                    this.handleWrongChar(typed, target);
                 }
             },
 
@@ -2015,135 +2429,122 @@
              * Confirmação Físico-Lógica de Shift e AltGr Oposto.
              */
             validateTechnique(targetChar) {
-                let def = null; 
-                let reqS = false; 
-                let reqA = false;
-                
-                // Busca em layout padrão
-                for (let r of ABNT2_LAYOUT) { 
-                    const f = r.find(k => k.main === targetChar || k.shift === targetChar || k.altgr === targetChar); 
-                    if(f) { 
-                        def = f; 
-                        reqS = (f.shift === targetChar); 
-                        reqA = (f.altgr === targetChar); 
-                        break; 
-                    } 
-                }
-                
-                // Busca em Teclas Mortas (Á, Ê, etc)
-                if (!def && DEAD_KEYS_MAP[targetChar]) {
-                    const dk = DEAD_KEYS_MAP[targetChar]; 
-                    reqS = dk.shiftTarget;
-                    for (let r of ABNT2_LAYOUT) { 
-                        def = r.find(k => k.code === dk.final); 
-                        if (def) break; 
-                    }
-                }
-                
-                if (!def) return true; // Fallback para barras de espaço ou desconhecidos
-                
-                if (reqA && !this.physicalKeysDown.has('AltRight')) return false;
-                
-                if (reqS) {
-                    if (def.hand === 'l' && !this.physicalKeysDown.has('ShiftRight')) return false;
-                    if (def.hand === 'r' && !this.physicalKeysDown.has('ShiftLeft')) return false;
-                }
+                const info = analyzeChar(targetChar);
+                if (!info) return true; // Espaço e caracteres sem exigência especial
+
+                if (info.altGr && !this.physicalKeysDown.has('AltRight')) return false;
+                if (info.finalShift && !this.physicalKeysDown.has(info.finalShift)) return false;
                 return true;
+            },
+
+            /** Alerta visual + sonoro de erro de técnica */
+            signalTechniqueError() {
+                AudioEngine.playError();
+                this.flashKey(this.lastCode, 'technique-error', 300);
+                const alertEl = document.getElementById('technique-alert');
+                alertEl.style.opacity = '1';
+                clearTimeout(this.alertTimer);
+                this.alertTimer = setTimeout(() => { alertEl.style.opacity = '0'; }, 1500);
+            },
+
+            /** Pisca uma tecla do teclado virtual com uma classe de estado (correct / wrong / technique-error) */
+            flashKey(code, cls, ms = 180) {
+                const el = document.getElementById(`key-${code}`);
+                if (!el) return;
+                el.classList.add(cls);
+                setTimeout(() => el.classList.remove(cls), ms);
             },
 
             /**
              * Tratador de Sucesso. Avança índices, comita combo e processa
-             * as regras infinitas da Maratona e do Rush.[cite: 1]
+             * as regras infinitas da Maratona e do Rush.
              */
-            handleCorrectChar() {
+            handleCorrectChar(target) {
+                const s = this.state;
                 AudioEngine.playType();
-                this.state.currentIndex++;
-                this.state.totalChars++; // Usado nos cálculos globais
-                this.state.deadKeyPending = null;
-                
+                this.flashKey(this.lastCode, 'correct');
+
+                const info = analyzeChar(target);
+                if (info && (info.dead || info.finalShift || info.altGr)) s.shiftCharsDone++;
+
+                s.currentIndex++;
+                s.correctChars++;
+                s.deadKeyPending = null;
+
                 // Progressão de Combo
-                this.state.currentCombo++;
-                if (this.state.currentCombo > this.state.maxCombo) {
-                    this.state.maxCombo = this.state.currentCombo;
+                s.currentCombo++;
+                if (s.currentCombo > s.maxCombo) s.maxCombo = s.currentCombo;
+                if ([10, 25, 50, 100].includes(s.currentCombo)) {
+                    UI.spawnComboFloat(s.currentCombo);
                 }
-                if ([10, 25, 50, 100].includes(this.state.currentCombo)) {
-                    UI.spawnComboFloat(this.state.currentCombo);
-                }
-                
-                UI.renderText(this.state.text, this.state.currentIndex, this.state.charErrorsLog);
-                this.updateStatsUI();
 
                 // Análise de Fim de String Local
-                if (this.state.currentIndex >= this.state.text.length) {
-                    
-                    if (this.state.mode === 'rush') {
-                        // Extensão infinita (adiciona mais palavras aleatórias na mesma string)
-                        this.state.text += " " + "para que não uma com mais por como mas foi ao ele das tem seu sua ou ser quando muito nos já está eu também só pelo pela até isso ela entre era depois sem mesmo aos ter seus quem nas me esse eles estão você tinha foram essa num nem suas meu minha".split(' ').sort(()=>Math.random()-0.5).join(' ');
-                        UI.renderText(this.state.text, this.state.currentIndex, this.state.charErrorsLog);
-                        this.highlightNextExpectedKeys();
-                        
-                    } else if (this.state.mode === 'marathon' && this.state.marathonTextsRemaining.length > 0) {
-                        // Puxa o próximo texto da bateria contínua (mantendo totalChars intacto)
-                        this.state.text = this.state.marathonTextsRemaining.pop();
-                        this.state.currentIndex = 0; 
-                        
-                        document.getElementById('game-title').textContent = `Maratona (Texto ${6 - this.state.marathonTextsRemaining.length} de 6)`;
-                        UI.renderText(this.state.text, this.state.currentIndex, this.state.charErrorsLog);
-                        this.highlightNextExpectedKeys();
-                        
+                if (s.currentIndex >= s.text.length) {
+                    if (s.mode === 'rush') {
+                        this.extendRushText();
+                    } else if (s.mode === 'marathon' && s.marathonTextsRemaining.length > 0) {
+                        // Puxa o próximo texto da bateria (acertos e erros acumulados são mantidos)
+                        s.text = s.marathonTextsRemaining.pop();
+                        s.currentIndex = 0;
+                        s.charErrorsLog.clear(); // erros de posição do texto anterior não valem para o novo texto
+                        const n = MARATHON_TEXTS.length - s.marathonTextsRemaining.length;
+                        document.getElementById('game-title').textContent = `Maratona (Texto ${n} de ${MARATHON_TEXTS.length})`;
                     } else {
                         // Concluiu com louvor a missão/maratona
+                        UI.renderText(s.text, s.currentIndex, s.charErrorsLog);
+                        this.updateStatsUI();
                         this.endSession();
+                        return;
                     }
-                } else {
-                    this.highlightNextExpectedKeys();
                 }
+
+                UI.renderText(s.text, s.currentIndex, s.charErrorsLog);
+                this.updateStatsUI();
+                this.highlightNextExpectedKeys();
+            },
+
+            /** Corrida: acrescenta palavras aleatórias para o texto nunca acabar antes do tempo */
+            extendRushText() {
+                this.state.text += " " + shuffle(RUSH_WORDS).join(' ');
             },
 
             handleWrongChar(charTyped, targetChar) {
-                AudioEngine.playError(); 
+                const s = this.state;
+                AudioEngine.playError();
+                this.flashKey(this.lastCode, 'wrong');
                 this.breakCombo();
-                
-                this.state.errorsCount++; 
-                this.state.charErrorsLog.set(this.state.currentIndex, true);
-                
-                let code = 'Unknown';
-                for(let r of ABNT2_LAYOUT) { 
-                    let f = r.find(k => k.main === targetChar || k.shift === targetChar || k.altgr === targetChar); 
-                    if(f) { code = f.code; break; } 
-                }
-                if(DEAD_KEYS_MAP[targetChar]) code = DEAD_KEYS_MAP[targetChar].final;
-                this.registerError(code);
 
-                if (this.state.mode === 'rush') {
-                    // Rush não para pra corrigir
-                    this.state.currentIndex++;
-                    this.state.totalChars++;
-                    if (this.state.currentIndex >= this.state.text.length) {
-                        this.endSession();
-                    }
+                s.errorsCount++;
+                s.charErrorsLog.set(s.currentIndex, true);
+                s.deadKeyPending = null; // o acento pendente foi consumido pelo S.O.
+
+                const info = analyzeChar(targetChar);
+                this.registerError(info ? info.code : 'Unknown');
+
+                if (s.mode === 'rush') {
+                    // Rush não para pra corrigir: o caractere é pulado
+                    s.currentIndex++;
+                    if (s.currentIndex >= s.text.length) this.extendRushText(); // antes a sessão encerrava sozinha aqui
                 } else {
-                    // Outros modos piscam a tela para correção coercitiva
+                    // Outros modos piscam a letra para correção coercitiva
                     const el = document.querySelector('#text-display .current');
-                    if (el) { 
-                        el.classList.add('bg-red-500/50'); 
-                        setTimeout(() => el.classList.remove('bg-red-500/50'), 200); 
+                    if (el) {
+                        el.classList.add('bg-red-500/50');
+                        setTimeout(() => el.classList.remove('bg-red-500/50'), 200);
                     }
                 }
-                
-                UI.renderText(this.state.text, this.state.currentIndex, this.state.charErrorsLog); 
+
+                UI.renderText(s.text, s.currentIndex, s.charErrorsLog);
                 this.updateStatsUI();
+                this.highlightNextExpectedKeys();
             },
 
-            breakCombo() { 
-                this.state.currentCombo = 0; 
+            breakCombo() {
+                this.state.currentCombo = 0;
             },
-            
-            registerError(code) { 
-                if(!this.state.sessionHeatmap[code]) {
-                    this.state.sessionHeatmap[code] = 0; 
-                }
-                this.state.sessionHeatmap[code]++; 
+
+            registerError(code) {
+                this.state.sessionHeatmap[code] = (this.state.sessionHeatmap[code] || 0) + 1;
             },
 
             /**
@@ -2151,79 +2552,52 @@
              * Fundamental para a didática visual das aulas.
              */
             highlightNextExpectedKeys() {
-                document.querySelectorAll('.key').forEach(k => k.classList.remove('active'));
-                
-                if (this.state.currentIndex >= this.state.text.length) return;
-                
-                const t = this.state.text[this.state.currentIndex];
-                
-                if (DEAD_KEYS_MAP[t]) {
-                    const dk = DEAD_KEYS_MAP[t];
-                    if (!this.state.deadKeyPending) {
-                        // Ilumina tecla do acento
-                        document.getElementById(`key-${dk.dead}`)?.classList.add('active');
-                        if (dk.shiftDead) {
-                            document.getElementById('key-ShiftLeft')?.classList.add('active');
-                        }
-                        return; 
+                document.querySelectorAll('.key.active').forEach(k => k.classList.remove('active'));
+
+                const s = this.state;
+                if (s.currentIndex >= s.text.length) return;
+
+                const t = s.text[s.currentIndex];
+                const add = (code) => document.getElementById(`key-${code}`)?.classList.add('active');
+
+                if (t === ' ') {
+                    add('Space');
+                    return;
+                }
+
+                const info = analyzeChar(t);
+                if (!info) return;
+
+                if (info.dead) {
+                    if (!s.deadKeyPending) {
+                        // 1º passo: tecla do acento (e Shift, se for crase/circunflexo)
+                        add(info.dead.dead);
+                        if (info.deadShift) add(info.deadShift);
                     } else {
-                        // Ilumina tecla da vogal
-                        document.getElementById(`key-${dk.final}`)?.classList.add('active');
-                        if (dk.shiftTarget) {
-                            const side = (dk.final==='KeyI' || dk.final==='KeyO' || dk.final==='KeyU') ? 'key-ShiftLeft' : 'key-ShiftRight';
-                            document.getElementById(side)?.classList.add('active');
-                        }
-                        return;
+                        // 2º passo: a vogal (e o Shift oposto, se for maiúscula)
+                        add(info.code);
+                        if (info.finalShift) add(info.finalShift);
                     }
+                    return;
                 }
-                
-                // Trato Comum
-                for (let r of ABNT2_LAYOUT) {
-                    const f = r.find(k => k.main === t || k.shift === t || k.altgr === t);
-                    if (f) {
-                        document.getElementById(`key-${f.codeOverride || f.code}`)?.classList.add('active');
-                        if (f.shift === t) {
-                            document.getElementById(f.hand === 'l' ? 'key-ShiftRight' : 'key-ShiftLeft')?.classList.add('active');
-                        }
-                        if (f.altgr === t) {
-                            document.getElementById('key-AltRight')?.classList.add('active');
-                        }
-                        break;
-                    }
-                }
+
+                add(info.code);
+                if (info.finalShift) add(info.finalShift);
+                if (info.altGr) add('AltRight');
             },
 
             /**
-             * Avalia continuamente a pontuação usando TotalChars global.[cite: 1]
+             * Avalia continuamente a pontuação.
              */
             updateStatsUI() {
-                let mins = 0;
-                
-                if (this.state.mode === 'rush') {
-                    document.getElementById('stat-time').textContent = `00:${this.state.timeRemaining.toString().padStart(2, '0')}`;
-                    mins = (90 - this.state.timeRemaining) / 60;
-                } else {
-                    const s = this.state.timeRemaining; 
-                    document.getElementById('stat-time').textContent = `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
-                    mins = s / 60;
-                }
-                
-                // PPM Líquida = ((Teclas Corretas / 5) - Erros) / Minutos
-                let wpm = 0;
-                if (mins > 0.05) {
-                    wpm = Math.max(0, Math.round(((this.state.totalChars / 5) - this.state.errorsCount) / mins));
-                }
-                
-                // Precisão Baseada em Total de Eventos de Digitação[cite: 1]
-                let acc = 100;
-                const totalKey = this.state.totalChars + this.state.errorsCount;
-                if (totalKey > 0) {
-                    acc = Math.round((this.state.totalChars / totalKey) * 100);
-                }
+                const s = this.state;
+                const mins = this.getElapsedMins();
+                const { wpm, acc } = this.calcStats(mins > 0.05 ? mins : 0);
 
+                document.getElementById('stat-time').textContent = formatTime(s.timeRemaining);
                 document.getElementById('stat-wpm').textContent = wpm;
                 document.getElementById('stat-acc').textContent = acc + '%';
-                document.getElementById('stat-errors').textContent = this.state.errorsCount;
+                document.getElementById('stat-errors').textContent = s.errorsCount;
             },
 
             /**
@@ -2231,87 +2605,112 @@
              * e despachando recompensas ou lições aprendidas.
              */
             endSession() {
-                this.state.active = false; 
-                clearInterval(this.state.timerInterval); 
+                const s = this.state;
+                if (!s.active) return; // evita finalizar duas vezes (ex: fim do texto e do tempo juntos)
+                s.active = false;
+                clearInterval(s.timerInterval);
                 AudioEngine.stopBgMusic();
-                
-                let durationMins = this.state.mode === 'rush' ? (90 - this.state.timeRemaining) / 60 : (Date.now() - this.state.startTime) / 60000;
-                if (durationMins < 0.05) durationMins = 0.05;
-                
-                // Fechamento usando TotalChars global (Correção Aplicada)[cite: 1]
-                const netWpm = Math.max(0, Math.round(((this.state.totalChars / 5) - this.state.errorsCount) / durationMins));
-                const acc = Math.round((this.state.totalChars / (this.state.totalChars + this.state.errorsCount)) * 100) || 100;
 
-                let passed = true; 
-                let title = "Sessão Concluída"; 
+                const mins = Math.max(this.getElapsedMins(), 0.05);
+                const { wpm: netWpm, acc } = this.calcStats(mins);
+
+                let passed = true;
+                let title = "Sessão Concluída";
                 let msg = "Treino finalizado com sucesso.";
-                
+                const lesson = s.mode === 'lesson' ? s.lessonRef : null;
+                const nextLesson = lesson ? CAMPAIGN_LESSONS.find(x => x.id === lesson.id + 1) : null;
+
                 // Regras Estritas do Curso
-                if (this.state.mode === 'lesson' && this.state.lessonRef) {
-                    const l = this.state.lessonRef;
-                    if (acc < l.minAcc || netWpm < l.minWpm) { 
-                        passed = false; 
-                        title = "Não foi desta vez"; 
-                        msg = `Atenção aos erros! Meta não alcançada: Precisão exigida de ${l.minAcc}%.`; 
-                    } else { 
-                        title = "Aprovado!"; 
-                        msg = "Excelente. Você absorveu os fundamentos e pode prosseguir."; 
+                if (lesson) {
+                    if (acc < lesson.minAcc || netWpm < lesson.minWpm) {
+                        passed = false;
+                        title = "Não foi desta vez";
+                        const falhas = [];
+                        if (acc < lesson.minAcc) falhas.push(`precisão exigida de ${lesson.minAcc}% (você fez ${acc}%)`);
+                        if (netWpm < lesson.minWpm) falhas.push(`velocidade mínima de ${lesson.minWpm} PPM (você fez ${netWpm})`);
+                        msg = `Meta não alcançada: ${falhas.join(' e ')}. Tente novamente com calma!`;
+                    } else {
+                        title = "Aprovado!";
+                        msg = nextLesson
+                            ? "Excelente. Você absorveu os fundamentos e pode prosseguir."
+                            : "Parabéns! Você concluiu todo o curso e se formou Mestre do Teclado!";
                     }
                 }
 
                 // Cálculo de Recompensa (XP)
                 let earnedXp = passed ? Math.max(10, Math.floor((netWpm * 1.5) + (acc > 90 ? (acc - 90) * 10 : 0))) : 5;
-                
-                // Conclusão e Registro Definitivo[cite: 1]
-                if (passed && this.state.mode === 'lesson') {
-                    earnedXp += 50; // Bônus Base por passar fase
-                    if (!Profile.data.lessonsCompleted.includes(this.state.lessonRef.id)) {
-                        Profile.data.lessonsCompleted.push(this.state.lessonRef.id);
+
+                // Conclusão e Registro Definitivo
+                if (passed && lesson) {
+                    // O bônus de fase vale só na 1ª aprovação (antes dava para repetir a lição e farmar XP)
+                    if (!Profile.data.lessonsCompleted.includes(lesson.id)) {
+                        earnedXp += 50;
+                        Profile.data.lessonsCompleted.push(lesson.id);
                     }
                 }
 
                 if (passed) AudioEngine.playSuccess(); else AudioEngine.playError();
-                
+
                 // Submissão do bloco histórico
                 Profile.addXP(earnedXp);
-                Profile.registerSession(netWpm, this.state.sessionHeatmap, acc); // avgAcc agora é calculado internamente[cite: 1]
+                Profile.registerSession(netWpm, s.sessionHeatmap, acc);
 
-                // Avaliação de Badges Condicionais
-                if(this.state.sessionHeatmap['Technique'] === undefined && this.state.mode !== 'rush' && this.state.errorsCount < 5) {
-                    Profile.awardBadge(3); // Badge Mestre da Técnica
+                // Badge "Mestre da Técnica": sessão aprovada, com acentos/Shift/AltGr de fato exigidos e sem erros de técnica
+                if (passed && s.mode !== 'rush' && s.shiftCharsDone >= 5
+                    && s.sessionHeatmap['Technique'] === undefined && s.errorsCount < 5) {
+                    Profile.awardBadge(3);
                 }
 
                 // Renderizando Informações de Fim de Turno
-                document.getElementById('result-title').textContent = title; 
+                document.getElementById('result-title').textContent = title;
                 document.getElementById('result-msg').textContent = msg;
-                document.getElementById('res-wpm').textContent = netWpm; 
+                document.getElementById('res-wpm').textContent = netWpm;
                 document.getElementById('res-acc').textContent = acc + '%';
-                document.getElementById('res-chars').textContent = this.state.totalChars; 
-                document.getElementById('res-errors').textContent = this.state.errorsCount;
+                document.getElementById('res-chars').textContent = s.correctChars;
+                document.getElementById('res-errors').textContent = s.errorsCount;
                 document.getElementById('res-xp').textContent = earnedXp;
 
                 // Dinamismo de Fluxo
                 const bNext = document.getElementById('btn-next-action');
-                if (this.state.mode === 'lesson') { 
-                    bNext.textContent = passed ? "Próxima Lição" : "Tentar Novamente"; 
-                    bNext.onclick = () => this.startLesson(passed ? this.state.lessonRef.id + 1 : this.state.lessonRef.id); 
-                } else { 
-                    bNext.textContent = "Jogar Novamente"; 
-                    bNext.onclick = () => this.startMode(this.state.mode); 
+                if (lesson) {
+                    if (!passed) {
+                        bNext.textContent = "Tentar Novamente";
+                        bNext.onclick = () => this.startLesson(lesson.id);
+                    } else if (nextLesson) {
+                        bNext.textContent = "Próxima Lição";
+                        bNext.onclick = () => this.startLesson(nextLesson.id);
+                    } else {
+                        // Última lição: antes o botão não fazia nada
+                        bNext.textContent = "Ver Trilha de Lições";
+                        bNext.onclick = () => UI.showScreen('lessons');
+                    }
+                } else {
+                    const mode = s.mode;
+                    bNext.textContent = "Jogar Novamente";
+                    bNext.onclick = () => this.startMode(mode);
                 }
 
                 // Despejando Estatísticas Locais (Heatmap)
-                const hc = document.getElementById('res-heatmap'); 
+                const hc = document.getElementById('res-heatmap');
                 hc.innerHTML = '';
-                const errs = Object.entries(this.state.sessionHeatmap).sort((a,b) => b[1] - a[1]);
-                
+                const errs = Object.entries(s.sessionHeatmap).sort((a, b) => b[1] - a[1]);
+
                 if (errs.length === 0) {
-                    hc.innerHTML = '<p class="text-green-400 font-bold text-center col-span-12">Digitação Perfeita, Meus Parabéns!</p>';
+                    const p = document.createElement('p');
+                    p.className = 'text-green-400 font-bold text-center col-span-12';
+                    p.textContent = 'Digitação Perfeita, Meus Parabéns!';
+                    hc.appendChild(p);
                 } else {
                     errs.forEach(([code, count]) => {
-                        const d = document.createElement('div'); 
+                        const d = document.createElement('div');
                         d.className = 'heat-cell bg-red-900/60 border border-red-500/30';
-                        d.innerHTML = `<span class="block text-gray-400 text-xs">${code.replace('Key','')}</span><span class="text-red-400">${count}x</span>`;
+                        const label = document.createElement('span');
+                        label.className = 'block text-gray-400 text-xs';
+                        label.textContent = keyLabel(code);
+                        const num = document.createElement('span');
+                        num.className = 'text-red-400';
+                        num.textContent = `${count}x`;
+                        d.append(label, num);
                         hc.appendChild(d);
                     });
                 }
@@ -2323,12 +2722,14 @@
         // =======================================================================
         // INICIALIZAÇÃO DE BOOT (ENTRY POINT)
         // =======================================================================
-        window.onload = () => { 
-            Profile.load(); 
-            AudioEngine.init(); 
-            UI.init(); 
-            Engine.init(); 
-        };
+        // A ordem importa: o perfil precisa existir antes da UI e o áudio é criado só sob demanda.
+        document.addEventListener('DOMContentLoaded', () => {
+            Profile.load();
+            A11y.init();
+            UI.init();
+            Engine.init();
+        });
+
     </script>
 </body>
 </html>

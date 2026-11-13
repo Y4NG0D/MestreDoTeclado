@@ -411,6 +411,22 @@
             .key span.altgr-char { bottom: 2px; right: 3px; }
             .text-display { font-size: 1.3rem; padding: 16px; }
         }
+    
+        /* Troféus */
+        .trophy{display:flex;gap:14px;align-items:flex-start;padding:16px;border-radius:14px;background:#1e293b;border:1px solid #334155;opacity:.65}
+        .trophy.got{opacity:1;border-color:var(--tc);box-shadow:0 10px 26px -16px var(--tc)}
+        .medal,.medal-sm{flex:none;display:grid;place-items:center;border-radius:50%;border:3px solid var(--tc,#64748b);color:var(--tc,#64748b);background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.18),transparent 55%),#0f172a}
+        .medal{width:54px;height:54px;font-size:1.35rem}
+        .medal-sm{width:40px;height:40px;font-size:1rem}
+        .trophy:not(.got) .medal{filter:grayscale(1)}
+        .trophy-bar{height:6px;border-radius:99px;background:#334155;overflow:hidden;margin-top:8px}
+        .trophy-bar>div{height:100%;background:var(--tc,#64748b)}
+        .key.pressed{transform:translateY(2px);filter:brightness(1.35)}
+        /* Desafio "sem olhar": teclado apagado e sem teclas destacadas */
+        body.blind .keyboard-container{opacity:.35}
+        body.blind .key.active{background:var(--key-bg);box-shadow:none;transform:none;border-bottom:4px solid var(--bg-color)}
+        body.blind .key.active span{color:inherit}
+        body.blind #finger-hint{display:none}
     </style>
 </head>
 <body>
@@ -442,6 +458,9 @@
                 <i class="fa-solid fa-volume-up"></i>
             </button>
             
+            <button class="p-2 rounded bg-gray-800 hover:bg-gray-700 text-yellow-400 transition" aria-label="Sala de troféus" title="Troféus" onclick="UI.showScreen('trophies')">
+                <i class="fa-solid fa-trophy"></i>
+            </button>
             <!-- Botão Home -->
             <button class="p-2 rounded bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow transition" onclick="UI.showScreen('menu')">
                 <i class="fa-solid fa-house mr-1"></i> Menu
@@ -508,6 +527,22 @@
                         <i class="fa-solid fa-star"></i> Praticar Acentos
                     </div>
                 </div>
+            
+                <h3 class="text-lg font-bold pt-2 text-gray-200"><i class="fa-solid fa-medal mr-2 text-yellow-400"></i> Desafios para quem já digita</h3>
+                <div class="grid sm:grid-cols-3 gap-4">
+                    <button type="button" class="text-left bg-gray-800 rounded-xl p-4 border border-gray-700 hover:border-pink-500 transition" onclick="Engine.startMode('weak')">
+                        <p class="font-bold text-pink-400"><i class="fa-solid fa-crosshairs mr-1"></i> Treino dos Meus Erros</p>
+                        <p class="text-xs text-gray-400 mt-1">Palavras sob medida para as teclas em que você mais erra.</p>
+                    </button>
+                    <button type="button" class="text-left bg-gray-800 rounded-xl p-4 border border-gray-700 hover:border-orange-500 transition" onclick="Engine.startMode('daily')">
+                        <p class="font-bold text-orange-400"><i class="fa-solid fa-calendar-day mr-1"></i> Desafio do Dia</p>
+                        <p class="text-xs text-gray-400 mt-1">O mesmo texto para toda a turma hoje. Compare o PPM!</p>
+                    </button>
+                    <button type="button" class="text-left bg-gray-800 rounded-xl p-4 border border-gray-700 hover:border-red-500 transition" onclick="Engine.startMode('sudden')">
+                        <p class="font-bold text-red-400"><i class="fa-solid fa-heart-crack mr-1"></i> Morte Súbita</p>
+                        <p class="text-xs text-gray-400 mt-1">Três vidas. Cada erro custa uma. Dica: ative "Sem olhar" dentro do jogo.</p>
+                    </button>
+                </div>
             </div>
 
             <!-- Coluna Direita: Perfil do Aluno e Tutor IA -->
@@ -558,14 +593,11 @@
                     </div>
                     
                     <!-- Vitrine de Conquistas (Badges) -->
-                    <h4 class="text-sm font-bold text-gray-300 mt-6 border-b border-gray-700 pb-1 mb-3">Conquistas</h4>
-                    <div class="flex flex-wrap gap-3 justify-center" id="badges-container">
-                        <div class="badge w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center" id="badge-1" title="Iniciante: Completou Lição 1"><i class="fa-solid fa-seedling text-green-400"></i></div>
-                        <div class="badge w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center" id="badge-2" title="As Duas Mãos: Completou Lição 5"><i class="fa-solid fa-hands text-blue-400"></i></div>
-                        <div class="badge w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center" id="badge-3" title="Mestre da Técnica: Sessão perfeita sem erros de Shift"><i class="fa-solid fa-arrow-up text-purple-400"></i></div>
-                        <div class="badge w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center" id="badge-4" title="Foco Total: Combo de 50 acertos seguidos"><i class="fa-solid fa-fire text-orange-500"></i></div>
-                        <div class="badge w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center" id="badge-5" title="Profissional: Completou Curso Inteiro"><i class="fa-solid fa-graduation-cap text-yellow-400"></i></div>
+                    <div class="flex justify-between items-center mt-6 border-b border-gray-700 pb-1 mb-3">
+                        <h4 class="text-sm font-bold text-gray-300">Troféus <span id="trophy-count" class="text-gray-500 font-normal"></span></h4>
+                        <button class="text-xs text-blue-400 hover:text-blue-300" onclick="UI.showScreen('trophies')">Ver todos</button>
                     </div>
+                    <div class="flex flex-wrap gap-3 justify-center min-h-[2.5rem]" id="trophy-strip"></div>
                 </div>
 
                 <!-- Tutor Analítico IA -->
@@ -585,6 +617,15 @@
     <!-- =======================================================================
          TELA 2: GRADE DE LIÇÕES (CURSO)
          ======================================================================= -->
+    <main id="screen-trophies" class="screen p-4 md:p-8 max-w-6xl mx-auto w-full flex-grow">
+        <button class="mb-6 text-gray-400 hover:text-white transition flex items-center gap-2" onclick="UI.showScreen('menu')">
+            <i class="fa-solid fa-arrow-left"></i> Voltar ao Menu
+        </button>
+        <h2 class="text-3xl font-bold mb-2"><i class="fa-solid fa-trophy text-yellow-400 mr-2"></i>Sala de Troféus</h2>
+        <div id="trophy-summary" class="flex flex-wrap items-center gap-2 mb-6"></div>
+        <div id="trophy-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    </main>
+
     <main id="screen-lessons" class="screen p-4 md:p-8 max-w-6xl mx-auto w-full flex-grow">
         <button class="mb-6 text-gray-400 hover:text-white transition flex items-center gap-2" onclick="UI.showScreen('menu')">
             <i class="fa-solid fa-arrow-left"></i> Voltar ao Menu
@@ -593,6 +634,7 @@
         <h2 class="text-3xl font-bold mb-2">Trilha Profissional (30 Módulos)</h2>
         <p class="text-gray-400 mb-8">Evolução lenta e gradual. Metodologia elaborada especialmente para letramento digital e turmas de EJA (Educação de Jovens e Adultos).</p>
         
+        <button id="btn-unlock" class="mb-6 text-sm bg-gray-800 hover:bg-gray-700 border border-gray-600 px-3 py-2 rounded text-gray-200 transition" onclick="Profile.toggleUnlockAll()"></button>
         <div id="lessons-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <!-- Os cards das lições serão inseridos dinamicamente aqui pelo JavaScript -->
         </div>
@@ -641,6 +683,7 @@
         <!-- Área onde o texto a ser digitado aparece -->
         <div id="text-display" class="text-display code-font"></div>
         
+        <div id="finger-hint" class="min-h-[1.5rem] mb-2 text-center text-sm text-sky-300"></div>
         <!-- Alerta visual de técnica incorreta (ex: Shift do lado errado) -->
         <div id="technique-alert" class="h-6 mb-2 text-center text-yellow-400 font-bold text-sm opacity-0 transition-opacity">
             <i class="fa-solid fa-triangle-exclamation"></i> ERRO DE TÉCNICA! Confira o acento e use o Shift ou AltGr do lado oposto.
@@ -661,6 +704,11 @@
         <!-- Input Oculto responsável por capturar o texto montado pelo S.O. -->
         <input type="text" id="hidden-input" autocomplete="off" autocapitalize="off" spellcheck="false" autocorrect="off" aria-label="Campo de captura da digitação">
         
+        <div class="mt-6 flex justify-center">
+            <button id="btn-blind" aria-pressed="false" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-600 text-gray-200 rounded text-sm transition" onclick="A11y.toggleBlind()">
+                <i class="fa-solid fa-eye-slash mr-1"></i> Sem olhar (desafio): teclado apagado
+            </button>
+        </div>
         <!-- Botão de Abandono de Sessão -->
         <div class="mt-6 flex justify-center">
             <button class="px-6 py-2 bg-red-600 hover:bg-red-500 text-white rounded font-bold shadow transition" onclick="Engine.cleanupAndExit()">
@@ -685,7 +733,7 @@
             <!-- Cards de Resultados -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8 relative z-10">
                 <div class="bg-gray-900 p-4 rounded-xl border border-gray-700">
-                    <p class="text-sm text-gray-500 mb-1">PPM Líquida</p>
+                    <p class="text-sm text-gray-500 mb-1">PPM</p>
                     <p id="res-wpm" class="text-3xl font-black text-green-400">0</p>
                 </div>
                 <div class="bg-gray-900 p-4 rounded-xl border border-gray-700">
@@ -702,12 +750,14 @@
                 </div>
             </div>
 
+            <p id="res-gross" class="text-xs text-gray-500 mb-6 relative z-10"></p>
             <!-- Resumo de Pontos de Experiência (XP) -->
             <div class="bg-gray-900/50 p-4 rounded-lg mb-8 inline-block text-left relative z-10 border border-gray-700">
                 <p class="text-sm text-gray-400">Recompensas da Sessão</p>
                 <p class="text-xl font-bold text-yellow-400"><i class="fa-solid fa-star"></i> +<span id="res-xp">0</span> XP</p>
             </div>
 
+            <div id="res-trophies" class="mb-8 relative z-10 hidden"></div>
             <!-- Heatmap (Mapa de Calor de Erros da Sessão) -->
             <div class="mb-8 relative z-10 text-left bg-gray-900 p-6 rounded-xl border border-gray-700">
                 <h3 class="text-lg font-bold text-white border-b border-gray-700 pb-2 mb-4">
@@ -1326,6 +1376,80 @@
         const RUSH_SECONDS = 90;
         const STORAGE_KEY = 'abnt2_pro_profile';
         const A11Y_KEY = 'abnt2_pro_a11y';
+        const BLIND_KEY = 'abnt2_pro_blind';
+
+        function el(tag, cls, text) {
+            const e = document.createElement(tag);
+            if (cls) e.className = cls;
+            if (text !== undefined) e.textContent = text;
+            return e;
+        }
+
+        /** 6 melodias de domínio público: cada acerto toca a próxima nota; sorteada a cada partida */
+        const MELODIES = [
+            { name: 'Ode à Alegria', notes: 'E4 E4 F4 G4 G4 F4 E4 D4 C4 C4 D4 E4 E4 D4 D4 E4 E4 F4 G4 G4 F4 E4 D4 C4 C4 D4 E4 D4 C4 C4'.split(' ') },
+            { name: 'Brilha, Brilha, Estrelinha', notes: 'C4 C4 G4 G4 A4 A4 G4 F4 F4 E4 E4 D4 D4 C4 G4 G4 F4 F4 E4 E4 D4 G4 G4 F4 F4 E4 E4 D4'.split(' ') },
+            { name: 'Frère Jacques', notes: 'C4 D4 E4 C4 C4 D4 E4 C4 E4 F4 G4 E4 F4 G4 G4 A4 G4 F4 E4 C4 G4 A4 G4 F4 E4 C4 C4 G3 C4'.split(' ') },
+            { name: 'Greensleeves', notes: 'A3 C4 D4 E4 F4 E4 D4 B3 G3 A3 B3 C4 A3 A3 G#3 A3 B3 G#3 E3 A3 C4 D4 E4 F4 E4 D4 B3 G3 A3 B3 C4 B3 A3 G#3 F#3 G#3 A3'.split(' ') },
+            { name: 'Für Elise', notes: 'E5 D#5 E5 D#5 E5 B4 D5 C5 A4 C4 E4 A4 B4 E4 G#4 B4 C5 E4 E5 D#5 E5 D#5 E5 B4 D5 C5 A4 C4 E4 A4 B4 E4 C5 B4 A4'.split(' ') },
+            { name: 'Canon em Ré', notes: 'F#4 E4 D4 C#4 B3 A3 B3 C#4 D4 F#4 A4 G4 F#4 D4 F#4 E4 D4 B3 D4 C#4 D4 F#4 A4 A4 B4 F#4 G4 E4 D4'.split(' ') }
+        ];
+        const TIER_NAMES = { bronze: 'Bronze', silver: 'Prata', gold: 'Ouro', platinum: 'Platina' };
+        const TIER_COLORS = { bronze: '#cd7f32', silver: '#cbd5e1', gold: '#facc15', platinum: '#67e8f9' };
+
+        /** Troféus: p(perfil) devolve [valor atual, meta]. Os de evento (p: ev) são concedidos pelo jogo. */
+        const ev = () => [0, 1];
+        const TROPHIES = [
+            { id: 'iniciante', cat: 'Trilha', tier: 'bronze', icon: 'seedling', name: 'Primeiro Toque', desc: 'Conclua a Lição 1.', p: d => [d.lessonsCompleted.includes(1) ? 1 : 0, 1] },
+            { id: 'duas_maos', cat: 'Trilha', tier: 'bronze', icon: 'hands', name: 'As Duas Mãos', desc: 'Conclua a Lição 5.', p: d => [d.lessonsCompleted.includes(5) ? 1 : 0, 1] },
+            { id: 'meio', cat: 'Trilha', tier: 'silver', icon: 'road', name: 'Meio do Caminho', desc: 'Conclua 15 lições.', p: d => [d.lessonsCompleted.length, 15] },
+            { id: 'acentos', cat: 'Trilha', tier: 'silver', icon: 'language', name: 'Dono dos Acentos', desc: 'Conclua a Lição 23 (crase).', p: d => [d.lessonsCompleted.includes(23) ? 1 : 0, 1] },
+            { id: 'profissional', cat: 'Trilha', tier: 'gold', icon: 'graduation-cap', name: 'Profissional', desc: 'Conclua as 30 lições.', p: d => [d.lessonsCompleted.length, 30] },
+            { id: 'ppm20', cat: 'Velocidade', tier: 'bronze', icon: 'gauge', name: 'Aquecendo', desc: 'Alcance 20 PPM.', p: d => [d.recordWpm, 20] },
+            { id: 'ppm40', cat: 'Velocidade', tier: 'silver', icon: 'gauge-high', name: 'Ritmo de Escritório', desc: 'Alcance 40 PPM.', p: d => [d.recordWpm, 40] },
+            { id: 'ppm60', cat: 'Velocidade', tier: 'gold', icon: 'bolt', name: 'Dedos Rápidos', desc: 'Alcance 60 PPM.', p: d => [d.recordWpm, 60] },
+            { id: 'ppm80', cat: 'Velocidade', tier: 'platinum', icon: 'rocket', name: 'Velocista', desc: 'Alcance 80 PPM.', p: d => [d.recordWpm, 80] },
+            { id: 'perfeito', cat: 'Precisão e técnica', tier: 'silver', icon: 'bullseye', name: 'Sem Errar', desc: 'Termine uma sessão com 100% (mínimo 20 caracteres).', p: d => [d.perfectSessions > 0 ? 1 : 0, 1] },
+            { id: 'perfeito10', cat: 'Precisão e técnica', tier: 'gold', icon: 'crosshairs', name: 'Cirurgião', desc: 'Faça 10 sessões perfeitas.', p: d => [d.perfectSessions, 10] },
+            { id: 'tecnica', cat: 'Precisão e técnica', tier: 'silver', icon: 'arrow-up', name: 'Mestre da Técnica', desc: 'Use Shift, AltGr e acentos corretamente numa sessão, sem erro de técnica.', p: ev },
+            { id: 'combo50', cat: 'Combo', tier: 'bronze', icon: 'fire', name: 'Foco Total', desc: '50 acertos seguidos.', p: d => [d.bestCombo, 50] },
+            { id: 'combo100', cat: 'Combo', tier: 'silver', icon: 'fire-flame-curved', name: 'Em Chamas', desc: '100 acertos seguidos.', p: d => [d.bestCombo, 100] },
+            { id: 'combo200', cat: 'Combo', tier: 'platinum', icon: 'meteor', name: 'Imparável', desc: '200 acertos seguidos.', p: d => [d.bestCombo, 200] },
+            { id: 'sess10', cat: 'Constância', tier: 'bronze', icon: 'calendar-check', name: 'Pegando o Jeito', desc: 'Complete 10 sessões.', p: d => [d.totalSessions, 10] },
+            { id: 'sess50', cat: 'Constância', tier: 'silver', icon: 'dumbbell', name: 'Treino Firme', desc: 'Complete 50 sessões.', p: d => [d.totalSessions, 50] },
+            { id: 'streak3', cat: 'Constância', tier: 'silver', icon: 'calendar-days', name: 'Hábito', desc: 'Pratique em 3 dias seguidos.', p: d => [d.streak, 3] },
+            { id: 'streak7', cat: 'Constância', tier: 'gold', icon: 'calendar-week', name: 'Semana Perfeita', desc: 'Pratique em 7 dias seguidos.', p: d => [d.streak, 7] },
+            { id: 'chars1k', cat: 'Constância', tier: 'bronze', icon: 'keyboard', name: 'Mil Toques', desc: 'Acerte 1.000 caracteres no total.', p: d => [d.totalChars, 1000] },
+            { id: 'chars10k', cat: 'Constância', tier: 'gold', icon: 'infinity', name: 'Dez Mil Toques', desc: 'Acerte 10.000 caracteres no total.', p: d => [d.totalChars, 10000] },
+            { id: 'desafio', cat: 'Desafios', tier: 'silver', icon: 'calendar-day', name: 'Desafio do Dia', desc: 'Conclua o Desafio do Dia com 95% ou mais de precisão.', p: ev },
+            { id: 'sobrevivente', cat: 'Desafios', tier: 'gold', icon: 'heart', name: 'Sobrevivente', desc: 'Termine a Morte Súbita sem perder as três vidas.', p: ev }
+        ];
+        const TROPHY_IDS = TROPHIES.map(t => t.id);
+        const LEGACY_BADGES = { 1: 'iniciante', 2: 'duas_maos', 3: 'tecnica', 4: 'combo50', 5: 'profissional' };
+
+        const FINGER_NAMES = {
+            'finger-l-pinky': 'mindinho esquerdo', 'finger-l-ring': 'anelar esquerdo', 'finger-l-middle': 'médio esquerdo', 'finger-l-index': 'indicador esquerdo',
+            'finger-r-index': 'indicador direito', 'finger-r-middle': 'médio direito', 'finger-r-ring': 'anelar direito', 'finger-r-pinky': 'mindinho direito', 'finger-thumb': 'polegar'
+        };
+
+        const WORD_BANK = "casa tempo pessoa trabalho escola computador teclado mão coração informação você também está até já café água saúde família número público técnica prática história médico música código gráfico projeto jogo queijo quilo exercício pergunta resposta zebra xícara vizinho fazenda hábito ônibus avô três português lição ação razão órgão sábado fácil difícil útil quinze wifi yoga maçã pão limão janela cidade estudar aprender digitar escrever lugar alegria".split(' ');
+
+        const DAILY_BANK = [
+            'Reunião às 14h30 na sala 205, bloco B.',
+            'Preço: R$ 49,90 (10% de desconto à vista).',
+            'Envie o relatório para financeiro@empresa.com.br até 18/11.',
+            'Não deixe para amanhã o que você pode digitar hoje!',
+            'Senha segura: use letras, números e símbolos (#, @, !).',
+            'A Constituição de 1988 garante o direito à educação.',
+            'Quantos quilômetros são 3,5 km em metros? Resposta: 3500 m.',
+            'O 1º colocado recebeu 100% da nota; o 2º, 95%.',
+            'Ele disse: "Vamos começar agora!"',
+            'Cálculo: (12 + 8) * 3 = 60; 60 - 15 = 45.',
+            'A pesquisa mostrou 72% de satisfação em 2024.',
+            'Tia Zuleide fez quiche de queijo e pão de açúcar.',
+            'Acesse www.escola.edu.br/aulas e baixe o material.',
+            'Sábado, às 9h: feira de ciências na quadra da escola.'
+        ];
 
         // Palavras usadas para estender indefinidamente o texto da Corrida
         const RUSH_WORDS = "para que não uma com mais por como mas foi ao ele das tem seu sua ou ser quando muito nos já está eu também só pelo pela até isso ela entre era depois sem mesmo aos ter seus quem nas me esse eles estão você tinha foram essa num nem suas meu minha".split(' ');
@@ -1424,6 +1548,7 @@
          */
         const Profile = {
             data: null,
+            newTrophies: [],
 
             /** Perfil novo e vazio */
             defaults() {
@@ -1436,7 +1561,7 @@
                     avgAcc: 0,
                     totalSessions: 0,
                     errorHeatmap: {},
-                    badges: []
+                    badges: [], trophies: {}, totalChars: 0, bestCombo: 0, perfectSessions: 0, streak: 0, lastDay: '', unlockAll: false
                 };
             },
 
@@ -1456,13 +1581,24 @@
                 d.recordWpm = num(raw.recordWpm, 0, 0);
                 d.avgAcc = Math.min(100, num(raw.avgAcc, 0, 0));
                 d.totalSessions = Math.floor(num(raw.totalSessions, 0, 0));
+                d.totalChars = Math.floor(num(raw.totalChars, 0, 0));
+                d.bestCombo = Math.floor(num(raw.bestCombo, 0, 0));
+                d.perfectSessions = Math.floor(num(raw.perfectSessions, 0, 0));
+                d.streak = Math.floor(num(raw.streak, 0, 0));
+                d.lastDay = (typeof raw.lastDay === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.lastDay)) ? raw.lastDay : '';
+                d.unlockAll = raw.unlockAll === true;
+                if (raw.trophies && typeof raw.trophies === 'object') {
+                    for (const [k, v] of Object.entries(raw.trophies)) {
+                        if (TROPHY_IDS.includes(k)) d.trophies[k] = (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)) ? v : '';
+                    }
+                }
 
                 const validIds = CAMPAIGN_LESSONS.map(l => l.id);
                 if (Array.isArray(raw.lessonsCompleted)) {
                     d.lessonsCompleted = [...new Set(raw.lessonsCompleted.filter(id => validIds.includes(id)))];
                 }
                 if (Array.isArray(raw.badges)) {
-                    d.badges = [...new Set(raw.badges.filter(b => Number.isInteger(b) && b >= 1 && b <= 5))];
+                    raw.badges.forEach(b => { const id = LEGACY_BADGES[b]; if (id && d.trophies[id] === undefined) d.trophies[id] = ''; }); // migra medalhas antigas
                 }
                 if (raw.errorHeatmap && typeof raw.errorHeatmap === 'object') {
                     for (const [k, v] of Object.entries(raw.errorHeatmap)) {
@@ -1528,7 +1664,7 @@
              * @param {Object} sessionErrors Dicionário de teclas erradas na sessão
              * @param {number} acc Porcentagem de precisão
              */
-            registerSession(wpm, sessionErrors, acc) {
+            registerSession(wpm, sessionErrors, acc, extra = {}) {
                 if (wpm > this.data.recordWpm) {
                     this.data.recordWpm = wpm;
                 }
@@ -1545,7 +1681,15 @@
                     this.data.avgAcc = Math.round(((currentAvg * (this.data.totalSessions - 1)) + acc) / this.data.totalSessions);
                 }
 
-                this.checkBadges(); // não-silencioso: avisa o aluno das conquistas de lição
+                const d = this.data;
+                d.totalChars += extra.chars || 0;
+                d.bestCombo = Math.max(d.bestCombo, extra.combo || 0);
+                if (extra.perfect) d.perfectSessions++;
+                const dk = x => x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
+                const now = new Date(), today = dk(now), yest = new Date(now);
+                yest.setDate(yest.getDate() - 1);
+                if (d.lastDay !== today) { d.streak = d.lastDay === dk(yest) ? d.streak + 1 : 1; d.lastDay = today; }
+                this.checkBadges(); // não-silencioso: avisa o aluno dos troféus
                 this.save();
             },
 
@@ -1554,25 +1698,32 @@
              * @param {number} badgeId Identificador da medalha (1 a 5)
              * @param {boolean} silent Se true, não toca som, não avisa e não salva (o chamador salva)
              */
-            awardBadge(badgeId, silent = false) {
-                if (this.data.badges.includes(badgeId)) return;
-                this.data.badges.push(badgeId);
+            awardBadge(id, silent = false) {
+                id = LEGACY_BADGES[id] || id;
+                if (!TROPHY_IDS.includes(id) || this.data.trophies[id] !== undefined) return;
+                this.data.trophies[id] = new Date().toISOString().slice(0, 10);
                 if (silent) return;
+                this.newTrophies.push(id);
                 this.save();
-                AudioEngine.playSuccess();
-                UI.notify('Conquista Desbloqueada!');
+                AudioEngine.playTrophy();
+                UI.notify('Troféu: ' + TROPHIES.find(t => t.id === id).name);
             },
 
-            /**
-             * Analisa os dados do perfil e concede conquistas pendentes
-             */
+            /** Concede todos os troféus cuja meta já foi atingida */
             checkBadges(silent = false) {
-                const done = this.data.lessonsCompleted;
-                if (done.includes(1)) this.awardBadge(1, silent);
-                if (done.includes(5)) this.awardBadge(2, silent);
-                // "Curso Inteiro" só vale com as 30 lições concluídas (antes bastava a lição 30)
-                if (CAMPAIGN_LESSONS.every(l => done.includes(l.id))) this.awardBadge(5, silent);
-                // Badges 3 e 4 são concedidas durante o gameplay
+                TROPHIES.forEach(t => {
+                    const [cur, max] = t.p(this.data);
+                    if (cur >= max) this.awardBadge(t.id, silent);
+                });
+            },
+
+            /** Para quem já digita: libera ou bloqueia a trilha inteira de lições */
+            toggleUnlockAll() {
+                if (!this.data.unlockAll) { Engine.startMode('placement'); return; } // precisa provar no teste
+                if (confirm('Voltar à trilha guiada? As lições ainda não concluídas serão bloqueadas de novo.')) {
+                    this.data.unlockAll = false;
+                    this.save();
+                }
             },
 
             /**
@@ -1640,6 +1791,7 @@
                 let on = false;
                 try { on = localStorage.getItem(A11Y_KEY) === '1'; } catch (err) { /* ignorar */ }
                 this.apply(on);
+                try { this.applyBlind(localStorage.getItem(BLIND_KEY) === '1'); } catch (err) { this.applyBlind(false); }
             },
 
             apply(on) {
@@ -1660,6 +1812,18 @@
             /**
              * Utiliza o TTS (Text-to-Speech) nativo do SO para ler a missão atual
              */
+            applyBlind(on) {
+                this.blind = on;
+                document.body.classList.toggle('blind', on);
+                document.getElementById('btn-blind').setAttribute('aria-pressed', String(on));
+            },
+
+            toggleBlind() {
+                this.applyBlind(!this.blind);
+                try { localStorage.setItem(BLIND_KEY, this.blind ? '1' : '0'); } catch (err) { /* ignorar */ }
+                document.getElementById('hidden-input').focus({ preventScroll: true });
+            },
+
             readInstructions() {
                 if (!this.synth || typeof SpeechSynthesisUtterance === 'undefined') return;
                 this.synth.cancel(); // Para leituras anteriores pendentes
@@ -1714,12 +1878,36 @@
                     this.synths.success = new Tone.PolySynth(Tone.AMSynth).toDestination();
                     this.synths.success.volume.value = -5;
 
-                    // Sintetizador de Música de Fundo
+                    // Som individual por tecla: cada tecla = nota da escala pentatônica (soa sempre agradável)
+                // + timbre da fileira. Colunas à direita ficam mais agudas; cada fileira soa diferente.
+                this.keyNotes = {};
+                ABNT2_LAYOUT.forEach((row, r) => {
+                    let c = 0;
+                    row.forEach(k => {
+                        if (k.type === 'ctrl' || k.type === 'mod' || k.code === 'Space') return;
+                        const idx = c + r * 2;
+                        const semi = [0, 2, 4, 7, 9][idx % 5] + 12 * Math.floor(idx / 5);
+                        this.keyNotes[k.code] = { row: r, freq: 130.81 * Math.pow(2, semi / 12) };
+                        c++;
+                    });
+                });
+                const timbres = ['fmsine', 'triangle', 'sine', 'fatsine'], vols = [-14, -12, -10, -16];
+                this.keySynths = timbres.map((t, i) => {
+                    const s = new Tone.PolySynth(Tone.Synth, { oscillator: { type: t }, envelope: { attack: 0.002, decay: 0.14, sustain: 0, release: 0.1 } }).toDestination();
+                    s.volume.value = vols[i];
+                    return s;
+                });
+                this.synths.thump = new Tone.MembraneSynth({ octaves: 2, envelope: { attack: 0.001, decay: 0.12, sustain: 0, release: 0.05 } }).toDestination();
+                this.synths.thump.volume.value = -14;
+
+                // Sintetizador de Música de Fundo
                     this.bgMusic = new Tone.PolySynth(Tone.Synth, {
                         oscillator: { type: "triangle" },
                         envelope: { attack: 0.5, decay: 0.5, sustain: 0.5, release: 1 }
                     }).toDestination();
                     this.bgMusic.volume.value = -25;
+                    this.bgLead = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.02, decay: 0.3, sustain: 0, release: 0.4 } }).toDestination();
+                    this.bgLead.volume.value = -28;
 
                     this.ready = true;
                     return true;
@@ -1739,6 +1927,45 @@
                 } catch (err) {
                     console.warn('Falha ao tocar som:', err);
                 }
+            },
+
+            /** Cada acerto toca a próxima nota da melodia sorteada (timbre muda conforme a fileira da tecla) */
+            playKey(code) {
+                this.play(() => {
+                    if (code === 'Space') { this.synths.thump.triggerAttackRelease('C2', '16n'); return; }
+                    const n = this.keyNotes[code], m = this.melody;
+                    const note = m ? m.notes[this.mi++ % m.notes.length] : (n ? n.freq : 'C5');
+                    this.keySynths[n ? n.row : 1].triggerAttackRelease(note, '16n');
+                });
+            },
+
+            /** Sorteia a melodia da partida (nunca repete a anterior) */
+            pickMelody() {
+                let i;
+                do { i = Math.floor(Math.random() * MELODIES.length); } while (i === this.lastMel && MELODIES.length > 1);
+                this.lastMel = i; this.melody = MELODIES[i]; this.mi = 0;
+                UI.notify('♪ Melodia desta partida: ' + this.melody.name);
+            },
+
+            /** Música de fundo some enquanto o aluno digita e volta após uma pausa */
+            duck() {
+                if (!this.ready || !this.bgLead) return;
+                clearTimeout(this.duckT);
+                this.bgMusic.volume.rampTo(-60, 0.1); this.bgLead.volume.rampTo(-60, 0.1);
+                this.duckT = setTimeout(() => this.unduck(), 2500);
+            },
+            unduck() {
+                if (!this.ready || !this.bgLead) return;
+                clearTimeout(this.duckT);
+                this.bgMusic.volume.rampTo(-25, 0.8); this.bgLead.volume.rampTo(-28, 0.8);
+            },
+
+            playTrophy() {
+                this.play(() => {
+                    const t = Tone.now();
+                    this.synths.success.triggerAttackRelease(['E5', 'G5', 'C6'], '8n', t);
+                    this.synths.success.triggerAttackRelease(['G5', 'C6', 'E6'], '4n', t + 0.15);
+                });
             },
 
             playType() {
@@ -1763,7 +1990,7 @@
             },
 
             startBgMusic() {
-                if (!this.enabled || !this.ensure() || this.chordPattern) return;
+                if (!this.enabled || !this.unlocked || !this.ensure() || this.chordPattern) return;
                 try {
                     Tone.start(); // Requer interação prévia do usuário nos navegadores modernos
                     const chords = [["C3", "E3", "G3"], ["A2", "C3", "E3"], ["F2", "A2", "C3"], ["G2", "B2", "D3"]];
@@ -1771,6 +1998,8 @@
 
                     this.chordPattern = new Tone.Loop((time) => {
                         this.bgMusic.triggerAttackRelease(chords[step], "1m", time);
+                        const arp = Tone.Frequency(chords[step][0]).transpose(24).toNote(), arp2 = Tone.Frequency(chords[step][1]).transpose(24).toNote(), arp3 = Tone.Frequency(chords[step][2]).transpose(24).toNote();
+                        [arp, arp2, arp3, arp2, arp3, arp2].forEach((n, i) => this.bgLead.triggerAttackRelease(n, "8n", time + i * Tone.Time("8n").toSeconds() * 1.5));
                         step = (step + 1) % chords.length;
                     }, "1m").start(0);
 
@@ -1803,9 +2032,7 @@
                 if (this.enabled) {
                     btn.innerHTML = '<i class="fa-solid fa-volume-up"></i>';
                     btn.classList.replace('text-red-400', 'text-gray-300');
-                    if (document.getElementById('screen-game').classList.contains('active-screen')) {
-                        this.startBgMusic();
-                    }
+                    this.startBgMusic();
                 } else {
                     btn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>';
                     btn.classList.replace('text-gray-300', 'text-red-400');
@@ -1822,7 +2049,7 @@
          * e manipular transições de tela do Single Page Application (SPA).
          */
         const UI = {
-            screens: ['menu', 'lessons', 'game', 'results'],
+            screens: ['menu', 'lessons', 'game', 'results', 'trophies'],
             defaultTutorHtml: '',
 
             init() {
@@ -1843,6 +2070,7 @@
                     el.classList.toggle('active-screen', id === screenId);
                 });
                 window.scrollTo(0, 0);
+                AudioEngine.startBgMusic(); // música também nos menus
 
                 if (screenId === 'game') {
                     AudioEngine.startBgMusic();
@@ -1912,10 +2140,7 @@
                 document.getElementById('profile-xp-bar').style.width = `${percentage}%`;
 
                 // Exibição de Badges/Conquistas
-                for (let i = 1; i <= 5; i++) {
-                    const b = document.getElementById(`badge-${i}`);
-                    if (b) b.classList.toggle('unlocked', d.badges.includes(i));
-                }
+                this.renderTrophyStrip();
 
                 this.renderTutor();
                 this.renderLessons(); // atualiza a trilha para destravar as novas lições
@@ -1958,19 +2183,94 @@
                 });
                 container.innerHTML = '';
                 container.appendChild(ul);
+                const bw = el('button', 'mt-3 w-full text-sm bg-pink-600 hover:bg-pink-500 text-white font-bold py-2 rounded transition', 'Treinar meus erros agora');
+                bw.onclick = () => Engine.startMode('weak');
+                container.appendChild(bw);
             },
 
             /**
              * Constrói a Grade de 30 Lições com bloqueio progressivo
              */
+            trophyCard(t) {
+                const d = Profile.data, [cur, max] = t.p(d), got = d.trophies[t.id] !== undefined;
+                const c = el('div', 'trophy' + (got ? ' got' : ''));
+                c.style.setProperty('--tc', TIER_COLORS[t.tier]);
+                const m = el('div', 'medal');
+                m.appendChild(el('i', 'fa-solid fa-' + t.icon));
+                const b = el('div', 'min-w-0 flex-1');
+                b.appendChild(el('p', 'font-bold text-white', t.name));
+                const tn = el('p', 'text-xs', TIER_NAMES[t.tier]);
+                tn.style.color = TIER_COLORS[t.tier];
+                b.appendChild(tn);
+                b.appendChild(el('p', 'text-sm text-gray-400 mt-1', t.desc));
+                if (got) {
+                    const dt = d.trophies[t.id];
+                    b.appendChild(el('p', 'text-xs text-gray-500 mt-2', dt ? 'Conquistado em ' + dt.split('-').reverse().join('/') : 'Conquistado'));
+                } else if (max > 1) {
+                    const bar = el('div', 'trophy-bar'), fill = el('div');
+                    fill.style.width = Math.min(100, (cur / max) * 100) + '%';
+                    bar.appendChild(fill);
+                    b.append(bar, el('p', 'text-xs text-gray-500 mt-1', `${Math.min(cur, max)} / ${max}`));
+                }
+                c.append(m, b);
+                return c;
+            },
+
+            renderTrophies() {
+                const g = document.getElementById('trophy-grid'), sum = document.getElementById('trophy-summary');
+                if (!g || !sum) return;
+                g.innerHTML = ''; sum.innerHTML = '';
+                const owned = t => Profile.data.trophies[t.id] !== undefined;
+                sum.appendChild(el('span', 'text-gray-300 mr-2', `${TROPHIES.filter(owned).length} de ${TROPHIES.length} conquistados`));
+                Object.keys(TIER_NAMES).forEach(k => {
+                    const all = TROPHIES.filter(t => t.tier === k);
+                    if (!all.length) return;
+                    const chip = el('span', 'text-xs px-2 py-1 rounded-full border', `${TIER_NAMES[k]} ${all.filter(owned).length}/${all.length}`);
+                    chip.style.color = chip.style.borderColor = TIER_COLORS[k];
+                    sum.appendChild(chip);
+                });
+                [...new Set(TROPHIES.map(t => t.cat))].forEach(cat => {
+                    g.appendChild(el('h3', 'col-span-full text-lg font-bold text-gray-200 mt-4', cat));
+                    TROPHIES.filter(t => t.cat === cat).forEach(t => g.appendChild(this.trophyCard(t)));
+                });
+            },
+
+            renderTrophyStrip() {
+                const ids = Object.keys(Profile.data.trophies);
+                const cnt = document.getElementById('trophy-count');
+                if (cnt) cnt.textContent = `${ids.length}/${TROPHIES.length}`;
+                const st = document.getElementById('trophy-strip');
+                if (st) {
+                    st.innerHTML = '';
+                    if (!ids.length) st.appendChild(el('p', 'text-xs text-gray-500 italic', 'Conclua a Lição 1 para ganhar o primeiro troféu.'));
+                    ids.slice(-6).forEach(id => {
+                        const t = TROPHIES.find(x => x.id === id);
+                        if (!t) return;
+                        const m = el('div', 'medal-sm');
+                        m.title = t.name;
+                        m.style.setProperty('--tc', TIER_COLORS[t.tier]);
+                        m.appendChild(el('i', 'fa-solid fa-' + t.icon));
+                        st.appendChild(m);
+                    });
+                }
+                this.renderTrophies();
+            },
+
+            updateHint(txt) {
+                const h = document.getElementById('finger-hint');
+                if (h) h.textContent = txt;
+            },
+
             renderLessons() {
                 const grid = document.getElementById('lessons-grid');
                 grid.innerHTML = '';
                 const done = Profile.data.lessonsCompleted;
+                const ub = document.getElementById('btn-unlock');
+                if (ub) ub.textContent = Profile.data.unlockAll ? 'Voltar à trilha guiada (bloquear lições)' : 'Já sei digitar: fazer o teste de nivelamento';
 
                 CAMPAIGN_LESSONS.forEach((lesson, index) => {
                     // A lição está destravada se for a primeira, ou se a anterior foi concluída
-                    const isUnlocked = index === 0 || done.includes(CAMPAIGN_LESSONS[index - 1].id);
+                    const isUnlocked = index === 0 || Profile.data.unlockAll || done.includes(CAMPAIGN_LESSONS[index - 1].id);
                     const isCompleted = done.includes(lesson.id);
 
                     const card = document.createElement('div');
@@ -2180,7 +2480,7 @@
                 this.state.active = false;
                 clearInterval(this.state.timerInterval);
                 clearTimeout(this.alertTimer);
-                AudioEngine.stopBgMusic();
+                AudioEngine.unduck();
 
                 this.physicalKeysDown.clear();
                 this.composing = false;
@@ -2201,13 +2501,14 @@
                 if (idx === -1) return;
 
                 // Impede abrir uma lição ainda bloqueada
-                if (idx > 0 && !Profile.data.lessonsCompleted.includes(CAMPAIGN_LESSONS[idx - 1].id)) return;
+                if (idx > 0 && !Profile.data.unlockAll && !Profile.data.lessonsCompleted.includes(CAMPAIGN_LESSONS[idx - 1].id)) return;
 
                 const l = CAMPAIGN_LESSONS[idx];
                 this.cleanupAndExit(false);
                 this.state.mode = 'lesson';
                 this.state.lessonRef = l;
-                this.state.text = l.text;
+                // Lições iniciais repetem o texto para dar tempo de fixar o movimento
+                this.state.text = l.id <= 18 ? Array(Math.max(1, Math.round(60 / l.text.length))).fill(l.text).join(' ') : l.text;
 
                 document.getElementById('game-title').textContent = `Lição ${l.id}: ${l.title}`;
                 document.getElementById('game-objective').textContent = `Meta: ${l.minAcc}% Precisão${l.minWpm > 0 ? ` | ${l.minWpm} PPM` : ''}`;
@@ -2216,7 +2517,12 @@
             },
 
             startMode(modeName) {
-                if (!['rush', 'marathon', 'accents'].includes(modeName)) return;
+                if (!['rush', 'marathon', 'accents', 'weak', 'daily', 'sudden', 'placement'].includes(modeName)) return;
+                let weakText = null;
+                if (modeName === 'weak') {
+                    weakText = this.buildWeakText();
+                    if (!weakText) { UI.notify('Jogue algumas sessões primeiro: este treino usa os seus erros.'); return; }
+                }
 
                 this.cleanupAndExit(false);
                 this.state.mode = modeName;
@@ -2234,6 +2540,28 @@
                     document.getElementById('game-title').textContent = `Maratona (Texto 1 de ${MARATHON_TEXTS.length})`;
                     document.getElementById('game-objective').textContent = "Conclua toda a bateria sequencialmente.";
                 }
+                else if (modeName === 'placement') {
+                    this.state.text = 'O Brasil possui 27 unidades federativas, e 100% dos alunos podem aprender. Envie o e-mail para aluno@escola.com.br até 15/11. Fui à escola às 7h; o 1º lugar é meu. Você já praticou hoje? Não, mas vou começar agora!';
+                    document.getElementById('game-title').textContent = 'Teste de Nivelamento';
+                    document.getElementById('game-objective').textContent = 'Para liberar as 30 lições: 95% de precisão e 25 PPM.';
+                }
+                else if (modeName === 'weak') {
+                    this.state.text = weakText;
+                    document.getElementById('game-title').textContent = 'Treino dos Meus Erros';
+                    document.getElementById('game-objective').textContent = 'Palavras escolhidas a partir das teclas em que você mais errou.';
+                }
+                else if (modeName === 'daily') {
+                    const d = new Date();
+                    this.state.text = this.dailyText(`${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`);
+                    document.getElementById('game-title').textContent = `Desafio do Dia (${d.toLocaleDateString('pt-BR')})`;
+                    document.getElementById('game-objective').textContent = 'Mesmo texto para toda a turma hoje. Meta: 95% de precisão.';
+                }
+                else if (modeName === 'sudden') {
+                    this.state.text = shuffle(MARATHON_TEXTS).slice(0, 2).join(' ');
+                    this.state.lives = 3;
+                    document.getElementById('game-title').textContent = 'Morte Súbita';
+                    document.getElementById('game-objective').textContent = '♥♥♥ Cada erro custa uma vida.';
+                }
                 else if (modeName === 'accents') {
                     this.state.text = "A água do café é essencial. O Brasil possui 1º lugar em produção? A pontuação (100%) é §1º na lei ª.";
                     document.getElementById('game-title').textContent = "Mestre dos Símbolos";
@@ -2241,6 +2569,54 @@
                 }
 
                 this.setupSession();
+            },
+
+            /** Monta palavras com as letras/acentos que o aluno mais erra (a partir do mapa de calor) */
+            buildWeakText() {
+                const AC = { BracketLeft: 'áéíóúà', Quote: 'ãõâêôñ' };
+                const top = Object.entries(Profile.data.errorHeatmap).sort((a, b) => b[1] - a[1]).slice(0, 5).map(e => e[0]);
+                let pool = [];
+                top.forEach(k => {
+                    if (k === 'Technique') { pool.push(...WORD_BANK.slice(0, 24).map(w => w[0].toUpperCase() + w.slice(1))); return; }
+                    const chars = AC[k] || (LAYOUT_BY_CODE[k] && LAYOUT_BY_CODE[k].main.length === 1 ? LAYOUT_BY_CODE[k].main : '');
+                    if (chars) pool.push(...WORD_BANK.filter(w => [...chars].some(c => w.includes(c))));
+                });
+                pool = [...new Set(pool)];
+                if (!pool.length) return null;
+                const out = [];
+                while (out.length < 16) out.push(...shuffle(pool));
+                return out.slice(0, 16).join(' ');
+            },
+
+            /** Texto do Desafio do Dia: sorteio com semente = data, igual para todos no mesmo dia */
+            dailyText(seed) {
+                let h = 0;
+                for (const c of seed) h = (Math.imul(h, 31) + c.charCodeAt(0)) | 0;
+                const rnd = () => {
+                    h = (h + 0x6D2B79F5) | 0;
+                    let t = Math.imul(h ^ (h >>> 15), 1 | h);
+                    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+                    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+                };
+                const pool = [...DAILY_BANK], out = [];
+                while (out.length < 4) out.push(pool.splice(Math.floor(rnd() * pool.length), 1)[0]);
+                return out.join(' ');
+            },
+
+            /** Dica em texto: qual dedo e qual modificador usar para o próximo caractere */
+            describeNext() {
+                const s = this.state, t = s.text[s.currentIndex];
+                if (t === undefined) return '';
+                if (t === ' ') return 'Espaço: use o polegar.';
+                const i = analyzeChar(t);
+                if (!i) return '';
+                const step1 = i.dead && !s.deadKeyPending;
+                const kc = step1 ? i.dead.dead : i.code, k = LAYOUT_BY_CODE[kc];
+                let txt = `Tecla ${keyLabel(kc)}: dedo ${FINGER_NAMES[k.finger] || ''}.`;
+                const sh = step1 ? i.deadShift : i.finalShift;
+                if (sh) txt += ` Segure o Shift ${sh === 'ShiftLeft' ? 'esquerdo' : 'direito'} (mão oposta).`;
+                if (i.altGr && !i.dead) txt += ' Segure o AltGr com o polegar direito.';
+                return txt;
             },
 
             setupSession() {
@@ -2256,6 +2632,8 @@
                 s.sessionHeatmap = {};
                 s.deadKeyPending = null;
                 s.capsWarned = false;
+                Profile.newTrophies = [];
+                AudioEngine.pickMelody();
                 // Corrida conta regressivamente; os demais modos contam de 0 (antes a lição herdava o tempo da Corrida)
                 s.timeRemaining = s.mode === 'rush' ? RUSH_SECONDS : 0;
 
@@ -2307,8 +2685,11 @@
                 const errs = this.state.errorsCount;
                 const attempts = correct + errs;
                 const acc = attempts > 0 ? Math.round((correct / attempts) * 100) : 100;
-                const wpm = mins > 0 ? Math.max(0, Math.round(((correct / 5) - errs) / mins)) : 0;
-                return { wpm, acc };
+                // Padrão da digitação: 1 palavra = 5 toques (espaços e pontuação contam). PPM = acertos / 5 / minutos.
+                // Erros não geram palavras, mas também não são subtraídos (antes cada erro descontava 1 palavra inteira).
+                const wpm = mins > 0 ? Math.round((correct / 5 / mins) * 10) / 10 : 0;
+                const gross = mins > 0 ? Math.round(((correct + errs) / 5 / mins) * 10) / 10 : 0;
+                return { wpm, acc, gross };
             },
 
             /**
@@ -2327,6 +2708,8 @@
 
                 this.physicalKeysDown.add(code);
                 this.lastCode = code;
+                this.flashKey(code, 'pressed', 120);
+                AudioEngine.duck();
 
                 // Aviso de Caps Lock (todas as letras sairiam maiúsculas e o aluno não entenderia o erro)
                 if (!this.state.capsWarned && e.getModifierState && e.getModifierState('CapsLock')) {
@@ -2356,6 +2739,7 @@
 
                     if (shiftValid) {
                         s.deadKeyPending = code;
+                        
                         this.highlightNextExpectedKeys();
                     } else {
                         this.registerError('Technique');
@@ -2406,6 +2790,7 @@
                 if (target === undefined) return;
 
                 if (s.startTime === 0) this.startTimer();
+                if (s.mode === 'rush' && Date.now() - s.startTime >= RUSH_SECONDS * 1000) { this.endSession(); return; }
 
                 // Regra Máxima: Técnica sempre sobrepõe digitação
                 if (!this.validateTechnique(target)) {
@@ -2461,7 +2846,7 @@
              */
             handleCorrectChar(target) {
                 const s = this.state;
-                AudioEngine.playType();
+                AudioEngine.playKey(this.lastCode);
                 this.flashKey(this.lastCode, 'correct');
 
                 const info = analyzeChar(target);
@@ -2545,6 +2930,12 @@
 
             registerError(code) {
                 this.state.sessionHeatmap[code] = (this.state.sessionHeatmap[code] || 0) + 1;
+                if (this.state.mode === 'sudden' && this.state.active) {
+                    this.state.lives--;
+                    const l = Math.max(0, this.state.lives);
+                    document.getElementById('game-objective').textContent = '♥'.repeat(l) + '♡'.repeat(3 - l) + ' Cada erro custa uma vida.';
+                    if (l === 0) setTimeout(() => this.endSession(), 0);
+                }
             },
 
             /**
@@ -2553,6 +2944,7 @@
              */
             highlightNextExpectedKeys() {
                 document.querySelectorAll('.key.active').forEach(k => k.classList.remove('active'));
+                UI.updateHint(this.describeNext());
 
                 const s = this.state;
                 if (s.currentIndex >= s.text.length) return;
@@ -2609,10 +3001,10 @@
                 if (!s.active) return; // evita finalizar duas vezes (ex: fim do texto e do tempo juntos)
                 s.active = false;
                 clearInterval(s.timerInterval);
-                AudioEngine.stopBgMusic();
+                AudioEngine.unduck();
 
                 const mins = Math.max(this.getElapsedMins(), 0.05);
-                const { wpm: netWpm, acc } = this.calcStats(mins);
+                const { wpm: netWpm, acc, gross: grossWpm } = this.calcStats(mins);
 
                 let passed = true;
                 let title = "Sessão Concluída";
@@ -2637,8 +3029,21 @@
                     }
                 }
 
+                if (s.mode === 'sudden') {
+                    passed = s.lives > 0;
+                    title = passed ? 'Sobrevivente!' : 'Fim das vidas';
+                    msg = passed ? 'Você terminou os textos sem perder todas as vidas.' : `Você acertou ${s.correctChars} caracteres antes de perder as três vidas.`;
+                }
+                if (s.mode === 'placement') {
+                    passed = acc >= 95 && netWpm >= 25;
+                    title = passed ? 'Nivelamento aprovado!' : 'Ainda não foi desta vez';
+                    msg = passed ? 'Você provou o seu nível: todas as 30 lições foram liberadas.' : `Meta: 95% de precisão e 25 PPM (você fez ${acc}% e ${netWpm} PPM). Siga a trilha ou tente de novo.`;
+                    if (passed) Profile.data.unlockAll = true;
+                }
                 // Cálculo de Recompensa (XP)
                 let earnedXp = passed ? Math.max(10, Math.floor((netWpm * 1.5) + (acc > 90 ? (acc - 90) * 10 : 0))) : 5;
+
+                if (s.mode === 'sudden') earnedXp = Math.max(earnedXp, Math.floor(s.correctChars / 4));
 
                 // Conclusão e Registro Definitivo
                 if (passed && lesson) {
@@ -2652,13 +3057,27 @@
                 if (passed) AudioEngine.playSuccess(); else AudioEngine.playError();
 
                 // Submissão do bloco histórico
+                const prevRecord = Profile.data.recordWpm;
                 Profile.addXP(earnedXp);
-                Profile.registerSession(netWpm, s.sessionHeatmap, acc);
+                Profile.registerSession(netWpm, s.sessionHeatmap, acc, { chars: s.correctChars, combo: s.maxCombo, perfect: passed && acc === 100 && s.correctChars >= 20 });
+                if (prevRecord > 0 && netWpm > prevRecord) msg += ' Novo recorde pessoal de PPM!';
 
                 // Badge "Mestre da Técnica": sessão aprovada, com acentos/Shift/AltGr de fato exigidos e sem erros de técnica
                 if (passed && s.mode !== 'rush' && s.shiftCharsDone >= 5
                     && s.sessionHeatmap['Technique'] === undefined && s.errorsCount < 5) {
                     Profile.awardBadge(3);
+                }
+
+                if (s.mode === 'daily' && acc >= 95) Profile.awardBadge('desafio');
+                if (s.mode === 'sudden' && passed) Profile.awardBadge('sobrevivente');
+                const rt = document.getElementById('res-trophies');
+                rt.innerHTML = '';
+                rt.classList.toggle('hidden', !Profile.newTrophies.length);
+                if (Profile.newTrophies.length) {
+                    rt.appendChild(el('p', 'text-sm text-gray-400 mb-3', 'Troféus conquistados nesta sessão'));
+                    const row = el('div', 'grid gap-3 text-left');
+                    Profile.newTrophies.forEach(id => row.appendChild(UI.trophyCard(TROPHIES.find(t => t.id === id))));
+                    rt.appendChild(row);
                 }
 
                 // Renderizando Informações de Fim de Turno
@@ -2669,6 +3088,7 @@
                 document.getElementById('res-chars').textContent = s.correctChars;
                 document.getElementById('res-errors').textContent = s.errorsCount;
                 document.getElementById('res-xp').textContent = earnedXp;
+                document.getElementById('res-gross').textContent = `PPM = acertos ÷ 5 ÷ minutos (${s.correctChars} acertos em ${(mins * 60).toFixed(1).replace('.', ',')} s). Contando também os erros: ${grossWpm} PPM bruta.`;
 
                 // Dinamismo de Fluxo
                 const bNext = document.getElementById('btn-next-action');
@@ -2728,6 +3148,8 @@
             A11y.init();
             UI.init();
             Engine.init();
+            // Navegadores só liberam áudio após um gesto do usuário: o 1º toque/tecla liga a música
+            ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => { AudioEngine.unlocked = true; AudioEngine.startBgMusic(); }, { once: true }));
         });
 
     </script>

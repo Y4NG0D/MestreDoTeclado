@@ -6,6 +6,10 @@
     <title>Mestre do Teclado - ABNT2 Pro Ultimate</title>
     
     <!-- Tailwind CSS para estruturação ágil e responsividade -->
+    <meta name="description" content="Mestre do Teclado: treino gamificado de digitação no padrão ABNT2 para letramento digital, EJA e laboratórios de informática.">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E⌨️%3C/text%3E%3C/svg%3E">
+    <link rel="manifest" href="manifest.webmanifest">
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- FontAwesome para ícones vetoriais -->
@@ -454,7 +458,7 @@
                 <p class="text-xs text-gray-400">Edição Laboratório Inclusivo</p>
             </div>
         </div>
-        <div class="flex gap-4 items-center">
+        <div class="flex flex-wrap justify-end gap-2 md:gap-4 items-center">
             <div class="text-right hidden md:block">
                 <p class="text-sm font-semibold text-blue-300">Nível <span id="nav-level">1</span></p>
                 <p class="text-xs text-gray-500" id="nav-xp">0 / 100 XP</p>
@@ -544,6 +548,10 @@
                 <button type="button" class="w-full text-left bg-gray-800 rounded-xl p-4 border border-gray-700 hover:border-teal-500 transition" onclick="Engine.openCustom()">
                     <p class="font-bold text-teal-400"><i class="fa-solid fa-pen-to-square mr-1"></i> Texto Livre (professor / prática)</p>
                     <p class="text-xs text-gray-400 mt-1">Cole qualquer texto (aula, e-mail, redação) e treine com a validação ABNT2.</p>
+                </button>
+                <button type="button" class="w-full text-left bg-gray-800 rounded-xl p-4 border border-gray-700 hover:border-indigo-500 transition" onclick="Engine.startMode('shortcuts')">
+                    <p class="font-bold text-indigo-400"><i class="fa-brands fa-windows mr-1"></i> Atalhos do Windows</p>
+                    <p class="text-xs text-gray-400 mt-1">Ctrl+C, Ctrl+V, Ctrl+Z e mais: 12 atalhos por rodada, do básico ao avançado.</p>
                 </button>
                 <h3 class="text-lg font-bold pt-2 text-gray-200"><i class="fa-solid fa-medal mr-2 text-yellow-400"></i> Desafios para quem já digita</h3>
                 <div class="grid sm:grid-cols-3 gap-4">
@@ -1457,6 +1465,33 @@
             'O teclado é uma ferramenta de trabalho. Com os dez dedos, escrever um e-mail ou um relatório fica rápido, e os olhos descansam para revisar o texto.',
             'Cada letra tem o seu dedo. Com o tempo, a mão aprende o caminho sozinha e o pensamento corre mais depressa do que a digitação.'
         ];
+        /** Atalhos que o navegador permite capturar (Ctrl+W, Ctrl+T, Alt+F4 e teclas Windows ficam de fora) */
+        const SC = (lvl, name, label, code, desc) => ({ lvl, name, label, code, desc, ctrl: /Ctrl/.test(label), shift: /Shift/.test(label), alt: /Alt/.test(label) });
+        const SHORTCUTS = [
+            SC(1, 'Copiar', 'Ctrl+C', 'KeyC', 'Copia o que está selecionado.'),
+            SC(1, 'Colar', 'Ctrl+V', 'KeyV', 'Cola o que foi copiado ou recortado.'),
+            SC(1, 'Recortar', 'Ctrl+X', 'KeyX', 'Remove o selecionado e guarda para colar.'),
+            SC(1, 'Desfazer', 'Ctrl+Z', 'KeyZ', 'Volta atrás na última ação.'),
+            SC(1, 'Selecionar tudo', 'Ctrl+A', 'KeyA', 'Seleciona todo o conteúdo.'),
+            SC(1, 'Salvar', 'Ctrl+S', 'KeyS', 'Salva o arquivo aberto.'),
+            SC(1, 'Imprimir', 'Ctrl+P', 'KeyP', 'Abre a janela de impressão.'),
+            SC(1, 'Localizar', 'Ctrl+F', 'KeyF', 'Procura uma palavra no documento.'),
+            SC(2, 'Refazer', 'Ctrl+Y', 'KeyY', 'Refaz o que foi desfeito.'),
+            SC(2, 'Negrito', 'Ctrl+B', 'KeyB', 'Liga ou desliga o negrito.'),
+            SC(2, 'Itálico', 'Ctrl+I', 'KeyI', 'Liga ou desliga o itálico.'),
+            SC(2, 'Sublinhado', 'Ctrl+U', 'KeyU', 'Liga ou desliga o sublinhado.'),
+            SC(2, 'Abrir arquivo', 'Ctrl+O', 'KeyO', 'Abre a janela para escolher um arquivo.'),
+            SC(2, 'Substituir', 'Ctrl+H', 'KeyH', 'Troca uma palavra por outra no documento.'),
+            SC(2, 'Renomear', 'F2', 'F2', 'Renomeia o arquivo ou pasta selecionado.'),
+            SC(2, 'Atualizar', 'F5', 'F5', 'Atualiza a janela ou a página.'),
+            SC(3, 'Ir para o início', 'Ctrl+Home', 'Home', 'Leva o cursor ao começo do documento.'),
+            SC(3, 'Ir para o fim', 'Ctrl+End', 'End', 'Leva o cursor ao fim do documento.'),
+            SC(3, 'Apagar palavra anterior', 'Ctrl+Backspace', 'Backspace', 'Apaga a palavra inteira à esquerda do cursor.'),
+            SC(3, 'Selecionar palavra à direita', 'Ctrl+Shift+→', 'ArrowRight', 'Seleciona a próxima palavra.'),
+            SC(3, 'Voltar', 'Alt+←', 'ArrowLeft', 'Volta para a tela ou página anterior.'),
+            SC(3, 'Selecionar até o início da linha', 'Shift+Home', 'Home', 'Seleciona do cursor até o começo da linha.'),
+            SC(3, 'Refazer (alternativo)', 'Ctrl+Shift+Z', 'KeyZ', 'Outra forma de refazer a ação.')
+        ];
         const TIER_NAMES = { bronze: 'Bronze', silver: 'Prata', gold: 'Ouro', platinum: 'Platina' };
         const TIER_COLORS = { bronze: '#cd7f32', silver: '#cbd5e1', gold: '#facc15', platinum: '#67e8f9' };
 
@@ -1485,6 +1520,8 @@
             { id: 'chars1k', cat: 'Constância', tier: 'bronze', icon: 'keyboard', name: 'Mil Toques', desc: 'Acerte 1.000 caracteres no total.', p: d => [d.totalChars, 1000] },
             { id: 'chars10k', cat: 'Constância', tier: 'gold', icon: 'infinity', name: 'Dez Mil Toques', desc: 'Acerte 10.000 caracteres no total.', p: d => [d.totalChars, 10000] },
             { id: 'desafio', cat: 'Desafios', tier: 'silver', icon: 'calendar-day', name: 'Desafio do Dia', desc: 'Conclua o Desafio do Dia com 95% ou mais de precisão.', p: ev },
+            { id: 'atalhos', cat: 'Desafios', tier: 'silver', icon: 'rectangle-list', name: 'Atalhista', desc: 'Conclua o modo Atalhos do Windows com 80% ou mais de precisão.', p: ev },
+            { id: 'atalhos_perfeito', cat: 'Desafios', tier: 'gold', icon: 'wand-magic-sparkles', name: 'Mestre dos Atalhos', desc: 'Conclua o modo Atalhos sem nenhum erro.', p: ev },
             { id: 'sobrevivente', cat: 'Desafios', tier: 'gold', icon: 'heart', name: 'Sobrevivente', desc: 'Termine a Morte Súbita sem perder as três vidas.', p: ev }
         ];
         const TROPHY_IDS = TROPHIES.map(t => t.id);
@@ -1752,7 +1789,7 @@
                 }
 
                 const d = this.data;
-                d.history = (d.history || []).concat({ w: wpm, a: acc === undefined ? 100 : acc }).slice(-30);
+                if (!extra.noWpm) d.history = (d.history || []).concat({ w: wpm, a: acc === undefined ? 100 : acc }).slice(-30);
                 d.totalChars += extra.chars || 0;
                 d.bestCombo = Math.max(d.bestCombo, extra.combo || 0);
                 if (extra.perfect) d.perfectSessions++;
@@ -1946,6 +1983,8 @@
                 ].filter(Boolean).join('. ');
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'pt-BR';
+                utterance.onend = utterance.onerror = () => AudioEngine.unduck();
+                AudioEngine.duck(30000); // a música abaixa enquanto a voz lê
                 this.synth.speak(utterance);
             }
         };
@@ -2055,15 +2094,17 @@
                 let i;
                 do { i = Math.floor(Math.random() * MELODIES.length); } while (i === this.lastMel && MELODIES.length > 1);
                 this.lastMel = i; this.melody = MELODIES[i]; this.mi = 0;
+                this.keyShift = this.melody.name === 'Canon em Ré' ? 2 : 0; // fundo na mesma tonalidade da melodia
                 UI.notify('♪ Melodia desta partida: ' + this.melody.name);
             },
 
             /** Música de fundo some enquanto o aluno digita e volta após uma pausa */
-            duck() {
+            duck(ms = 2500) {
                 if (!this.ready || !this.bgLead) return;
                 clearTimeout(this.duckT);
-                this.bgMusic.volume.rampTo(-60, 0.1); this.bgLead.volume.rampTo(-60, 0.1);
-                this.duckT = setTimeout(() => this.unduck(), 2500);
+                this.bgMusic.releaseAll(); this.bgLead.triggerRelease(); // corta o que ainda soa: nada de notas do fundo sob a melodia
+                this.bgMusic.volume.rampTo(-80, 0.05); this.bgLead.volume.rampTo(-80, 0.05);
+                this.duckT = setTimeout(() => this.unduck(), ms);
             },
             unduck() {
                 if (!this.ready || !this.bgLead) return;
@@ -2108,9 +2149,10 @@
                     let step = 0;
 
                     this.chordPattern = new Tone.Loop((time) => {
-                        this.bgMusic.triggerAttackRelease(chords[step], "1m", time);
-                        const arp = Tone.Frequency(chords[step][0]).transpose(24).toNote(), arp2 = Tone.Frequency(chords[step][1]).transpose(24).toNote(), arp3 = Tone.Frequency(chords[step][2]).transpose(24).toNote();
-                        [arp, arp2, arp3, arp2, arp3, arp2].forEach((n, i) => this.bgLead.triggerAttackRelease(n, "8n", time + i * Tone.Time("8n").toSeconds() * 1.5));
+                        const ch = chords[step].map(n => Tone.Frequency(n).transpose(this.keyShift || 0).toNote());
+                        this.bgMusic.triggerAttackRelease(ch, "1m", time);
+                        const up = ch.map(n => Tone.Frequency(n).transpose(24).toNote());
+                        [0, 1, 2, 1, 2, 1].forEach((j, i) => this.bgLead.triggerAttackRelease(up[j], "8n", time + i * Tone.Time("8n").toSeconds() * 1.5));
                         step = (step + 1) % chords.length;
                     }, "1m").start(0);
 
@@ -2131,6 +2173,7 @@
                     }
                     Tone.Transport.stop();
                     this.bgMusic.releaseAll(); // corta notas ainda soando
+                    this.bgLead.triggerRelease();
                 } catch (err) {
                     console.warn('Falha ao parar a música:', err);
                 }
@@ -2678,7 +2721,7 @@
             },
 
             startMode(modeName) {
-                if (!['rush', 'marathon', 'accents', 'weak', 'daily', 'sudden', 'placement', 'custom'].includes(modeName)) return;
+                if (!['rush', 'marathon', 'accents', 'weak', 'daily', 'sudden', 'placement', 'custom', 'shortcuts'].includes(modeName)) return;
                 let weakText = null;
                 if (modeName === 'weak') {
                     weakText = this.buildWeakText();
@@ -2700,6 +2743,14 @@
                     this.state.text = this.state.marathonTextsRemaining.pop();
                     document.getElementById('game-title').textContent = `Maratona (Texto 1 de ${MARATHON_TEXTS.length})`;
                     document.getElementById('game-objective').textContent = "Conclua toda a bateria sequencialmente.";
+                }
+                else if (modeName === 'shortcuts') {
+                    const pick = (lvl, n) => shuffle(SHORTCUTS.filter(x => x.lvl === lvl)).slice(0, n);
+                    this.state.scList = [...pick(1, 5), ...pick(2, 4), ...pick(3, 3)];
+                    this.state.scIdx = 0;
+                    this.state.text = '•'.repeat(this.state.scList.length);
+                    document.getElementById('game-title').textContent = 'Atalhos do Windows';
+                    document.getElementById('game-objective').textContent = 'Aperte a combinação certa. Atalhos reservados pelo navegador (Ctrl+W, Alt+F4, tecla Windows) não são treinados.';
                 }
                 else if (modeName === 'custom') {
                     this.state.text = this.customText;
@@ -2817,6 +2868,53 @@
                 this.highlightNextExpectedKeys();
             },
 
+            /** Mostra o atalho atual; a dica com as teclas aparece na hora (nível 1) ou após alguns segundos */
+            renderShortcut() {
+                const s = this.state, it = s.scList[s.scIdx], d = document.getElementById('text-display');
+                if (!it) return;
+                clearTimeout(s.scHintT);
+                d.innerHTML = '';
+                const w = el('div', 'text-center py-6');
+                w.appendChild(el('p', 'text-sm text-gray-400 mb-2', `Atalho ${s.scIdx + 1} de ${s.scList.length}`));
+                w.appendChild(el('p', 'text-3xl font-bold text-white mb-2', it.name));
+                w.appendChild(el('p', 'text-gray-300 mb-4', it.desc));
+                const hint = el('p', 'text-3xl font-mono text-sky-300 min-h-[2.5rem]');
+                w.appendChild(hint);
+                d.appendChild(w);
+                document.querySelectorAll('.key.active').forEach(k => k.classList.remove('active'));
+                UI.updateHint('');
+                const show = () => {
+                    hint.textContent = it.label.split('+').join(' + ');
+                    [it.ctrl && 'ControlLeft', it.shift && 'ShiftLeft', it.alt && 'AltLeft', it.code].forEach(c => c && document.getElementById('key-' + c)?.classList.add('active'));
+                };
+                if (it.lvl === 1) show(); else s.scHintT = setTimeout(show, it.lvl === 2 ? 4000 : 7000);
+            },
+
+            handleShortcut(e) {
+                e.preventDefault(); // impede o navegador de agir (salvar página, imprimir, atualizar...)
+                const s = this.state, code = e.code;
+                if (s.paused || e.repeat) return;
+                if (/^(Control|Shift|Alt|Meta)/.test(code)) { this.flashKey(code, 'pressed', 150); return; }
+                if (!s.startTime) this.startTimer();
+                const it = s.scList[s.scIdx];
+                if (!it) return;
+                const ok = code === it.code && e.ctrlKey === it.ctrl && e.shiftKey === it.shift && e.altKey === it.alt && !e.metaKey;
+                if (ok) {
+                    s.correctChars++; s.currentCombo++; s.maxCombo = Math.max(s.maxCombo, s.currentCombo);
+                    AudioEngine.playKey(code);
+                    s.scIdx++; s.currentIndex = s.scIdx;
+                    this.updateStatsUI();
+                    if (s.scIdx >= s.scList.length) this.endSession(); else this.highlightNextExpectedKeys();
+                } else {
+                    s.errorsCount++;
+                    this.breakCombo();
+                    AudioEngine.playError();
+                    const got = [e.ctrlKey && 'Ctrl', e.shiftKey && 'Shift', e.altKey && 'Alt', e.key.length === 1 ? e.key.toUpperCase() : e.key].filter(Boolean).join(' + ');
+                    UI.updateHint(`Você apertou ${got}. Tente de novo!`);
+                    this.updateStatsUI();
+                }
+            },
+
             togglePause() {
                 const s = this.state;
                 if (!s.active) return;
@@ -2850,7 +2948,7 @@
             /** Texto livre: só mantém caracteres que o ABNT2 consegue digitar */
             startCustom() {
                 let t = document.getElementById('custom-text').value.replace(/\s+/g, ' ').trim();
-                t = [...t].filter(c => c === ' ' || analyzeChar(c)).join('').slice(0, 800).trim();
+                t = [...t].filter(c => c === ' ' || analyzeChar(c)).join('').replace(/\s+/g, ' ').slice(0, 800).trim();
                 if (t.length < 10) { UI.notify('Cole um texto com pelo menos 10 caracteres digitáveis.'); return; }
                 this.customText = t;
                 document.getElementById('custom-modal').classList.add('hidden');
@@ -2895,8 +2993,9 @@
                 const acc = attempts > 0 ? Math.round((correct / attempts) * 100) : 100;
                 // Padrão da digitação: 1 palavra = 5 toques (espaços e pontuação contam). PPM = acertos / 5 / minutos.
                 // Erros não geram palavras, mas também não são subtraídos (antes cada erro descontava 1 palavra inteira).
-                const wpm = mins > 0 ? Math.round((correct / 5 / mins) * 10) / 10 : 0;
-                const gross = mins > 0 ? Math.round(((correct + errs) / 5 / mins) * 10) / 10 : 0;
+                const eff = this.state.mode === 'rush' ? correct : Math.max(0, correct - 1);
+                const wpm = mins > 0 ? Math.round((eff / 5 / mins) * 10) / 10 : 0;
+                const gross = mins > 0 ? Math.round(((eff + errs) / 5 / mins) * 10) / 10 : 0;
                 return { wpm, acc, gross };
             },
 
@@ -2916,6 +3015,7 @@
 
                 if (code === 'Escape') { e.preventDefault(); this.togglePause(); return; }
                 if (this.state.paused) return;
+                if (this.state.mode === 'shortcuts') { AudioEngine.duck(); this.handleShortcut(e); return; }
                 this.physicalKeysDown.add(code);
                 this.lastCode = code;
                 this.flashKey(code, 'pressed', 120);
@@ -2972,7 +3072,7 @@
                 if (!this.state.active) return;
                 // Durante a composição de um acento o campo guarda um caractere provisório (ex: "´"):
                 // apagá-lo agora quebraria a composição. Esperamos o evento compositionend.
-                if (e.isComposing || this.composing) return;
+                if (this.state.mode === 'shortcuts' || e.isComposing || this.composing) return;
 
                 const hi = document.getElementById('hidden-input');
                 const data = hi.value;
@@ -3155,6 +3255,7 @@
              * Fundamental para a didática visual das aulas.
              */
             highlightNextExpectedKeys() {
+                if (this.state.mode === 'shortcuts') { this.renderShortcut(); return; }
                 document.querySelectorAll('.key.active').forEach(k => k.classList.remove('active'));
                 UI.updateHint(this.describeNext());
 
@@ -3213,7 +3314,7 @@
                 if (!s.active) return; // evita finalizar duas vezes (ex: fim do texto e do tempo juntos)
                 s.active = false;
                 clearInterval(s.timerInterval);
-                AudioEngine.unduck();
+                setTimeout(() => AudioEngine.unduck(), 1800); // deixa o acorde de vitória soar sozinho
 
                 const mins = Math.max(this.getElapsedMins(), 0.05);
                 const { wpm: netWpm, acc, gross: grossWpm } = this.calcStats(mins);
@@ -3252,10 +3353,17 @@
                     msg = passed ? 'Você provou o seu nível: todas as 30 lições foram liberadas.' : `Meta: 95% de precisão e 25 PPM (você fez ${acc}% e ${netWpm} PPM). Siga a trilha ou tente de novo.`;
                     if (passed) Profile.data.unlockAll = true;
                 }
+                clearTimeout(s.scHintT);
+                if (s.mode === 'shortcuts') {
+                    passed = acc >= 80 && s.scIdx >= s.scList.length;
+                    title = passed ? 'Atalhos dominados!' : 'Rodada encerrada';
+                    msg = `${s.scIdx} de ${s.scList.length} atalhos em ${Math.round(mins * 60)} s, com ${acc}% de precisão.`;
+                }
                 // Cálculo de Recompensa (XP)
                 let earnedXp = passed ? Math.max(10, Math.floor((netWpm * 1.5) + (acc > 90 ? (acc - 90) * 10 : 0))) : 5;
 
                 if (s.mode === 'sudden') earnedXp = Math.max(earnedXp, Math.floor(s.correctChars / 4));
+                if (s.mode === 'shortcuts') earnedXp = passed ? 20 + s.correctChars * 5 : s.correctChars * 2;
 
                 // Conclusão e Registro Definitivo
                 if (passed && lesson) {
@@ -3271,7 +3379,7 @@
                 // Submissão do bloco histórico
                 const prevRecord = Profile.data.recordWpm;
                 Profile.addXP(earnedXp);
-                Profile.registerSession(netWpm, s.sessionHeatmap, acc, { chars: s.correctChars, combo: s.maxCombo, perfect: passed && acc === 100 && s.correctChars >= 20 });
+                Profile.registerSession(s.mode === 'shortcuts' ? 0 : netWpm, s.sessionHeatmap, acc, { chars: s.correctChars, combo: s.maxCombo, perfect: passed && acc === 100 && s.correctChars >= 20, noWpm: s.mode === 'shortcuts' });
                 if (prevRecord > 0 && netWpm > prevRecord) msg += ' Novo recorde pessoal de PPM!';
 
                 // Badge "Mestre da Técnica": sessão aprovada, com acentos/Shift/AltGr de fato exigidos e sem erros de técnica
@@ -3280,6 +3388,7 @@
                     Profile.awardBadge(3);
                 }
 
+                if (s.mode === 'shortcuts' && passed) { Profile.awardBadge('atalhos'); if (acc === 100) Profile.awardBadge('atalhos_perfeito'); }
                 if (s.mode === 'daily' && acc >= 95) Profile.awardBadge('desafio');
                 if (s.mode === 'sudden' && passed) Profile.awardBadge('sobrevivente');
                 const rt = document.getElementById('res-trophies');
@@ -3295,12 +3404,12 @@
                 // Renderizando Informações de Fim de Turno
                 document.getElementById('result-title').textContent = title;
                 document.getElementById('result-msg').textContent = msg;
-                document.getElementById('res-wpm').textContent = netWpm;
+                document.getElementById('res-wpm').textContent = (s.mode === 'shortcuts' ? '-' : netWpm);
                 document.getElementById('res-acc').textContent = acc + '%';
                 document.getElementById('res-chars').textContent = s.correctChars;
                 document.getElementById('res-errors').textContent = s.errorsCount;
                 document.getElementById('res-xp').textContent = earnedXp;
-                document.getElementById('res-gross').textContent = `PPM = acertos ÷ 5 ÷ minutos (${s.correctChars} acertos em ${(mins * 60).toFixed(1).replace('.', ',')} s). Contando também os erros: ${grossWpm} PPM bruta.`;
+                document.getElementById('res-gross').textContent = s.mode === 'shortcuts' ? 'Este modo não mede PPM: contam a precisão e o tempo.' : `PPM = acertos ÷ 5 ÷ minutos (${s.correctChars} acertos em ${(mins * 60).toFixed(1).replace('.', ',')} s). Contando também os erros: ${grossWpm} PPM bruta.`;
 
                 // Dinamismo de Fluxo
                 const bNext = document.getElementById('btn-next-action');
@@ -3360,6 +3469,23 @@
             A11y.init();
             UI.init();
             Engine.init();
+            // GitHub Pages (https): registra o service worker (cache das bibliotecas, funciona offline depois do 1º acesso)
+            if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
+            // Aviso amigável se as bibliotecas externas não carregaram (rede da escola bloqueando CDN)
+            window.addEventListener('load', () => {
+                if (typeof tailwind === 'undefined') {
+                    const b = document.createElement('div');
+                    b.setAttribute('role', 'alert');
+                    b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99;background:#7c2d12;color:#fff;padding:10px 14px;font:14px sans-serif;text-align:center';
+                    b.textContent = 'Os estilos não carregaram (sem internet ou CDN bloqueada). Conecte-se uma vez e recarregue: depois a página funciona offline.';
+                    document.body.appendChild(b);
+                }
+            });
+            // Pausa a música quando a aba fica em segundo plano
+            document.addEventListener('visibilitychange', () => {
+                if (typeof Tone === 'undefined' || !AudioEngine.chordPattern) return;
+                try { if (document.hidden) Tone.Transport.pause(); else Tone.Transport.start(); } catch (err) { /* ignorar */ }
+            });
             // Navegadores só liberam áudio após um gesto do usuário: o 1º toque/tecla liga a música
             ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => { AudioEngine.unlocked = true; AudioEngine.startBgMusic(); }, { once: true }));
         });

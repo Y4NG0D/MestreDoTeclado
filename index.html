@@ -427,6 +427,18 @@
         body.blind .key.active{background:var(--key-bg);box-shadow:none;transform:none;border-bottom:4px solid var(--bg-color)}
         body.blind .key.active span{color:inherit}
         body.blind #finger-hint{display:none}
+    
+        html.light-theme { filter: invert(.93) hue-rotate(180deg); }
+        #certificate { display: none; }
+        @media print {
+            body > *:not(#certificate) { display: none !important; }
+            #certificate { display: block !important; color: #000; background: #fff; padding: 40px; font-family: Georgia, serif; }
+            #certificate h1 { font-size: 28px; text-align: center; margin-bottom: 4px; }
+            #certificate p { text-align: center; color: #444; }
+            #certificate table { width: 100%; margin-top: 24px; border-collapse: collapse; }
+            #certificate th, #certificate td { border-bottom: 1px solid #999; padding: 8px; text-align: left; font-size: 16px; }
+            html { filter: none !important; } body { background: #fff !important; }
+        }
     </style>
 </head>
 <body>
@@ -449,12 +461,13 @@
             </div>
             
             <!-- Botão de Acessibilidade (Alto Contraste) -->
-            <button id="btn-a11y" aria-label="Alternar alto contraste e fonte grande" aria-pressed="false" class="p-2 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 transition" onclick="A11y.toggleHighContrast()" title="Alto Contraste / Fonte Grande">
-                <i class="fa-solid fa-eye"></i>
-            </button>
+            <button id="btn-contrast" aria-label="Alto contraste" aria-pressed="false" class="p-2 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 transition" onclick="A11y.toggle('contrast')" title="Alto contraste"><i class="fa-solid fa-circle-half-stroke"></i></button>
+            <button id="btn-font" aria-label="Fonte grande" aria-pressed="false" class="p-2 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 transition" onclick="A11y.toggle('font')" title="Fonte grande"><i class="fa-solid fa-text-height"></i></button>
+            <button id="btn-theme" aria-label="Tema claro" aria-pressed="false" class="p-2 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 transition" onclick="A11y.toggle('light')" title="Tema claro"><i class="fa-solid fa-sun"></i></button>
+            <button id="btn-music-toggle" aria-label="Música de fundo" aria-pressed="true" class="p-2 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 transition" onclick="AudioEngine.toggleMusic()" title="Música de fundo"><i class="fa-solid fa-music"></i></button>
             
             <!-- Botão de Áudio -->
-            <button id="btn-audio-toggle" aria-label="Ligar ou desligar o som" aria-pressed="false" class="p-2 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 transition" onclick="AudioEngine.toggleAudio()" title="Som/Música">
+            <button id="btn-audio-toggle" aria-label="Ligar ou desligar o som" aria-pressed="false" class="p-2 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 transition" onclick="AudioEngine.toggleAudio()" title="Efeitos sonoros das teclas">
                 <i class="fa-solid fa-volume-up"></i>
             </button>
             
@@ -528,6 +541,10 @@
                     </div>
                 </div>
             
+                <button type="button" class="w-full text-left bg-gray-800 rounded-xl p-4 border border-gray-700 hover:border-teal-500 transition" onclick="Engine.openCustom()">
+                    <p class="font-bold text-teal-400"><i class="fa-solid fa-pen-to-square mr-1"></i> Texto Livre (professor / prática)</p>
+                    <p class="text-xs text-gray-400 mt-1">Cole qualquer texto (aula, e-mail, redação) e treine com a validação ABNT2.</p>
+                </button>
                 <h3 class="text-lg font-bold pt-2 text-gray-200"><i class="fa-solid fa-medal mr-2 text-yellow-400"></i> Desafios para quem já digita</h3>
                 <div class="grid sm:grid-cols-3 gap-4">
                     <button type="button" class="text-left bg-gray-800 rounded-xl p-4 border border-gray-700 hover:border-pink-500 transition" onclick="Engine.startMode('weak')">
@@ -556,7 +573,8 @@
                                 <i class="fa-solid fa-user-graduate"></i>
                             </div>
                             <div>
-                                <h3 class="font-bold text-lg">Seu Perfil</h3>
+                                <h3 id="profile-title" class="font-bold text-lg">Seu Perfil</h3>
+                                <button class="text-xs text-blue-400 hover:text-blue-300" onclick="Profile.editIdentity()">Nome e turma</button>
                                 <p class="text-blue-400 text-sm font-semibold">Nível <span id="profile-level">1</span></p>
                             </div>
                         </div>
@@ -598,6 +616,9 @@
                         <button class="text-xs text-blue-400 hover:text-blue-300" onclick="UI.showScreen('trophies')">Ver todos</button>
                     </div>
                     <div class="flex flex-wrap gap-3 justify-center min-h-[2.5rem]" id="trophy-strip"></div>
+                    <h4 class="text-sm font-bold text-gray-300 mt-6 border-b border-gray-700 pb-1 mb-3">Evolução (últimas sessões)</h4>
+                    <div id="history-chart"></div>
+                    <button class="mt-4 w-full text-sm bg-gray-700 hover:bg-gray-600 text-white py-2 rounded transition" onclick="Profile.printCertificate()"><i class="fa-solid fa-print mr-1"></i> Certificado / Relatório para imprimir</button>
                 </div>
 
                 <!-- Tutor Analítico IA -->
@@ -708,6 +729,32 @@
             <button id="btn-blind" aria-pressed="false" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-600 text-gray-200 rounded text-sm transition" onclick="A11y.toggleBlind()">
                 <i class="fa-solid fa-eye-slash mr-1"></i> Sem olhar (desafio): teclado apagado
             </button>
+        </div>
+        <div class="mt-4 flex justify-center gap-3">
+            <button class="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-600 text-gray-200 rounded text-sm transition" onclick="Engine.togglePause()"><i class="fa-solid fa-pause mr-1"></i> Pausar (Esc)</button>
+            <button class="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-600 text-gray-200 rounded text-sm transition" onclick="Engine.restart()"><i class="fa-solid fa-rotate-right mr-1"></i> Reiniciar</button>
+        </div>
+        <div id="pause-overlay" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Jogo pausado">
+            <div class="bg-gray-800 border border-gray-600 rounded-xl p-8 text-center max-w-sm w-full">
+                <h3 class="text-2xl font-bold mb-2">Pausado</h3>
+                <p class="text-gray-400 text-sm mb-6">O tempo está parado. Esc também continua.</p>
+                <div class="flex flex-col gap-3">
+                    <button id="btn-resume" class="py-2 bg-blue-600 hover:bg-blue-500 rounded font-bold" onclick="Engine.togglePause()">Continuar</button>
+                    <button class="py-2 bg-gray-700 hover:bg-gray-600 rounded" onclick="Engine.restart()">Reiniciar</button>
+                    <button class="py-2 bg-red-600 hover:bg-red-500 rounded" onclick="Engine.cleanupAndExit()">Sair para o menu</button>
+                </div>
+            </div>
+        </div>
+        <div id="custom-modal" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Texto livre">
+            <div class="bg-gray-800 border border-gray-600 rounded-xl p-6 max-w-xl w-full">
+                <h3 class="text-xl font-bold mb-2">Texto Livre</h3>
+                <p class="text-gray-400 text-sm mb-3">Cole o texto (até 800 caracteres). Caracteres que o teclado ABNT2 não digita são removidos.</p>
+                <textarea id="custom-text" rows="6" maxlength="2000" class="w-full bg-gray-900 border border-gray-600 rounded p-3 text-gray-100"></textarea>
+                <div class="flex justify-end gap-3 mt-4">
+                    <button class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded" onclick="document.getElementById('custom-modal').classList.add('hidden')">Cancelar</button>
+                    <button class="px-4 py-2 bg-teal-600 hover:bg-teal-500 rounded font-bold" onclick="Engine.startCustom()">Iniciar</button>
+                </div>
+            </div>
         </div>
         <!-- Botão de Abandono de Sessão -->
         <div class="mt-6 flex justify-center">
@@ -1394,6 +1441,22 @@
             { name: 'Für Elise', notes: 'E5 D#5 E5 D#5 E5 B4 D5 C5 A4 C4 E4 A4 B4 E4 G#4 B4 C5 E4 E5 D#5 E5 D#5 E5 B4 D5 C5 A4 C4 E4 A4 B4 E4 C5 B4 A4'.split(' ') },
             { name: 'Canon em Ré', notes: 'F#4 E4 D4 C#4 B3 A3 B3 C#4 D4 F#4 A4 G4 F#4 D4 F#4 E4 D4 B3 D4 C#4 D4 F#4 A4 A4 B4 F#4 G4 E4 D4'.split(' ') }
         ];
+        const ACCENT_BANK = [
+            'A água do café é essencial. O Brasil possui 1º lugar em produção? A pontuação (100%) é §1º na lei ª.',
+            'Ação rápida: vovó já fez pão, maçã e café; também comeu limão.',
+            'Atenção às crases: vou à escola, volto à noite, fui à feira.',
+            'Três avôs foram à reunião. Será que há solução até amanhã?',
+            'Use AltGr: 1º lugar, 2ª fase, 30° de calor, §2 da lei.',
+            'Ônibus, órgão, músico, café, você, história, número e público levam acento.',
+            'Pão de queijo à vontade? Já provei, é ótimo; hoje também faço!',
+            'Coração, emoção e lição: palavras com til que todos devem saber.'
+        ];
+        const RUSH_STARTS = [
+            'A digitação rápida requer foco total. O segredo não é a força, mas a memória muscular e a precisão nos toques. Se errar não pare, siga em frente sem olhar para trás.',
+            'Quem pratica um pouco todos os dias aprende mais depressa do que quem treina muito só uma vez. Mantenha os dedos nas teclas de apoio e respire com calma.',
+            'O teclado é uma ferramenta de trabalho. Com os dez dedos, escrever um e-mail ou um relatório fica rápido, e os olhos descansam para revisar o texto.',
+            'Cada letra tem o seu dedo. Com o tempo, a mão aprende o caminho sozinha e o pensamento corre mais depressa do que a digitação.'
+        ];
         const TIER_NAMES = { bronze: 'Bronze', silver: 'Prata', gold: 'Ouro', platinum: 'Platina' };
         const TIER_COLORS = { bronze: '#cd7f32', silver: '#cbd5e1', gold: '#facc15', platinum: '#67e8f9' };
 
@@ -1558,7 +1621,7 @@
                     nextLevelXp: 100,
                     lessonsCompleted: [],
                     recordWpm: 0,
-                    avgAcc: 0,
+                    avgAcc: 0, accSum: 0, name: '', group: '', history: [],
                     totalSessions: 0,
                     errorHeatmap: {},
                     badges: [], trophies: {}, totalChars: 0, bestCombo: 0, perfectSessions: 0, streak: 0, lastDay: '', unlockAll: false
@@ -1580,6 +1643,10 @@
                 if (d.xp >= d.nextLevelXp) d.xp = 0;
                 d.recordWpm = num(raw.recordWpm, 0, 0);
                 d.avgAcc = Math.min(100, num(raw.avgAcc, 0, 0));
+                d.accSum = num(raw.accSum, 0, 0);
+                d.name = typeof raw.name === 'string' ? raw.name.replace(/[<>]/g, '').slice(0, 40) : '';
+                d.group = typeof raw.group === 'string' ? raw.group.replace(/[<>]/g, '').slice(0, 40) : '';
+                d.history = Array.isArray(raw.history) ? raw.history.filter(x => x && Number.isFinite(x.w) && Number.isFinite(x.a)).map(x => ({ w: Math.min(400, Math.max(0, x.w)), a: Math.min(100, Math.max(0, x.a)) })).slice(-30) : [];
                 d.totalSessions = Math.floor(num(raw.totalSessions, 0, 0));
                 d.totalChars = Math.floor(num(raw.totalChars, 0, 0));
                 d.bestCombo = Math.floor(num(raw.bestCombo, 0, 0));
@@ -1678,10 +1745,14 @@
                 if (acc !== undefined) {
                     this.data.totalSessions = (this.data.totalSessions || 0) + 1;
                     const currentAvg = this.data.avgAcc || 0;
-                    this.data.avgAcc = Math.round(((currentAvg * (this.data.totalSessions - 1)) + acc) / this.data.totalSessions);
+                    // Soma acumulada: evita o erro de arredondar a média a cada sessão
+                    if (!this.data.accSum) this.data.accSum = currentAvg * (this.data.totalSessions - 1);
+                    this.data.accSum += acc;
+                    this.data.avgAcc = Math.round((this.data.accSum / this.data.totalSessions) * 10) / 10;
                 }
 
                 const d = this.data;
+                d.history = (d.history || []).concat({ w: wpm, a: acc === undefined ? 100 : acc }).slice(-30);
                 d.totalChars += extra.chars || 0;
                 d.bestCombo = Math.max(d.bestCombo, extra.combo || 0);
                 if (extra.perfect) d.perfectSessions++;
@@ -1729,12 +1800,41 @@
             /**
              * Transforma os dados em JSON e aciona o download para o aluno
              */
+            editIdentity() {
+                const n = prompt('Nome do aluno:', this.data.name || '');
+                if (n === null) return;
+                const g = prompt('Turma (ex.: EJA noite):', this.data.group || '');
+                this.data.name = n.replace(/[<>]/g, '').trim().slice(0, 40);
+                this.data.group = (g || '').replace(/[<>]/g, '').trim().slice(0, 40);
+                this.save();
+            },
+
+            /** Relatório/certificado: monta uma página só para impressão e abre a janela de impressão */
+            printCertificate() {
+                const d = this.data;
+                const old = document.getElementById('certificate');
+                if (old) old.remove();
+                const c = el('div'); c.id = 'certificate';
+                c.appendChild(el('h1', '', d.lessonsCompleted.length >= 30 ? 'Certificado de Conclusão' : 'Relatório de Progresso'));
+                c.appendChild(el('p', '', 'Mestre do Teclado - ABNT2 Pro'));
+                const t = el('table');
+                [['Aluno', d.name || '(sem nome)'], ['Turma', d.group || '-'], ['Data', new Date().toLocaleDateString('pt-BR')],
+                 ['Lições concluídas', d.lessonsCompleted.length + ' de 30'], ['PPM recorde', d.recordWpm], ['Precisão média', (d.avgAcc || 0) + '%'],
+                 ['Sessões realizadas', d.totalSessions], ['Troféus', Object.keys(d.trophies).length + ' de ' + TROPHIES.length], ['Nível', d.level]]
+                    .forEach(([k, v]) => { const tr = el('tr'); tr.append(el('th', '', k), el('td', '', String(v))); t.appendChild(tr); });
+                c.appendChild(t);
+                document.body.appendChild(c);
+                window.addEventListener('afterprint', () => c.remove(), { once: true });
+                window.print();
+            },
+
             exportData() {
                 const blob = new Blob([JSON.stringify(this.data, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `mestre_teclado_perfil_n${this.data.level}.json`;
+                const slug = [this.data.name, this.data.group].filter(Boolean).join('_').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]+/g, '_').toLowerCase();
+                a.download = slug ? `${slug}.json` : `mestre_teclado_perfil_n${this.data.level}.json`;
                 document.body.appendChild(a);
                 a.click();
                 a.remove();
@@ -1783,31 +1883,42 @@
          * ----------------------------------------------------------------------
          */
         const A11y = {
-            highContrast: false,
+            prefs: { contrast: false, font: false, light: false },
             synth: window.speechSynthesis,
 
             /** Restaura a preferência salva (laboratórios: o aluno não precisa reativar a cada aula) */
             init() {
-                let on = false;
-                try { on = localStorage.getItem(A11Y_KEY) === '1'; } catch (err) { /* ignorar */ }
-                this.apply(on);
+                try {
+                    const r = localStorage.getItem(A11Y_KEY);
+                    if (r === '1') this.prefs = { contrast: true, font: true, light: false }; // preferência antiga
+                    else if (r && r[0] === '{') Object.assign(this.prefs, JSON.parse(r));
+                } catch (err) { /* ignorar */ }
+                this.apply();
                 try { this.applyBlind(localStorage.getItem(BLIND_KEY) === '1'); } catch (err) { this.applyBlind(false); }
+                AudioEngine.loadPrefs();
             },
 
-            apply(on) {
-                this.highContrast = on;
-                document.body.classList.toggle('high-contrast', on);
-                document.body.classList.toggle('large-font', on);
-                document.getElementById('btn-a11y').setAttribute('aria-pressed', String(on));
+            apply() {
+                const p = this.prefs;
+                document.body.classList.toggle('high-contrast', !!p.contrast);
+                document.body.classList.toggle('large-font', !!p.font);
+                document.documentElement.classList.toggle('light-theme', !!p.light);
+                [['contrast', 'btn-contrast'], ['font', 'btn-font'], ['light', 'btn-theme']].forEach(([k, id]) => {
+                    const b = document.getElementById(id);
+                    if (b) b.setAttribute('aria-pressed', String(!!p[k]));
+                });
+            },
+
+            toggle(k) {
+                this.prefs[k] = !this.prefs[k];
+                this.apply();
+                try { localStorage.setItem(A11Y_KEY, JSON.stringify(this.prefs)); } catch (err) { /* ignorar */ }
             },
 
             /**
              * Alterna as classes CSS no <body> para transformar a visualização
              */
-            toggleHighContrast() {
-                this.apply(!this.highContrast);
-                try { localStorage.setItem(A11Y_KEY, this.highContrast ? '1' : '0'); } catch (err) { /* ignorar */ }
-            },
+            toggleHighContrast() { this.toggle('contrast'); },
 
             /**
              * Utiliza o TTS (Text-to-Speech) nativo do SO para ler a missão atual
@@ -1990,7 +2101,7 @@
             },
 
             startBgMusic() {
-                if (!this.enabled || !this.unlocked || !this.ensure() || this.chordPattern) return;
+                if (this.musicOn === false || !this.unlocked || !this.ensure() || this.chordPattern) return;
                 try {
                     Tone.start(); // Requer interação prévia do usuário nos navegadores modernos
                     const chords = [["C3", "E3", "G3"], ["A2", "C3", "E3"], ["F2", "A2", "C3"], ["G2", "B2", "D3"]];
@@ -2025,19 +2136,27 @@
                 }
             },
 
-            toggleAudio() {
-                this.enabled = !this.enabled;
-                const btn = document.getElementById('btn-audio-toggle');
-                btn.setAttribute('aria-pressed', String(!this.enabled));
-                if (this.enabled) {
-                    btn.innerHTML = '<i class="fa-solid fa-volume-up"></i>';
-                    btn.classList.replace('text-red-400', 'text-gray-300');
-                    this.startBgMusic();
-                } else {
-                    btn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>';
-                    btn.classList.replace('text-gray-300', 'text-red-400');
-                    this.stopBgMusic();
-                }
+            toggleAudio() { this.enabled = !this.enabled; this.savePrefs(); this.syncButtons(); },
+            toggleMusic() {
+                this.musicOn = this.musicOn === false;
+                this.savePrefs(); this.syncButtons();
+                if (this.musicOn) this.startBgMusic(); else this.stopBgMusic();
+            },
+            savePrefs() { try { localStorage.setItem('abnt2_pro_audio', JSON.stringify({ sfx: this.enabled, music: this.musicOn !== false })); } catch (err) { /* ignorar */ } },
+            loadPrefs() {
+                try {
+                    const pr = JSON.parse(localStorage.getItem('abnt2_pro_audio') || 'null');
+                    if (pr) { this.enabled = pr.sfx !== false; this.musicOn = pr.music !== false; }
+                } catch (err) { /* ignorar */ }
+                this.syncButtons();
+            },
+            syncButtons() {
+                const b = document.getElementById('btn-audio-toggle'), m = document.getElementById('btn-music-toggle');
+                b.setAttribute('aria-pressed', String(!this.enabled));
+                b.innerHTML = `<i class="fa-solid fa-${this.enabled ? 'volume-up' : 'volume-xmark'}"></i>`;
+                b.classList.toggle('text-red-400', !this.enabled); b.classList.toggle('text-gray-300', this.enabled);
+                m.setAttribute('aria-pressed', String(this.musicOn !== false));
+                m.classList.toggle('text-red-400', this.musicOn === false); m.classList.toggle('text-gray-300', this.musicOn !== false);
             }
         };
 
@@ -2135,6 +2254,8 @@
                 document.getElementById('profile-xp-text').textContent = `${d.xp} / ${d.nextLevelXp} XP`;
                 document.getElementById('profile-record-wpm').textContent = d.recordWpm;
                 document.getElementById('profile-avg-acc').textContent = `${d.avgAcc || 0}%`;
+                document.getElementById('profile-title').textContent = d.name ? d.name + (d.group ? ' · ' + d.group : '') : 'Seu Perfil';
+                this.renderHistory();
 
                 const percentage = Math.min(100, (d.xp / d.nextLevelXp) * 100);
                 document.getElementById('profile-xp-bar').style.width = `${percentage}%`;
@@ -2256,6 +2377,29 @@
                 this.renderTrophies();
             },
 
+            /** Gráfico simples em SVG: PPM (azul) e precisão (verde) das últimas 30 sessões */
+            renderHistory() {
+                const box = document.getElementById('history-chart');
+                if (!box) return;
+                box.innerHTML = '';
+                const hs = Profile.data.history || [];
+                if (hs.length < 2) { box.appendChild(el('p', 'text-xs text-gray-500 italic', 'Faça 2 ou mais sessões para ver a sua evolução.')); return; }
+                const NS = 'http://www.w3.org/2000/svg', W = 300, H = 100;
+                const svg = document.createElementNS(NS, 'svg');
+                svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('class', 'w-full'); svg.setAttribute('role', 'img');
+                svg.setAttribute('aria-label', `Evolução nas últimas ${hs.length} sessões. Última: ${hs[hs.length - 1].w} PPM e ${hs[hs.length - 1].a}% de precisão.`);
+                const maxW = Math.max(20, ...hs.map(x => x.w));
+                const line = (key, max, color) => {
+                    const pts = hs.map((x, i) => `${(i / (hs.length - 1)) * (W - 8) + 4},${H - 6 - (x[key] / max) * (H - 12)}`).join(' ');
+                    const pl = document.createElementNS(NS, 'polyline');
+                    pl.setAttribute('points', pts); pl.setAttribute('fill', 'none'); pl.setAttribute('stroke', color); pl.setAttribute('stroke-width', '2');
+                    svg.appendChild(pl);
+                };
+                line('w', maxW, '#60a5fa'); line('a', 100, '#4ade80');
+                box.appendChild(svg);
+                box.appendChild(el('p', 'text-xs text-gray-400 mt-1', `Azul: PPM (máx. ${maxW}) · Verde: precisão (0-100%)`));
+            },
+
             updateHint(txt) {
                 const h = document.getElementById('finger-hint');
                 if (h) h.textContent = txt;
@@ -2323,6 +2467,21 @@
              */
             renderText(text, currentIndex, errorsMap) {
                 const display = document.getElementById('text-display');
+                const rt = this._rt;
+                if (rt && rt.text === text && rt.spans.length && display.contains(rt.spans[0])) {
+                    const a = Math.max(0, Math.min(rt.idx, currentIndex) - 1), b = Math.min(text.length - 1, Math.max(rt.idx, currentIndex) + 1);
+                    for (let i = a; i <= b; i++) {
+                        rt.spans[i].className = 'char ' + (i < currentIndex ? (errorsMap.has(i) ? 'typed-wrong' : 'typed-correct') : (i === currentIndex ? 'current' : 'untyped'));
+                    }
+                    rt.idx = currentIndex;
+                    const cur = rt.spans[currentIndex];
+                    if (cur) {
+                        const top = cur.offsetTop, bottom = top + cur.offsetHeight;
+                        if (bottom > display.scrollTop + display.clientHeight) display.scrollTop = bottom - display.clientHeight + 12;
+                        else if (top < display.scrollTop) display.scrollTop = top - 12;
+                    }
+                    return;
+                }
                 const frag = document.createDocumentFragment();
                 let wordEl = null;
 
@@ -2356,6 +2515,7 @@
 
                 display.innerHTML = '';
                 display.appendChild(frag);
+                this._rt = { text, idx: currentIndex, spans: Array.from(display.querySelectorAll('.char')) };
 
                 // Mantém o caractere atual visível quando o texto é longo (Corrida)
                 const cur = display.querySelector('.current');
@@ -2466,9 +2626,10 @@
                 hi.addEventListener('paste', (e) => e.preventDefault());
 
                 // Mantém o foco no campo oculto durante o jogo
-                hi.addEventListener('blur', () => {
+                hi.addEventListener('blur', (e) => {
                     this.composing = false;
-                    if (this.state.active) setTimeout(() => hi.focus({ preventScroll: true }), 0);
+                    const rt = e.relatedTarget;
+                    if (this.state.active && !this.state.paused && !(rt && rt.closest && rt.closest('button, textarea'))) setTimeout(() => hi.focus({ preventScroll: true }), 0);
                 });
                 document.getElementById('text-display').addEventListener('click', () => hi.focus({ preventScroll: true }));
             },
@@ -2517,7 +2678,7 @@
             },
 
             startMode(modeName) {
-                if (!['rush', 'marathon', 'accents', 'weak', 'daily', 'sudden', 'placement'].includes(modeName)) return;
+                if (!['rush', 'marathon', 'accents', 'weak', 'daily', 'sudden', 'placement', 'custom'].includes(modeName)) return;
                 let weakText = null;
                 if (modeName === 'weak') {
                     weakText = this.buildWeakText();
@@ -2529,7 +2690,7 @@
                 this.state.lessonRef = null;
 
                 if (modeName === 'rush') {
-                    this.state.text = "A digitação rápida requer foco total. O segredo não é a força, mas a memória muscular e a precisão nos toques. Se errar não pare, siga em frente sem olhar para trás.";
+                    this.state.text = RUSH_STARTS[Math.floor(Math.random() * RUSH_STARTS.length)];
                     document.getElementById('game-title').textContent = "Corrida 90s";
                     document.getElementById('game-objective').textContent = "Escreva o máximo que puder sem pausas!";
                 }
@@ -2539,6 +2700,11 @@
                     this.state.text = this.state.marathonTextsRemaining.pop();
                     document.getElementById('game-title').textContent = `Maratona (Texto 1 de ${MARATHON_TEXTS.length})`;
                     document.getElementById('game-objective').textContent = "Conclua toda a bateria sequencialmente.";
+                }
+                else if (modeName === 'custom') {
+                    this.state.text = this.customText;
+                    document.getElementById('game-title').textContent = 'Texto Livre';
+                    document.getElementById('game-objective').textContent = 'Texto escolhido por você ou pelo professor.';
                 }
                 else if (modeName === 'placement') {
                     this.state.text = 'O Brasil possui 27 unidades federativas, e 100% dos alunos podem aprender. Envie o e-mail para aluno@escola.com.br até 15/11. Fui à escola às 7h; o 1º lugar é meu. Você já praticou hoje? Não, mas vou começar agora!';
@@ -2563,7 +2729,7 @@
                     document.getElementById('game-objective').textContent = '♥♥♥ Cada erro custa uma vida.';
                 }
                 else if (modeName === 'accents') {
-                    this.state.text = "A água do café é essencial. O Brasil possui 1º lugar em produção? A pontuação (100%) é §1º na lei ª.";
+                    this.state.text = shuffle(ACCENT_BANK).slice(0, 3).join(' ');
                     document.getElementById('game-title').textContent = "Mestre dos Símbolos";
                     document.getElementById('game-objective').textContent = "Domine as Dead Keys (Acentos) e o AltGr.";
                 }
@@ -2633,6 +2799,8 @@
                 s.deadKeyPending = null;
                 s.capsWarned = false;
                 Profile.newTrophies = [];
+                s.paused = false;
+                document.getElementById('pause-overlay').classList.add('hidden');
                 AudioEngine.pickMelody();
                 // Corrida conta regressivamente; os demais modos contam de 0 (antes a lição herdava o tempo da Corrida)
                 s.timeRemaining = s.mode === 'rush' ? RUSH_SECONDS : 0;
@@ -2647,6 +2815,46 @@
                 this.updateStatsUI();
                 UI.renderText(s.text, 0, s.charErrorsLog);
                 this.highlightNextExpectedKeys();
+            },
+
+            togglePause() {
+                const s = this.state;
+                if (!s.active) return;
+                const ov = document.getElementById('pause-overlay');
+                if (!s.paused) {
+                    s.paused = true; s.pausedAt = Date.now();
+                    clearInterval(s.timerInterval);
+                    AudioEngine.unduck();
+                    ov.classList.remove('hidden');
+                    document.getElementById('btn-resume').focus();
+                } else {
+                    if (s.startTime) { s.startTime += Date.now() - s.pausedAt; s.timerInterval = setInterval(() => this.tick(), 250); }
+                    s.paused = false;
+                    ov.classList.add('hidden');
+                    document.getElementById('hidden-input').focus({ preventScroll: true });
+                }
+            },
+
+            /** Recomeça a mesma lição/modo do zero */
+            restart() {
+                const s = this.state;
+                if (s.mode === 'lesson' && s.lessonRef) this.startLesson(s.lessonRef.id);
+                else if (s.mode) this.startMode(s.mode);
+            },
+
+            openCustom() {
+                document.getElementById('custom-modal').classList.remove('hidden');
+                document.getElementById('custom-text').focus();
+            },
+
+            /** Texto livre: só mantém caracteres que o ABNT2 consegue digitar */
+            startCustom() {
+                let t = document.getElementById('custom-text').value.replace(/\s+/g, ' ').trim();
+                t = [...t].filter(c => c === ' ' || analyzeChar(c)).join('').slice(0, 800).trim();
+                if (t.length < 10) { UI.notify('Cole um texto com pelo menos 10 caracteres digitáveis.'); return; }
+                this.customText = t;
+                document.getElementById('custom-modal').classList.add('hidden');
+                this.startMode('custom');
             },
 
             startTimer() {
@@ -2706,6 +2914,8 @@
                     e.preventDefault();
                 }
 
+                if (code === 'Escape') { e.preventDefault(); this.togglePause(); return; }
+                if (this.state.paused) return;
                 this.physicalKeysDown.add(code);
                 this.lastCode = code;
                 this.flashKey(code, 'pressed', 120);
@@ -2742,13 +2952,13 @@
                         
                         this.highlightNextExpectedKeys();
                     } else {
-                        this.registerError('Technique');
+                        this.registerError('Technique', true);
                         this.breakCombo();
                         this.signalTechniqueError();
                     }
                 } else {
                     // Bateu o acento na hora errada ou o acento errado
-                    this.registerError(code);
+                    this.registerError(code, true);
                     this.breakCombo();
                     this.signalTechniqueError();
                 }
@@ -2789,12 +2999,13 @@
                 const target = s.text[s.currentIndex];
                 if (target === undefined) return;
 
+                if (s.paused) return;
                 if (s.startTime === 0) this.startTimer();
                 if (s.mode === 'rush' && Date.now() - s.startTime >= RUSH_SECONDS * 1000) { this.endSession(); return; }
 
                 // Regra Máxima: Técnica sempre sobrepõe digitação
                 if (!this.validateTechnique(target)) {
-                    this.registerError('Technique');
+                    this.registerError('Technique', true);
                     this.breakCombo();
                     s.deadKeyPending = null;
                     this.signalTechniqueError();
@@ -2817,7 +3028,7 @@
                 const info = analyzeChar(targetChar);
                 if (!info) return true; // Espaço e caracteres sem exigência especial
 
-                if (info.altGr && !this.physicalKeysDown.has('AltRight')) return false;
+                if (info.altGr && !(this.physicalKeysDown.has('AltRight') || (this.physicalKeysDown.has('ControlLeft') && this.physicalKeysDown.has('AltLeft')))) return false;
                 if (info.finalShift && !this.physicalKeysDown.has(info.finalShift)) return false;
                 return true;
             },
@@ -2859,7 +3070,7 @@
                 // Progressão de Combo
                 s.currentCombo++;
                 if (s.currentCombo > s.maxCombo) s.maxCombo = s.currentCombo;
-                if ([10, 25, 50, 100].includes(s.currentCombo)) {
+                if ([10, 25, 50, 100, 200].includes(s.currentCombo)) {
                     UI.spawnComboFloat(s.currentCombo);
                 }
 
@@ -2928,7 +3139,8 @@
                 this.state.currentCombo = 0;
             },
 
-            registerError(code) {
+            registerError(code, count = false) {
+                if (count) { this.state.errorsCount++; this.updateStatsUI(); }
                 this.state.sessionHeatmap[code] = (this.state.sessionHeatmap[code] || 0) + 1;
                 if (this.state.mode === 'sudden' && this.state.active) {
                     this.state.lives--;
